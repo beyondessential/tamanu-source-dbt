@@ -1,0 +1,4920 @@
+{
+  "programName": "WHO DAK Child Health",
+  "programCode": "who-dak-che",
+  "country": "",
+  "homeServer": "",
+  "registry": {
+    "registryCode": "who-dak-che",
+    "registryName": "WHO DAK Child Health",
+    "currentlyAtType": "facility",
+    "visibilityStatus": "current",
+    "lossToFollowUpEnabled": true,
+    "lossToFollowUpThresholdDays": 60,
+    "clinicalStatuses": [
+      {
+        "code": "who-dak-che-well",
+        "name": "Well child",
+        "color": "green"
+      },
+      {
+        "code": "who-dak-che-treated",
+        "name": "Treated at this facility",
+        "color": "blue"
+      },
+      {
+        "code": "who-dak-che-follow-up-due",
+        "name": "Follow-up due",
+        "color": "yellow"
+      },
+      {
+        "code": "who-dak-che-follow-up-overdue",
+        "name": "Follow-up overdue",
+        "color": "orange"
+      },
+      {
+        "code": "who-dak-che-referred",
+        "name": "Referred urgently",
+        "color": "red"
+      },
+      {
+        "code": "who-dak-che-nutrition-programme",
+        "name": "In a nutrition programme",
+        "color": "purple"
+      },
+      {
+        "code": "who-dak-che-defaulted",
+        "name": "Defaulted",
+        "color": "brown"
+      },
+      {
+        "code": "who-dak-che-transferred-out",
+        "name": "Transferred out",
+        "color": "grey"
+      },
+      {
+        "code": "who-dak-che-aged-out",
+        "name": "Aged out at 5 years",
+        "color": "teal"
+      },
+      {
+        "code": "who-dak-che-died",
+        "name": "Child died",
+        "color": "pink"
+      }
+    ],
+    "conditions": [
+      {
+        "code": "who-dak-che-cond-hiv-confirmed",
+        "name": "Confirmed HIV infection"
+      },
+      {
+        "code": "who-dak-che-cond-hiv-exposed",
+        "name": "HIV exposed"
+      },
+      {
+        "code": "who-dak-che-cond-severe-acute-malnutrition",
+        "name": "Severe acute malnutrition"
+      },
+      {
+        "code": "who-dak-che-cond-moderate-acute-malnutrition",
+        "name": "Moderate acute malnutrition"
+      },
+      {
+        "code": "who-dak-che-cond-low-weight-for-age",
+        "name": "Low weight for age"
+      },
+      {
+        "code": "who-dak-che-cond-preterm",
+        "name": "Preterm birth"
+      },
+      {
+        "code": "who-dak-che-cond-chronic-ear-infection",
+        "name": "Chronic ear infection"
+      },
+      {
+        "code": "who-dak-che-cond-recurrent-wheeze",
+        "name": "Recurrent wheeze"
+      },
+      {
+        "code": "who-dak-che-cond-immunization-incomplete",
+        "name": "Immunizations incomplete for age"
+      }
+    ]
+  },
+  "surveys": [
+    {
+      "code": "consultation",
+      "name": "Reason for Consultation",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "danger-signs",
+      "name": "Life-threatening Illness and Danger Signs",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "measurements",
+      "name": "Measurements",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "symptoms-child",
+      "name": "Symptoms, 2-59 Months",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "signs-child",
+      "name": "Signs, 2-59 Months",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "symptoms-infant",
+      "name": "Symptoms, Young Infant",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "signs-infant",
+      "name": "Signs, Young Infant",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "assessments",
+      "name": "Assessments and Tests",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "health-promotion",
+      "name": "Health Promotion",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "classification",
+      "name": "Classification",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "severe",
+      "name": "Severe Classification Summary",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "setting-malaria",
+      "name": "Malaria Setting and Test Availability",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "setting-hiv",
+      "name": "HIV Prevalence Setting",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    }
+  ],
+  "surveySheets": [
+    {
+      "surveyName": "Reason for Consultation",
+      "questions": [
+        {
+          "code": "whodakche-consultation-act-b3",
+          "type": "Instruction",
+          "name": "Determine reason for consultation",
+          "text": "Determine reason for consultation",
+          "detail": "CHE.B3. Determine reason for consultation",
+          "newScreen": false
+        },
+        {
+          "code": "whodakche-b3-de01",
+          "type": "Radio",
+          "name": "Reason for consultation",
+          "text": "Reason for consultation",
+          "detail": "The reason for the child's consultation.",
+          "options": [
+            "Life-threatening emergency",
+            "Sick child",
+            "Well child"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B3.DE01",
+            "activity": "CHE.B3. Determine reason for consultation",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b3-de05",
+          "type": "Binary",
+          "name": "Is the child sick today?",
+          "text": "Is the child sick today?",
+          "detail": "The child's visit is for a well child but the child is also presenting as sick.",
+          "_dak": {
+            "dataElementId": "CHE.B3.DE05",
+            "activity": "CHE.B3. Determine reason for consultation",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b3-de06",
+          "type": "Radio",
+          "name": "Type of consultation",
+          "text": "Type of consultation",
+          "detail": "The child's visit is for a new consultation.",
+          "options": [
+            "New consultation",
+            "Follow-up"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B3.DE06",
+            "activity": "CHE.B3. Determine reason for consultation",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Life-threatening Illness and Danger Signs",
+      "questions": [
+        {
+          "code": "whodakche-danger-signs-act-b7",
+          "type": "Instruction",
+          "name": "DangerSigns",
+          "text": "DangerSigns",
+          "detail": "CHE.B7. DangerSigns",
+          "newScreen": false
+        },
+        {
+          "code": "whodakche-b7-de01",
+          "type": "Binary",
+          "name": "Obstructed or absent breathing",
+          "text": "Obstructed or absent breathing",
+          "detail": "The child has obstructed or absent breathing. --> Treat immediately. Refer link for treatment.",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B7.DE01",
+            "activity": "CHE.B7. DangerSigns",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b7-de02",
+          "type": "Binary",
+          "name": "Convulsing now",
+          "text": "Convulsing now",
+          "detail": "The child is convulsing now --> Treat immediately During a convulsion, the child’s arms and legs stiffen because the muscles are contracting. The child may lose consciousness or cannot respond to spoken directions. If the child is convulsing now: - Turn…",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B7.DE02",
+            "activity": "CHE.B7. DangerSigns",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-danger-signs-sec-general-danger-signs-age-2-months-to-5-y",
+          "type": "Instruction",
+          "name": "General danger signs - Age ≥2 months to <5 years",
+          "text": "General danger signs - Age ≥2 months to <5 years"
+        },
+        {
+          "code": "whodakche-b7-de03a",
+          "type": "MultiSelect",
+          "name": "Select all danger signs that apply",
+          "text": "Select all danger signs that apply",
+          "detail": "The danger signs that are observed or reported in the child",
+          "options": [
+            "Convulsion(s) in this Illness",
+            "Unconscious or lethargic",
+            "Not able to drink or breastfeed",
+            "Vomiting everything",
+            "Vomiting but not everything"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B7.DE03A",
+            "activity": "CHE.B7. DangerSigns",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b7-de08",
+          "type": "Radio",
+          "name": "Number of convulsions in this Illness",
+          "text": "Number of convulsions in this Illness",
+          "options": [
+            "One convulsion",
+            "Two or more convulsions"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B7.DE08",
+            "activity": "CHE.B7. DangerSigns",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b7-de11",
+          "type": "Binary",
+          "name": "Convulsion(s) lasting 15 minutes or longer",
+          "text": "Convulsion(s) lasting 15 minutes or longer",
+          "detail": "The child has had one or more convulsions lasting 15 minutes or longer.",
+          "_dak": {
+            "dataElementId": "CHE.B7.DE11",
+            "activity": "CHE.B7. DangerSigns",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-danger-signs-sec-oral-fluid-test",
+          "type": "Instruction",
+          "name": "Oral fluid test",
+          "text": "Oral fluid test"
+        },
+        {
+          "code": "whodakche-danger-signs-b24-g-de07",
+          "type": "Radio",
+          "name": "Oral fluid test results",
+          "text": "Oral fluid test results",
+          "detail": "If the child is unconscious, do not try to carry out an oral fluid test because it could cause the child to choke or fluid to get into their lungs. Ask the mother to offer the child some water in a cup or spoon (or breastfeed for a child under 6…",
+          "options": [
+            "Completely unable to drink",
+            "Vomits immediately/everything",
+            "Drinks poorly",
+            "Drinks eagerly/thirstily",
+            "Drinks normally"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE07",
+            "activity": "CHE.B7. DangerSigns",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-danger-signs-b24-g-de13",
+          "type": "Binary",
+          "name": "Unable to perform oral fluid test",
+          "text": "Unable to perform oral fluid test",
+          "detail": "The health worker is unable to perform an oral fluid test.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE13",
+            "activity": "CHE.B7. DangerSigns",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-danger-signs-b24-g-de15",
+          "type": "Binary",
+          "name": "Has the child had anything to drink today?",
+          "text": "Has the child had anything to drink today?",
+          "detail": "When it is not possible to conduct an oral fluid test, ask when the child last drank as part of a dehydration assessment.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE15",
+            "activity": "CHE.B7. DangerSigns",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-danger-signs-b24-g-de16",
+          "type": "FreeText",
+          "name": "How did the child last drink?",
+          "text": "How did the child last drink?",
+          "detail": "When it is not possible to conduct an oral fluid test, ask how the child last drank as part of a dehydration assessment.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE16",
+            "activity": "CHE.B7. DangerSigns",
+            "dataType": "Coding (use the same coding as for the oral fluid test results)",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-danger-signs-act-b7-2",
+          "type": "Instruction",
+          "name": "DangerSigns",
+          "text": "DangerSigns",
+          "detail": "CHE.B7/B8/B9. DangerSigns",
+          "newScreen": true
+        },
+        {
+          "code": "whodakche-b7-b8-b9-de01",
+          "type": "Radio",
+          "name": "Continue to assess sick child",
+          "text": "Continue to assess sick child",
+          "detail": "The health worker chooses if they will continue to assess the sick child with a life-threatening illness.",
+          "options": [
+            "Stabilized, continue consultation",
+            "End consultation",
+            "Entered response in error"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B7.B8.B9.DE01",
+            "activity": "CHE.B7/B8/B9. DangerSigns",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Measurements",
+      "questions": [
+        {
+          "code": "whodakche-measurements-act-b6",
+          "type": "Instruction",
+          "name": "Determine Basic Anthropometric and Other Measurements",
+          "text": "Determine Basic Anthropometric and Other Measurements",
+          "detail": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+          "newScreen": false
+        },
+        {
+          "code": "whodakche-b6-de01",
+          "type": "Number",
+          "name": "Axillary temperature (°C)",
+          "text": "Axillary temperature (°C)",
+          "detail": "The child's axillary temperature (temperature taken under the armpit), measured in °C. Temperature ranges for children 2–59 months: - Under 35.5: hypothermia (low body temperature) - 35.5 to 37.4: normal - 37.5 to 38.4: fever - 38.5 and above: high…",
+          "_dak": {
+            "dataElementId": "CHE.B6.DE01",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de02",
+          "type": "Binary",
+          "name": "Prefer to take rectal temperature",
+          "text": "Prefer to take rectal temperature",
+          "detail": "The health worker prefers to take the child's rectal temperature.",
+          "_dak": {
+            "dataElementId": "CHE.B6.DE02",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de03",
+          "type": "Number",
+          "name": "Rectal temperature (°C)",
+          "text": "Rectal temperature (°C)",
+          "detail": "The child's rectal temperature (temperature taken in the rectum), measured in °C. Only consider taking rectal temperature if trained. Temperature ranges for children 2–59 months: - Under 36.0: hypothermia (low body temperature) - 36.0 to 38.0: normal -…",
+          "_dak": {
+            "dataElementId": "CHE.B6.DE03",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de05",
+          "type": "Binary",
+          "name": "Thermometer not available",
+          "text": "Thermometer not available",
+          "detail": "A thermometer is not available to measure the child's temperature.",
+          "_dak": {
+            "dataElementId": "CHE.B6.DE05",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de06",
+          "type": "Binary",
+          "name": "Hot to touch",
+          "text": "Hot to touch",
+          "detail": "The child is hot to touch.",
+          "_dak": {
+            "dataElementId": "CHE.B6.DE06",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de07",
+          "type": "Number",
+          "name": "Weight (kilograms)",
+          "text": "Weight (kilograms)",
+          "detail": "The child's weight in kilograms, to one decimal place.",
+          "_dak": {
+            "dataElementId": "CHE.B6.DE07",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de08",
+          "type": "Binary",
+          "name": "Weight cannot be measured",
+          "text": "Weight cannot be measured",
+          "detail": "The child's weight cannot be measured today. This should only be selected if there are no scales available to properly weight the child. An estimated weight will be calculated for the purposes of medication dosing.",
+          "_dak": {
+            "dataElementId": "CHE.B6.DE08",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de09",
+          "type": "Number",
+          "name": "Estimated weight",
+          "text": "Estimated weight",
+          "detail": "Estimated weight is calculated for the purposes of medication dosing only, based on the following order: 1. If a recent* weight is available, the weight for age z-score at the time of the measurement is used today to estimate the weight based on the age…",
+          "_dak": {
+            "dataElementId": "CHE.B6.DE09",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de10",
+          "type": "Number",
+          "name": "Height (cm)",
+          "text": "Height (cm)",
+          "detail": "The child's height, measured in centimetres. Height is used for children aged 2 years and older. The assistant should hold the child’s knees to keep the legs straight with one hand, and the other hand on the shins to keep the heels against the back and…",
+          "_dak": {
+            "dataElementId": "CHE.B6.DE10",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de11",
+          "type": "Binary",
+          "name": "Prefer to measure length",
+          "text": "Prefer to measure length",
+          "detail": "Length is automatically prompted for children under 2 years of age. For children 2 years of age and older, length can be measured if the child is unable to stand. If length is measured instead of height, 0.7 cm will automatically be subtracted before…",
+          "_dak": {
+            "dataElementId": "CHE.B6.DE11",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de12",
+          "type": "Binary",
+          "name": "Height cannot be measured",
+          "text": "Height cannot be measured",
+          "detail": "The child's height cannot be measured.",
+          "_dak": {
+            "dataElementId": "CHE.B6.DE12",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de13",
+          "type": "Number",
+          "name": "Length (cm)",
+          "text": "Length (cm)",
+          "detail": "The child's length, measured in centimetres. Length is used for children under 2 years or those too weak or unable to stand. One assistant should hold the child’s head over the ears and with straight arms. The measurer should keep one hand on the…",
+          "_dak": {
+            "dataElementId": "CHE.B6.DE13",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de14",
+          "type": "Binary",
+          "name": "Prefer to measure height",
+          "text": "Prefer to measure height",
+          "_dak": {
+            "dataElementId": "CHE.B6.DE14",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de15",
+          "type": "Binary",
+          "name": "Length cannot be measured",
+          "text": "Length cannot be measured",
+          "detail": "The child's length cannot be measured.",
+          "_dak": {
+            "dataElementId": "CHE.B6.DE15",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de16",
+          "type": "Number",
+          "name": "Weight for height (WFH) z-score",
+          "text": "Weight for height (WFH) z-score",
+          "detail": "This score is calculated automatically, to compare the WFH of the child against standard scores. A low z-score indicates that the child has low weight for their height. WFH z-score below −3: severe acute malnutrition WFH z-score between −2 and −3…",
+          "config": {
+            "rounding": 0
+          },
+          "_dak": {
+            "dataElementId": "CHE.B6.DE16",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de17",
+          "type": "Number",
+          "name": "Weight for length (WFL) z-score",
+          "text": "Weight for length (WFL) z-score",
+          "detail": "This score is calculated automatically to compare the WFL of the child against standard scores. A low z-score indicates that the child has low weight for their length. WFL z-score below −3: severe acute malnutrition WFL z-score between −2 and −3…",
+          "config": {
+            "rounding": 0
+          },
+          "_dak": {
+            "dataElementId": "CHE.B6.DE17",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de18",
+          "type": "Number",
+          "name": "Weight for age (WFA) z-score",
+          "text": "Weight for age (WFA) z-score",
+          "detail": "This score is calculated automatically to compare the WFA of the child against standard scores. A low z-score indicates that the child has low weight for their age. WFA z-score below −3: very low weight for age WFA z-score between −2 and −3: low weight…",
+          "config": {
+            "rounding": 0
+          },
+          "_dak": {
+            "dataElementId": "CHE.B6.DE18",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de19",
+          "type": "Number",
+          "name": "Mid-upper arm circumference (MUAC) (mm)",
+          "text": "Mid-upper arm circumference (MUAC) (mm)",
+          "detail": "MUAC is an important indicator of acute malnutrition in children aged 6–59 months. To measure: - Find the midpoint of the child’s upper arm between the shoulder and elbow. - Use the MUAC tape to mark the midpoint on the child’s arm. - Hold the large end…",
+          "_dak": {
+            "dataElementId": "CHE.B6.DE19",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de20",
+          "type": "Binary",
+          "name": "MUAC cannot be measured",
+          "text": "MUAC cannot be measured",
+          "detail": "The child's MUAC cannot be measured",
+          "_dak": {
+            "dataElementId": "CHE.B6.DE20",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de21",
+          "type": "Radio",
+          "name": "Visually assess whether underweight (for drug dose calculation)",
+          "text": "Visually assess whether underweight (for drug dose calculation)",
+          "detail": "The health worker visually assesses whether underweight (to help estimate weight for medication dosing).",
+          "options": [
+            "Not underweight",
+            "Underweight",
+            "Severely underweight"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B6.DE21",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b6-de25",
+          "type": "Date",
+          "name": "Date of measurement",
+          "text": "Date of measurement",
+          "detail": "The date when the measurement was taken",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B6.DE25",
+            "activity": "CHE.B6. Determine Basic Anthropometric and Other Measurements",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Symptoms, 2-59 Months",
+      "questions": [
+        {
+          "code": "whodakche-symptoms-child-act-b10",
+          "type": "Instruction",
+          "name": "Cough or difficulty breathing",
+          "text": "Cough or difficulty breathing",
+          "detail": "CHE.B10. Cough or difficulty breathing",
+          "newScreen": false
+        },
+        {
+          "code": "whodakche-b10s1-de05",
+          "type": "MultiSelect",
+          "name": "Symptoms",
+          "text": "Symptoms",
+          "detail": "The symptoms that are observed/reported by the caregiver",
+          "options": [
+            "Cough",
+            "Difficulty breathing",
+            "Diarrhoea",
+            "Fever reported",
+            "Ear problem",
+            "Eye problem",
+            "Skin problem"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B10S1.DE05",
+            "activity": "CHE.B10. Cough or difficulty breathing",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b10s1-de06",
+          "type": "Radio",
+          "name": "Cough for how long?",
+          "text": "Cough for how long?",
+          "detail": "Length of time the child has had the cough - 14 days or less (2 weeks or less) - More than 14 days (more than 2 weeks)",
+          "options": [
+            "14 days or less",
+            "More than 14 days"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B10S1.DE06",
+            "activity": "CHE.B10. Cough or difficulty breathing",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b10s1-de02",
+          "type": "Radio",
+          "name": "Difficulty breathing for how long?",
+          "text": "Difficulty breathing for how long?",
+          "detail": "Length of time the child has had difficulty breathing: - 14 days or less (2 weeks or less) - More than 14 days (more than 2 weeks)",
+          "options": [
+            "14 days or less",
+            "More than 14 days"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B10S1.DE02",
+            "activity": "CHE.B10. Cough or difficulty breathing",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-symptoms-child-act-b11",
+          "type": "Instruction",
+          "name": "Diarrhoea",
+          "text": "Diarrhoea",
+          "detail": "CHE.B11. Diarrhoea",
+          "newScreen": true
+        },
+        {
+          "code": "whodakche-b11s1-de02",
+          "type": "Radio",
+          "name": "Diarrhoea for how long?",
+          "text": "Diarrhoea for how long?",
+          "detail": "Length of time the child has had diarrhoea - Less than 14 days (less than 2 weeks) - 14 days or more (2 weeks or more)",
+          "options": [
+            "Less than 14 days",
+            "14 days or more",
+            "Yes - No"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B11S1.DE02",
+            "activity": "CHE.B11. Diarrhoea",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-symptoms-child-act-b12",
+          "type": "Instruction",
+          "name": "Fever",
+          "text": "Fever",
+          "detail": "CHE.B12. Fever",
+          "newScreen": true
+        },
+        {
+          "code": "whodakche-b12s1-de03",
+          "type": "Radio",
+          "name": "Fever for how long?",
+          "text": "Fever for how long?",
+          "detail": "Length of time the child has had fever - 7 days or less (1 week or less) - More than 7 days (more than 1 week)",
+          "options": [
+            "7 days or less",
+            "More than 7 days"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B12S1.DE03",
+            "activity": "CHE.B12. Fever",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b12s1-de06",
+          "type": "Binary",
+          "name": "Has fever been present every day for more than 7 days?",
+          "text": "Has fever been present every day for more than 7 days?",
+          "detail": "If the fever has been present for more than 7 days, ask if the fever has been present every day. A fever that has been present every day for more than 7 days can mean that the child has a more severe disease, such as typhoid fever. The child will need…",
+          "_dak": {
+            "dataElementId": "CHE.B12S1.DE06",
+            "activity": "CHE.B12. Fever",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b12s1-de08",
+          "type": "MultiSelect",
+          "name": "Pain",
+          "text": "Pain",
+          "detail": "The child is reported to have or appears to be in pain. It is important to assess for pain that could be a sign of a source of infection when the child has reported or measured fever.",
+          "options": [
+            "No pain",
+            "Joint or bone pain",
+            "Pain or difficulty passing urine",
+            "Skin pain",
+            "Ear pain",
+            "Other"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B12S1.DE08",
+            "activity": "CHE.B12. Fever",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b12s1-de15",
+          "type": "Radio",
+          "name": "Malaria risk",
+          "text": "Malaria risk",
+          "detail": "The area is a high/low/no malaria risk area",
+          "options": [
+            "High malaria risk",
+            "Low malaria risk",
+            "No malaria risk"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B12S1.DE15",
+            "activity": "CHE.B12. Fever",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b12s1-de19",
+          "type": "Binary",
+          "name": "Recent travel to a high malaria risk area",
+          "text": "Recent travel to a high malaria risk area",
+          "detail": "The child has recently travelled (in the last 2 weeks) to a high malaria risk area.",
+          "_dak": {
+            "dataElementId": "CHE.B12S1.DE19",
+            "activity": "CHE.B12. Fever",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-symptoms-child-act-b13",
+          "type": "Instruction",
+          "name": "Ear problem",
+          "text": "Ear problem",
+          "detail": "CHE.B13. Ear problem",
+          "newScreen": true
+        },
+        {
+          "code": "whodakche-b13s1-de02",
+          "type": "Binary",
+          "name": "Ear pain",
+          "text": "Ear pain",
+          "detail": "Ear pain can mean that the child has an ear infection. If the caregiver is not sure that the child has ear pain, ask if the child has been irritable and rubbing his ear.",
+          "_dak": {
+            "dataElementId": "CHE.B13S1.DE02",
+            "activity": "CHE.B13. Ear problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b13s1-de03",
+          "type": "Binary",
+          "name": "Ear discharge",
+          "text": "Ear discharge",
+          "detail": "The child is reported or appears to have pus discharging from the ear. Use words the caregiver understands.",
+          "_dak": {
+            "dataElementId": "CHE.B13S1.DE03",
+            "activity": "CHE.B13. Ear problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b13s1-de04",
+          "type": "Binary",
+          "name": "Ear discharge for how long?",
+          "text": "Ear discharge for how long?",
+          "detail": "How long the child has had the discharge from the ear. - Less than 14 days (less than 2 weeks) - 14 days or more (2 weeks or more)",
+          "_dak": {
+            "dataElementId": "CHE.B13S1.DE04",
+            "activity": "CHE.B13. Ear problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Signs, 2-59 Months",
+      "questions": [
+        {
+          "code": "whodakche-signs-child-act-b10",
+          "type": "Instruction",
+          "name": "Cough or difficulty breathing",
+          "text": "Cough or difficulty breathing",
+          "detail": "CHE.B10. Cough or difficulty breathing",
+          "newScreen": false
+        },
+        {
+          "code": "whodakche-signs-child-sec-respiratory-rate",
+          "type": "Instruction",
+          "name": "Respiratory rate",
+          "text": "Respiratory rate"
+        },
+        {
+          "code": "whodakche-signs-child-b24-g-de01",
+          "type": "Number",
+          "name": "Respiratory rate (breaths per minute)",
+          "text": "Respiratory rate (breaths per minute)",
+          "detail": "Count the number of breaths the child takes per minute to determine if fast breathing is present. It is very important that the child is calm and still. If the child is moving or crying, you will not be able to get an accurate breath count. To count the…",
+          "config": {
+            "rounding": 0
+          },
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE01",
+            "activity": "CHE.B10. Cough or difficulty breathing",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-signs-child-b24-g-de02",
+          "type": "Binary",
+          "name": "Unable to perform respiratory rate at this time",
+          "text": "Unable to perform respiratory rate at this time",
+          "detail": "If the child is not calm and it is not possible to measure the respiratory rate, ask the mother to help calm the child and take the measurement later during the consultation.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE02",
+            "activity": "CHE.B10. Cough or difficulty breathing",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-signs-child-b24-g-de03",
+          "type": "Number",
+          "name": "Respiratory rate second count (breaths per minute)",
+          "text": "Respiratory rate second count (breaths per minute)",
+          "detail": "In young infants, a second respiratory rate measurement should be taken to confirm fast breathing (60 breaths per minute or more) found at the first measurement, unless there is already another sign of possible serious bacterial infection. Fast…",
+          "config": {
+            "rounding": 0
+          },
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE03",
+            "activity": "CHE.B10. Cough or difficulty breathing",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-signs-child-b24-g-de04",
+          "type": "Binary",
+          "name": "Respiratory rate second count not possible",
+          "text": "Respiratory rate second count not possible",
+          "detail": "The child's second respiratory rate is not possible to measure.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE04",
+            "activity": "CHE.B10. Cough or difficulty breathing",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one (checkbox)",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-signs-child-b24-g-de05",
+          "type": "Binary",
+          "name": "Fast breathing",
+          "text": "Fast breathing",
+          "detail": "Fast breathing is auto-calculated based on the respiratory rate and the child's age: - Under 2 months: greater than or equal to 60 breaths per minute* - 2–11 months: greater than or equal to 50 breaths per minute - 12–59 months: greater than or equal to…",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE05",
+            "activity": "CHE.B10. Cough or difficulty breathing",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-b10s2-de03",
+          "type": "Binary",
+          "name": "Chest indrawing",
+          "text": "Chest indrawing",
+          "detail": "NORMAL: When child breathes IN, chest wall moves OUT CHEST INDRAWING: When child breathes IN, chest wall moves IN Chest indrawing occurs when the child needs to make a greater effort than normal to breathe in. Look for chest indrawing when the child…",
+          "_dak": {
+            "dataElementId": "CHE.B10S2.DE03",
+            "activity": "CHE.B10. Cough or difficulty breathing",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b10s2-de04",
+          "type": "Binary",
+          "name": "Stridor in a calm child",
+          "text": "Stridor in a calm child",
+          "detail": "Stridor is a harsh noise made when a child breathes IN. Put your ear near the child’s mouth because stridor can be difficult to hear. Sometimes you will hear a wet noise if the child’s nose is blocked. Clear the nose and listen again. Be sure to look…",
+          "_dak": {
+            "dataElementId": "CHE.B10S2.DE04",
+            "activity": "CHE.B10. Cough or difficulty breathing",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b10s2-de05",
+          "type": "Binary",
+          "name": "Wheezing",
+          "text": "Wheezing",
+          "detail": "Wheeze is a high-pitched whistling or musical sound heard at the end of the breathing OUT. The child’s small air passages narrow thus causing wheezing. To hear wheezing, put your ear near to the child’s mouth when the child is calm. Look at the child’s…",
+          "_dak": {
+            "dataElementId": "CHE.B10S2.DE05",
+            "activity": "CHE.B10. Cough or difficulty breathing",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b10s2-de06",
+          "type": "Binary",
+          "name": "Recurrent wheeze",
+          "text": "Recurrent wheeze",
+          "detail": "Recurrent wheezing can be a sign of asthma, tuberculosis or other important health problems that require further assessment.",
+          "_dak": {
+            "dataElementId": "CHE.B10S2.DE06",
+            "activity": "CHE.B10. Cough or difficulty breathing",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b10s2-de07",
+          "type": "Number",
+          "name": "Oxygen saturation (%)",
+          "text": "Oxygen saturation (%)",
+          "detail": "If a pulse oximeter is available, determine oxygen saturation (SpO2). After turning the oximeter on, position the appropriate probe based on the child's size. If using on a finger or toe, make sure the area is clean and without nail varnish. Ensure that…",
+          "_dak": {
+            "dataElementId": "CHE.B10S2.DE07",
+            "activity": "CHE.B10. Cough or difficulty breathing",
+            "dataType": "Integer",
+            "multipleChoiceType": "NA",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-signs-child-act-b11",
+          "type": "Instruction",
+          "name": "Diarrhoea",
+          "text": "Diarrhoea",
+          "detail": "CHE.B11. Diarrhoea",
+          "newScreen": true
+        },
+        {
+          "code": "whodakche-b11s2-de01",
+          "type": "Binary",
+          "name": "Sunken eyes",
+          "text": "Sunken eyes",
+          "detail": "The eyes of a child who is dehydrated may look sunken. Decide if you think the eyes are sunken. Then ask the mother if she thinks her child’s eyes look unusual. Her opinion can help you confirm. NOTE: In a severely malnourished child with wasting, the…",
+          "_dak": {
+            "dataElementId": "CHE.B11S2.DE01",
+            "activity": "CHE.B11. Diarrhoea",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b11s2-de02",
+          "type": "Radio",
+          "name": "Skin pinch of abdomen",
+          "text": "Skin pinch of abdomen",
+          "detail": "To assess dehydration using the skin pinch: 1. ASK the mother to place the child on the examining table so that the child is flat on their back with their arms at their sides (not over their head) and their legs straight, or ask the mother to hold the…",
+          "options": [
+            "Goes back normally (immediately)",
+            "Skin pinch goes back slowly (2 seconds or fewer, but not immediately)",
+            "Skin pinch goes back very slowly (more than 2 seconds)"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B11S2.DE02",
+            "activity": "CHE.B11. Diarrhoea",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b11s2-de06",
+          "type": "Binary",
+          "name": "Restless and irritable",
+          "text": "Restless and irritable",
+          "detail": "A child is restless and irritable if they are restless and irritable all the time or every time the are touched and handled. If an infant or child is calm when breastfeeding but again restless and irritable when they stops breastfeeding, they should…",
+          "_dak": {
+            "dataElementId": "CHE.B11S2.DE06",
+            "activity": "CHE.B11. Diarrhoea",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-signs-child-act-b12",
+          "type": "Instruction",
+          "name": "Fever",
+          "text": "Fever",
+          "detail": "CHE.B12. Fever",
+          "newScreen": true
+        },
+        {
+          "code": "whodakche-b12s2-de01",
+          "type": "Binary",
+          "name": "Stiff neck",
+          "text": "Stiff neck",
+          "detail": "A stiff neck may be a sign of meningitis, cerebral malaria or another very severe febrile disease. It requires urgent treatment with injectable antibiotics and referral to a hospital. WATCH THE CHILD: While you talk with the caregiver during the…",
+          "_dak": {
+            "dataElementId": "CHE.B12S2.DE01",
+            "activity": "CHE.B12. Fever",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b12s2-de02",
+          "type": "Binary",
+          "name": "Refusal to use a limb",
+          "text": "Refusal to use a limb",
+          "detail": "The child is unable to use a limb (arm or leg) on examination. It is important to assess for refusal to use a limb, which could be a sign of a bone or joint infection when the child has reported or measured fever.",
+          "_dak": {
+            "dataElementId": "CHE.B12S2.DE02",
+            "activity": "CHE.B12. Fever",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b12s2-de03",
+          "type": "Binary",
+          "name": "Warm, tender or swollen joint or bone",
+          "text": "Warm, tender or swollen joint or bone",
+          "detail": "The child has a warm, tender or swollen joint or bone, which could be a sign of a infection when the child has reported or measured fever.",
+          "_dak": {
+            "dataElementId": "CHE.B12S2.DE03",
+            "activity": "CHE.B12. Fever",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b12s2-de05",
+          "type": "Binary",
+          "name": "Runny nose",
+          "text": "Runny nose",
+          "detail": "The child has a runny nose.",
+          "_dak": {
+            "dataElementId": "CHE.B12S2.DE05",
+            "activity": "CHE.B12. Fever",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-signs-child-act-b13",
+          "type": "Instruction",
+          "name": "Ear problem",
+          "text": "Ear problem",
+          "detail": "CHE.B13. Ear problem",
+          "newScreen": true
+        },
+        {
+          "code": "whodakche-b13s2-de01",
+          "type": "Binary",
+          "name": "Tender swelling behind the ear",
+          "text": "Tender swelling behind the ear",
+          "detail": "If both tenderness and swelling are present, the child may have mastoiditis, a deep infection in the mastoid bone. Feel behind both ears. Compare them and decide if there is tender swelling of the mastoid bone. In infants, the swelling may be above the…",
+          "_dak": {
+            "dataElementId": "CHE.B13S2.DE01",
+            "activity": "CHE.B13. Ear problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b13s2-de02",
+          "type": "Binary",
+          "name": "Pus seen draining from the ear",
+          "text": "Pus seen draining from the ear",
+          "detail": "Look inside the child’s ear to see if pus is draining. this is a sign of infection, even if the child is not feeling any pain. Draining pus is a sign of infection.",
+          "_dak": {
+            "dataElementId": "CHE.B13S2.DE02",
+            "activity": "CHE.B13. Ear problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b13s2-de03",
+          "type": "Radio",
+          "name": "Pus seen draining from the ear for how long?",
+          "text": "Pus seen draining from the ear for how long?",
+          "detail": "How long the child has had the discharge from the ear? - Fewer than 14 days (fewer than 2 weeks) - 14 days or more (2 weeks or more)",
+          "options": [
+            "Fewer than 14 days",
+            "14 days or more"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B13S2.DE03",
+            "activity": "CHE.B13. Ear problem",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-signs-child-act-b14",
+          "type": "Instruction",
+          "name": "Skin or mouth or eye problem",
+          "text": "Skin or mouth or eye problem",
+          "detail": "CHE.B14. Skin or mouth or eye problem",
+          "newScreen": true
+        },
+        {
+          "code": "whodakche-b14s2-de01",
+          "type": "Binary",
+          "name": "Red eyes",
+          "text": "Red eyes",
+          "detail": "The child has “red eyes” if there is redness in the white part of the eye. In a healthy eye, the white part of the eye is clearly white and not discoloured.",
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE01",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de02",
+          "type": "Binary",
+          "name": "Pus draining from the eye",
+          "text": "Pus draining from the eye",
+          "detail": "Pus draining from the eye is a sign of conjunctivitis. Conjunctivitis is an infection of the conjunctiva, the inside surface of the eyelid and the white part of the eye. If you do not see pus draining from the eye, look for pus on the conjunctiva or on…",
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE02",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de03",
+          "type": "Binary",
+          "name": "Clouding of the cornea",
+          "text": "Clouding of the cornea",
+          "detail": "The cornea is usually clear. When clouding of the cornea is present, the cornea may appear clouded or hazy. The cornea may look the way a glass of water looks when you add a small amount of milk. Clouding may occur in one or both eyes. A child with…",
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE03",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de04",
+          "type": "Binary",
+          "name": "Is clouding of the cornea a new problem?",
+          "text": "Is clouding of the cornea a new problem?",
+          "detail": "If there is clouding of the cornea, ask the caregiver how long clouding has been present. If the caregiver is certain that clouding has been there for some time, ask if clouding has already been assessed and treated at the hospital. If it has, you do…",
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE04",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de05",
+          "type": "Binary",
+          "name": "Has clouding of the cornea previously been treated?",
+          "text": "Has clouding of the cornea previously been treated?",
+          "detail": "If clouding has already been assessed and treated at the hospital, you do not need to refer this child again for corneal clouding.",
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE05",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de06",
+          "type": "MultiSelect",
+          "name": "Generalized or localized skin problem",
+          "text": "Generalized or localized skin problem",
+          "detail": "A generalized skin problem is a skin problem that affects the whole body, a large area of the body or several parts of the body, whereas a localized skin problem is limited to one area of the body. This question is prompted either if a skin problem has…",
+          "options": [
+            "Generalized skin problem",
+            "Localized skin problem",
+            "No skin problem"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE06",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de10",
+          "type": "Binary",
+          "name": "Measles rash",
+          "text": "Measles rash",
+          "detail": "In measles, a rash begins behind the ears and on the neck. It spreads to the face. During the next day, the rash spreads to the rest of the body, arms and legs. After 4–5 days, the rash starts to fade and the skin may peel. Some children with severe…",
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE10",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de11",
+          "type": "Binary",
+          "name": "Measles within the last 3 months",
+          "text": "Measles within the last 3 months",
+          "detail": "Ask the caregiver or check the child's health record to see if they have had measles in the last 3 months. If the caregiver is not sure, explain the symptoms (a generalized rash all over the body, starting from behind the ears and on the neck, spreading…",
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE11",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de11a",
+          "type": "Binary",
+          "name": "Itchy skin",
+          "text": "Itchy skin",
+          "detail": "The child is reported to have or appears to have itchy skin.",
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE11A",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de012",
+          "type": "Binary",
+          "name": "Blisters, sores or pustules",
+          "text": "Blisters, sores or pustules",
+          "detail": "The child has skin blisters, sores or pustules.",
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE012",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de13",
+          "type": "MultiSelect",
+          "name": "Type of skin problem",
+          "text": "Type of skin problem",
+          "detail": "Common skin problems are: - Abscess – Hot tender swelling - Cellulitis – Red tender skin - Papular itching rash (prurigo) – Itching rash with small papules and scratch marks. Dark spots with pale centre - Ringworm (tinea) – An itchy circular lesion with…",
+          "options": [
+            "Abscess – Hot tender swelling"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE13",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de15",
+          "type": "Binary",
+          "name": "Deep or extends to muscle",
+          "text": "Deep or extends to muscle",
+          "detail": "The child has an abscess that is deep or extends to the muscle.",
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE15",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one (only if abscess is selected)",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de17",
+          "type": "Binary",
+          "name": "Rapidly spreading, extensive or not responding to oral antibiotics",
+          "text": "Rapidly spreading, extensive or not responding to oral antibiotics",
+          "detail": "The child has cellulitis that is rapidly spreading, extensive or not responding to oral antibiotics.",
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE17",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one (only if Cellulitis is selected)",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de20",
+          "type": "Binary",
+          "name": "Extensive ringworm (Tinea)",
+          "text": "Extensive ringworm (Tinea)",
+          "detail": "The child has extensive ringworm.",
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE20",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one (only if ringworm [tinea] is selected)",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de24",
+          "type": "Binary",
+          "name": "Eye involvement",
+          "text": "Eye involvement",
+          "detail": "The child has Herpes zoster virus with eye involvement.",
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE24",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one (only if Herpes zoster virus is selected)",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de26",
+          "type": "MultiSelect",
+          "name": "Signs of severe impetigo or folliculitis",
+          "text": "Signs of severe impetigo or folliculitis",
+          "detail": "Signs of severe impetigo or folliculitis include: - Skin lesions 4 cm or larger - Red skin streaks - Tender nodes (nodules) under the skin - Skin infection extends to the muscle - No signs of severe impetigo or folliculitis",
+          "options": [
+            "Skin lesions ≥4 cm",
+            "Red skin streaks",
+            "Tender nodes (nodules) under the skin",
+            "Skin infection extends to to the muscle",
+            "No signs of severe impetigo or folliculitis",
+            "Molluscum contagiosum (poxvirus) – Skin coloured with pearly white papules with central umbilication. Most commonly seen on the face and trunk in children.",
+            "Warts – Papules or nodules with a rough (verrucous) surface",
+            "Seborrhoea – Greasy scales and redness on the central face and body folds"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE26",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply (only if impetigo or folliculitis is selected)",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de34",
+          "type": "Binary",
+          "name": "Severe seborrhoea",
+          "text": "Severe seborrhoea",
+          "detail": "The child has severe seborrhoea requiring referral.",
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE34",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one (only if seborrhoea is selected)",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de38",
+          "type": "MultiSelect",
+          "name": "Oral sores or mouth ulcers",
+          "text": "Oral sores or mouth ulcers",
+          "detail": "Examination for oral sores or mouth ulcers should be carried out at the end of the physical examination so as not to upset or aggitate the child before completing other physical examinations. Ulcers are painful open sores on the inside of the mouth and…",
+          "options": [
+            "No oral sores or mouth ulcers",
+            "Oral thrush",
+            "Mouth sores or mouth ulcers – Deep and extensive",
+            "Mouth sores or mouth ulcers – Not deep and extensive"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE38",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b14s2-de43",
+          "type": "MultiSelect",
+          "name": "Add a skin or mouth or eye problem",
+          "text": "Add a skin or mouth or eye problem",
+          "detail": "On examination, the child has a skin, mouth or eye problem not reported by the caregiver, or not already assessed.",
+          "options": [
+            "Skin problem",
+            "Oral sores or mouth ulcers",
+            "Eye problem",
+            "No - Do not add a skin or mouth or eye problem"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B14S2.DE43",
+            "activity": "CHE.B14. Skin or mouth or eye problem",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-signs-child-act-b15",
+          "type": "Instruction",
+          "name": "Anaemia",
+          "text": "Anaemia",
+          "detail": "CHE.B15. Anaemia",
+          "newScreen": true
+        },
+        {
+          "code": "whodakche-b15s2-de01",
+          "type": "FreeText",
+          "name": "Palmar pallor",
+          "text": "Palmar pallor",
+          "detail": "LOOK at the skin of the child’s palm. Hold the child’s palm open by grasping it gently from the side. Do not stretch the fingers backwards. This may cause pallor by blocking the blood supply. Compare the colour of the child’s palm with your own palm and…",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B15S2.DE01",
+            "activity": "CHE.B15. Anaemia",
+            "dataType": "Code",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b15s2-de02",
+          "type": "Radio",
+          "name": "Severe palmar pallor",
+          "text": "Severe palmar pallor",
+          "detail": "The child has severe palmar pallor if the skin of the palm is very pale or so pale that it looks white.",
+          "options": [
+            "Some palmar pallor",
+            "No palmar pallor"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B15S2.DE02",
+            "activity": "CHE.B15. Anaemia",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b15s2-de05",
+          "type": "Radio",
+          "name": "Malaria risk",
+          "text": "Malaria risk",
+          "detail": "The area is a high/low/no malaria risk area",
+          "options": [
+            "High malaria risk",
+            "Low malaria risk",
+            "No malaria risk"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B15S2.DE05",
+            "activity": "CHE.B15. Anaemia",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-signs-child-act-b16",
+          "type": "Instruction",
+          "name": "Acute malnutrition",
+          "text": "Acute malnutrition",
+          "detail": "CHE.B16. Acute malnutrition",
+          "newScreen": true
+        },
+        {
+          "code": "whodakche-b16s2-de01",
+          "type": "Binary",
+          "name": "Oedema of both feet",
+          "text": "Oedema of both feet",
+          "detail": "Oedema of both feet means severe acute malnutrition. LOOK and FEEL to determine if the child has oedema of both feet. Using your thumbs, press the top of both feet simultaneously for 3 seconds on the top of each foot. The child has oedema if a dent…",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B16S2.DE01",
+            "activity": "CHE.B16. Acute malnutrition",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Symptoms, Young Infant",
+      "questions": [
+        {
+          "code": "whodakche-symptoms-infant-act-b18",
+          "type": "Instruction",
+          "name": "Symptoms",
+          "text": "Symptoms",
+          "detail": "CHE.B18. Symptoms",
+          "newScreen": false
+        },
+        {
+          "code": "whodakche-b18s1-de01",
+          "type": "Binary",
+          "name": "Convulsions in this illness",
+          "text": "Convulsions in this illness",
+          "detail": "Use words the caregiver understands. For example, the caregiver may know convulsions as “fits” or “spasms”. During a convulsion, the young infant’s arms and legs may become stiff. The infant may stop breathing and turn blue. Many times there may only be…",
+          "_dak": {
+            "dataElementId": "CHE.B18S1.DE01",
+            "activity": "CHE.B18. Symptoms",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b18s1-de02",
+          "type": "Radio",
+          "name": "Difficulty with feeding",
+          "text": "Difficulty with feeding",
+          "detail": "Any difficulty mentioned by the caregiver is important. A newborn that has not been able to feed since birth may be premature or may have complications such as birth asphyxia. These infants who are either not able to feed or are not feeding well should…",
+          "options": [
+            "Feeding well",
+            "Not feeding well",
+            "Not able to feed at all"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B18S1.DE02",
+            "activity": "CHE.B18. Symptoms",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-symptoms-infant-act-b20",
+          "type": "Instruction",
+          "name": "Symptoms",
+          "text": "Symptoms",
+          "detail": "CHE.B20. Symptoms",
+          "newScreen": true
+        },
+        {
+          "code": "whodakche-b20s1-de01",
+          "type": "Binary",
+          "name": "Diarrhoea",
+          "text": "Diarrhoea",
+          "detail": "A young infant has diarrhoea if the stools have changed from the usual pattern, and are many and watery. This means more water than faecal matter. The normally frequent or semi-solid stools of a breastfed baby are not diarrhoea. The mother of a…",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B20S1.DE01",
+            "activity": "CHE.B20. Symptoms",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-symptoms-infant-act-b21",
+          "type": "Instruction",
+          "name": "Symptoms",
+          "text": "Symptoms",
+          "detail": "CHE.B21. Symptoms",
+          "newScreen": true
+        },
+        {
+          "code": "whodakche-b21s1-de06",
+          "type": "Binary",
+          "name": "Breastfed",
+          "text": "Breastfed",
+          "detail": "Ask the caregiver if the infant is breastfed. This includes both exclusive breastfeeding or receiving breast milk and other foods or fluids.",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B21S1.DE06",
+            "activity": "CHE.B21. Symptoms",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Signs, Young Infant",
+      "questions": [
+        {
+          "code": "whodakche-signs-infant-act-b18",
+          "type": "Instruction",
+          "name": "Signs",
+          "text": "Signs",
+          "detail": "CHE.B18. Signs",
+          "newScreen": false
+        },
+        {
+          "code": "whodakche-signs-infant-sec-respiratory-rate",
+          "type": "Instruction",
+          "name": "Respiratory rate",
+          "text": "Respiratory rate"
+        },
+        {
+          "code": "whodakche-signs-infant-b24-g-de01",
+          "type": "Number",
+          "name": "Respiratory rate (breaths per minute)",
+          "text": "Respiratory rate (breaths per minute)",
+          "detail": "Count the number of breaths the child takes per minute to determine if fast breathing is present. It is very important that the child is calm and still. If the child is moving or crying, you will not be able to get an accurate breath count. To count the…",
+          "config": {
+            "rounding": 0
+          },
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE01",
+            "activity": "CHE.B18. Signs",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-signs-infant-b24-g-de02",
+          "type": "Binary",
+          "name": "Unable to perform respiratory rate at this time",
+          "text": "Unable to perform respiratory rate at this time",
+          "detail": "If the child is not calm and it is not possible to measure the respiratory rate, ask the mother to help calm the child and take the measurement later during the consultation.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE02",
+            "activity": "CHE.B18. Signs",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-signs-infant-b24-g-de03",
+          "type": "Number",
+          "name": "Respiratory rate second count (breaths per minute)",
+          "text": "Respiratory rate second count (breaths per minute)",
+          "detail": "In young infants, a second respiratory rate measurement should be taken to confirm fast breathing (60 breaths per minute or more) found at the first measurement, unless there is already another sign of possible serious bacterial infection. Fast…",
+          "config": {
+            "rounding": 0
+          },
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE03",
+            "activity": "CHE.B18. Signs",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-signs-infant-b24-g-de04",
+          "type": "Binary",
+          "name": "Respiratory rate second count not possible",
+          "text": "Respiratory rate second count not possible",
+          "detail": "The child's second respiratory rate is not possible to measure.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE04",
+            "activity": "CHE.B18. Signs",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one (checkbox)",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-signs-infant-b24-g-de05",
+          "type": "Binary",
+          "name": "Fast breathing",
+          "text": "Fast breathing",
+          "detail": "Fast breathing is auto-calculated based on the respiratory rate and the child's age: - Under 2 months: greater than or equal to 60 breaths per minute* - 2–11 months: greater than or equal to 50 breaths per minute - 12–59 months: greater than or equal to…",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE05",
+            "activity": "CHE.B18. Signs",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-b18s2-de07",
+          "type": "Binary",
+          "name": "Severe chest indrawing",
+          "text": "Severe chest indrawing",
+          "detail": "The young infant must be calm while you assess for severe chest indrawing. Lift the young infant’s shirt. Look for chest indrawing when the young infant breathes in. Lower chest wall indrawing is the inward movement of the bony structure of the chest…",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B18S2.DE07",
+            "activity": "CHE.B18. Signs",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b21s2-de08",
+          "type": "Radio",
+          "name": "Infant's movements",
+          "text": "Infant's movements",
+          "detail": "Look at the young infant’s movements. Does the young infant move on their own? Does the infant move only when stimulated but then stops? Does the infant not move at all? Young infants often sleep most of the time, and this is not a sign of illness. It…",
+          "options": [
+            "Moves on their own or moves spontaneously or without stimulation",
+            "Movement only when stimulated but then stops",
+            "No movement at all"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B21S2.DE08",
+            "activity": "CHE.B18. Signs",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required,core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b18s2-de12",
+          "type": "Binary",
+          "name": "Umbilicus red or pus draining",
+          "text": "Umbilicus red or pus draining",
+          "detail": "The umbilical cord usually separates one week after birth and the wound heals within 15 days. Redness of the end of the umbilicus or pus draining from the umbilicus are signs of umbilical infection.",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B18S2.DE12",
+            "activity": "CHE.B18. Signs",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b18s2-de13",
+          "type": "Binary",
+          "name": "Skin pustules",
+          "text": "Skin pustules",
+          "detail": "Examine the skin on the entire body. Skin pustules are red spots or blisters that contain pus.",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B18S2.DE13",
+            "activity": "CHE.B18. Signs",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-signs-infant-act-b19",
+          "type": "Instruction",
+          "name": "Signs",
+          "text": "Signs",
+          "detail": "CHE.B19. Signs",
+          "newScreen": true
+        },
+        {
+          "code": "whodakche-b19s2-de01",
+          "type": "Binary",
+          "name": "Yellow skin",
+          "text": "Yellow skin",
+          "detail": "Jaundice is a yellow discoloration of skin and mucus membranes. It is important to look for jaundice in natural light. To look for jaundice, press the infant’s skin over the forehead with your fingers to blanch, remove your fingers and look for yellow…",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B19S2.DE01",
+            "activity": "CHE.B19. Signs",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b19s2-de02",
+          "type": "Binary",
+          "name": "Yellow palms or yellow soles",
+          "text": "Yellow palms or yellow soles",
+          "detail": "Jaundice is a yellow discolouration of skin and mucus membranes. Jaundice in the palms of the hands or soles of the feet is a sign of severe jaundice. It is important to look for jaundice in natural light. To assess for severe jaundice, press the…",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B19S2.DE02",
+            "activity": "CHE.B19. Signs",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b19s2-de04",
+          "type": "Radio",
+          "name": "When did the jaundice first appear?",
+          "text": "When did the jaundice first appear?",
+          "detail": "Ask the caregiver when the baby's skin first turned yellowish. If the caregiver did not notice the yellow discolouration or cannot remember when it started, select \"don't know\". Jaundice that appears in less than 24 hours after birth is always due to an…",
+          "options": [
+            "Within less than 24 hours of birth",
+            "24 hours or more after birth",
+            "Unknown when jaundice first appeared"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B19S2.DE04",
+            "activity": "CHE.B19. Signs",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-signs-infant-act-b20",
+          "type": "Instruction",
+          "name": "Signs",
+          "text": "Signs",
+          "detail": "CHE.B20. Signs",
+          "newScreen": true
+        },
+        {
+          "code": "whodakche-b20s2-de01",
+          "type": "Binary",
+          "name": "Sunken eyes",
+          "text": "Sunken eyes",
+          "detail": "The eyes of a dehydrated infant may look sunken. In a low-weight infant, the eyes may always look sunken, even if the young infant is not dehydrated. Even though the sign “sunken eyes” is less reliable in a low-weight infant, it can still be used to…",
+          "_dak": {
+            "dataElementId": "CHE.B20S2.DE01",
+            "activity": "CHE.B20. Signs",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b20s2-de02",
+          "type": "Radio",
+          "name": "Skin pinch of abdomen",
+          "text": "Skin pinch of abdomen",
+          "detail": "Locate the area on the infant’s abdomen halfway between the umbilicus and the side of the abdomen. To do the skin pinch, use your thumb and first finger. Do not use your fingertips because this will cause pain. Place your hand so that when you pinch the…",
+          "options": [
+            "Goes back normally (immediately)",
+            "Goes back slowly (2 seconds or fewer, but not immediately)",
+            "Goes back very slowly (more than 2 seconds)"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B20S2.DE02",
+            "activity": "CHE.B20. Signs",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b20s2-de06",
+          "type": "Binary",
+          "name": "Restless and irritable",
+          "text": "Restless and irritable",
+          "detail": "Look at the young infant's general condition. Is the infant restless and irritable? An infant has the sign \"restless and irritable\" if the infant is restless and irritable all the time or every time they are touched and handled. If an infant is calm…",
+          "_dak": {
+            "dataElementId": "CHE.B20S2.DE06",
+            "activity": "CHE.B20. Signs",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-signs-infant-act-b21",
+          "type": "Instruction",
+          "name": "Signs",
+          "text": "Signs",
+          "detail": "CHE.B21. Signs",
+          "newScreen": true
+        },
+        {
+          "code": "whodakche-b21s2-de01",
+          "type": "Radio",
+          "name": "Weight status",
+          "text": "Weight status",
+          "detail": "Weight status is auto-calculated based on the young infant's weight for age z-score, which is determined from a standardized chart of weight -for-age for the infant's sex. A young infant is low weight for age if the z-score is below −2. A young infant…",
+          "options": [
+            "Very low weight for age",
+            "Low weight for age",
+            "Normal weight for age",
+            "Sufficient feeds",
+            "Insufficient feeds"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B21S2.DE01",
+            "activity": "CHE.B21. Signs",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b21s2-de05",
+          "type": "Number",
+          "name": "Breastfed how many times in 24 hours?",
+          "text": "Breastfed how many times in 24 hours?",
+          "detail": "Ask the caregiver how many times in 24 hours (one day and one night) they usually breastfeed the young infant. The recommendation is that the young infant be breastfed as often and for as long as the infant wants, day and night. This should be eight or…",
+          "config": {
+            "rounding": 0
+          },
+          "_dak": {
+            "dataElementId": "CHE.B21S2.DE05",
+            "activity": "CHE.B21. Signs",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b21s2-de09",
+          "type": "Radio",
+          "name": "What milk is being given as a replacement feed?",
+          "text": "What milk is being given as a replacement feed?",
+          "detail": "Ask the mother questions to determine what replacement milk or milks are used. It may be a breast milk replacement, animal milk or some other fluid or some combination thereof. Determine if this type of replacement feed is appropriate or not appropriate…",
+          "options": [
+            "Appropriate replacement milk",
+            "Inappropriate replacement milk",
+            "Sufficient replacement feeds (in 24 hours)",
+            "Insufficient replacement feeds (in 24 hours)"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B21S2.DE09",
+            "activity": "CHE.B21. Signs",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b21s2-de12",
+          "type": "Number",
+          "name": "How many replacement feeds during the day and night (24 hours)?",
+          "text": "How many replacement feeds during the day and night (24 hours)?",
+          "detail": "A young infant up to 1 month of age should be fed eight times and a young infant between 1 and 2 months of age should be fed seven times in 24 hours.",
+          "config": {
+            "rounding": 0
+          },
+          "_dak": {
+            "dataElementId": "CHE.B21S2.DE12",
+            "activity": "CHE.B21. Signs",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b21s2-de15",
+          "type": "Radio",
+          "name": "How much milk is given at each feed?",
+          "text": "How much milk is given at each feed?",
+          "detail": "A young infant up to 1 month of age should be given approximately 60 ml per feed, eight times per day, and a young infant between 1 and 2 months of age approximately 90 ml at each feed, seven times per day. It is helpful to have common bottles or cups…",
+          "options": [
+            "Sufficient replacement feeds",
+            "Insufficient replacement feeds"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B21S2.DE15",
+            "activity": "CHE.B21. Signs",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b21s2-de18",
+          "type": "Radio",
+          "name": "How is the milk prepared?",
+          "text": "How is the milk prepared?",
+          "detail": "Ask the mother to demonstrate or explain how a feed is prepared and how she gives it to the infant. Determine if the breast milk substitute is being prepared correctly and hygienically.",
+          "options": [
+            "Correct and hygienic feed preparation",
+            "Incorrect or unhygienic feed preparation"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B21S2.DE18",
+            "activity": "CHE.B21. Signs",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b21s2-de21",
+          "type": "Radio",
+          "name": "How is the milk given?",
+          "text": "How is the milk given?",
+          "detail": "Ask the caregiver how they give milk to the young infant.",
+          "options": [
+            "Cup",
+            "Bottle"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B21S2.DE21",
+            "activity": "CHE.B21. Signs",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b21s2-de24",
+          "type": "Radio",
+          "name": "How are the feeding utensils cleaned?",
+          "text": "How are the feeding utensils cleaned?",
+          "detail": "Ask the caregiver how they clear the feeding utensils. Determine if this is a safe and hygienic cleaning method.",
+          "options": [
+            "Feeding utensils cleaned hygienically",
+            "Feeding utensils not cleaned hygienically"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B21S2.DE24",
+            "activity": "CHE.B21. Signs",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b21s2-de30",
+          "type": "Binary",
+          "name": "Ulcers or white patches in mouth",
+          "text": "Ulcers or white patches in mouth",
+          "detail": "Look inside the mouth at the tongue and inside of the cheek. Thrush looks like milk curds on the inside of the cheek, or a thick white coating of the tongue. Try to wipe the white off. The white patches of thrush will remain.",
+          "_dak": {
+            "dataElementId": "CHE.B21S2.DE30",
+            "activity": "CHE.B21. Signs",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b21s2-de31",
+          "type": "Binary",
+          "name": "Unable to check if ulcers or white patches in mouth",
+          "text": "Unable to check if ulcers or white patches in mouth",
+          "detail": "The health worker is unable to check if the young infant has ulcers or white patches in the mouth.",
+          "_dak": {
+            "dataElementId": "CHE.B21S2.DE31",
+            "activity": "CHE.B21. Signs",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one – Check box",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Assessments and Tests",
+      "questions": [
+        {
+          "code": "whodakche-assessments-act-b22",
+          "type": "Instruction",
+          "name": "Assessments.Tests.Laboratory Tests",
+          "text": "Assessments.Tests.Laboratory Tests",
+          "detail": "CHE.B22. Assessments.Tests.Laboratory Tests",
+          "newScreen": false
+        },
+        {
+          "code": "whodakche-assessments-sec-respiratory-rate",
+          "type": "Instruction",
+          "name": "Respiratory rate",
+          "text": "Respiratory rate"
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de01",
+          "type": "Number",
+          "name": "Respiratory rate (breaths per minute)",
+          "text": "Respiratory rate (breaths per minute)",
+          "detail": "Count the number of breaths the child takes per minute to determine if fast breathing is present. It is very important that the child is calm and still. If the child is moving or crying, you will not be able to get an accurate breath count. To count the…",
+          "config": {
+            "rounding": 0
+          },
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE01",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de02",
+          "type": "Binary",
+          "name": "Unable to perform respiratory rate at this time",
+          "text": "Unable to perform respiratory rate at this time",
+          "detail": "If the child is not calm and it is not possible to measure the respiratory rate, ask the mother to help calm the child and take the measurement later during the consultation.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE02",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de03",
+          "type": "Number",
+          "name": "Respiratory rate second count (breaths per minute)",
+          "text": "Respiratory rate second count (breaths per minute)",
+          "detail": "In young infants, a second respiratory rate measurement should be taken to confirm fast breathing (60 breaths per minute or more) found at the first measurement, unless there is already another sign of possible serious bacterial infection. Fast…",
+          "config": {
+            "rounding": 0
+          },
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE03",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de04",
+          "type": "Binary",
+          "name": "Respiratory rate second count not possible",
+          "text": "Respiratory rate second count not possible",
+          "detail": "The child's second respiratory rate is not possible to measure.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE04",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one (checkbox)",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de05",
+          "type": "Binary",
+          "name": "Fast breathing",
+          "text": "Fast breathing",
+          "detail": "Fast breathing is auto-calculated based on the respiratory rate and the child's age: - Under 2 months: greater than or equal to 60 breaths per minute* - 2–11 months: greater than or equal to 50 breaths per minute - 12–59 months: greater than or equal to…",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE05",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-sec-oral-fluid-test-results",
+          "type": "Instruction",
+          "name": "Oral fluid test results",
+          "text": "Oral fluid test results"
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de07",
+          "type": "Radio",
+          "name": "Oral fluid test results",
+          "text": "Oral fluid test results",
+          "detail": "If the child is unconscious, do not try to carry out an oral fluid test because it could cause the child to choke or fluid to get into their lungs. Ask the mother to offer the child some water in a cup or spoon (or breastfeed for a child under 6…",
+          "options": [
+            "Completely unable to drink",
+            "Vomits immediately/everything",
+            "Drinks poorly",
+            "Drinks eagerly/thirstily",
+            "Drinks normally"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE07",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de13",
+          "type": "Binary",
+          "name": "Unable to perform oral fluid test",
+          "text": "Unable to perform oral fluid test",
+          "detail": "The health worker is unable to perform an oral fluid test.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE13",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de15",
+          "type": "Binary",
+          "name": "Has the child had anything to drink today?",
+          "text": "Has the child had anything to drink today?",
+          "detail": "When it is not possible to conduct an oral fluid test, ask when the child last drank as part of a dehydration assessment.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE15",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de16",
+          "type": "FreeText",
+          "name": "How did the child last drink?",
+          "text": "How did the child last drink?",
+          "detail": "When it is not possible to conduct an oral fluid test, ask how the child last drank as part of a dehydration assessment.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE16",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Coding (use the same coding as for the oral fluid test results)",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-sec-inhaled-bronchodilator-trial",
+          "type": "Instruction",
+          "name": "Inhaled bronchodilator trial",
+          "text": "Inhaled bronchodilator trial"
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de17",
+          "type": "FreeText",
+          "name": "Inhaled bronchodilator trial results",
+          "text": "Inhaled bronchodilator trial results",
+          "detail": "To administer a bronchodilator trial: - Give two puffs from a salbutamol-metered dose inhaler (100 μg per puff) using a spacer* - Repeat up to three times every 15–20 minutes - Reassess respiratory rate and chest indrawing *A spacer is a way of…",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE17",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Coding",
+            "multipleChoiceType": "Derived from information entered into the fields below",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de18",
+          "type": "Binary",
+          "name": "Chest indrawing (after the inhaled bronchodilator trial)",
+          "text": "Chest indrawing (after the inhaled bronchodilator trial)",
+          "detail": "NORMAL: When the child breathes IN, the chest wall moves OUT. CHEST INDRAWING: When the child breaths IN, the chest wall moves IN. Chest indrawing occurs when the child needs to make a greater effort than normal to breathe in. You will look for chest…",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE18",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de19",
+          "type": "Number",
+          "name": "Respiratory rate (after the inhaled bronchodilator trial)",
+          "text": "Respiratory rate (after the inhaled bronchodilator trial)",
+          "detail": "Count the number of breaths the child takes per minute to determine if fast breathing is present after the bronchodilator trial. It is very important that the child is calm and still. If the child is moving or crying, you will not be able to get an…",
+          "config": {
+            "rounding": 0
+          },
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE19",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de20",
+          "type": "Binary",
+          "name": "Fast breathing (after the inhaled bronchodilator trial)",
+          "text": "Fast breathing (after the inhaled bronchodilator trial)",
+          "detail": "Fast breathing after the bronchodilator trial is auto-calculated based on the respiratory rate and the child's age: - 2–11 months: more than 50 breaths per minute - 12–59 months: more than 40 breaths per minute",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE20",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one (automated based on the respiratory rate result taken after the bronchodilator trial)",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de21",
+          "type": "Binary",
+          "name": "No fast breathing and no chest indrawing (after the inhaled bronchodilator trial)",
+          "text": "No fast breathing and no chest indrawing (after the inhaled bronchodilator trial)",
+          "detail": "The child has no fast breathing and no chest indrawing after the bronchodilator trial.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE21",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Derived (auto-calculated) from the information entered for the inhaled bronchodilator trial",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de22",
+          "type": "Binary",
+          "name": "Inhaled bronchodilator trial not feasible or available",
+          "text": "Inhaled bronchodilator trial not feasible or available",
+          "detail": "The inhaled bronchodilator trial was not feasible or available.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE22",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one (checkbox)",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-sec-appetite-test-using-rutf",
+          "type": "Instruction",
+          "name": "Appetite test (using RUTF)",
+          "text": "Appetite test (using RUTF)"
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de23",
+          "type": "Radio",
+          "name": "Appetite test (using RUTF) results",
+          "text": "Appetite test (using RUTF) results",
+          "detail": "To carry out the appetite test, follow the steps listed below: 1. Conduct in a separate quiet area. 2. Explain to the caregiver the purpose of the appetite test and how it will be carried out. 3. The caregiver should wash their hands. 4. The caregiver…",
+          "options": [
+            "Able to finish RUTF",
+            "Unable to finish RUTF",
+            "RUTF not available"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE23",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-sec-breastfeeding-assessment",
+          "type": "Instruction",
+          "name": "Breastfeeding assessment",
+          "text": "Breastfeeding assessment"
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de28",
+          "type": "Binary",
+          "name": "Mother reports difficulty breastfeeding",
+          "text": "Mother reports difficulty breastfeeding",
+          "detail": "The mother may also mention feeding difficulties, such as her infant feeding too frequently (or not frequently enough), not having enough milk, nipples being sore, or having flat or inverted nipples.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE28",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de29",
+          "type": "Binary",
+          "name": "Good attachment",
+          "text": "Good attachment",
+          "detail": "The infant is considered to have good attachment if all four of the following signs are present: - more areola seen above the infant’s top lip than below the bottom lip; - mouth wide open; - lower lip turned outwards; - chin touching the breast.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE29",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de30",
+          "type": "Binary",
+          "name": "Sucking effectively",
+          "text": "Sucking effectively",
+          "detail": "The infant is sucking effectively if there are taking slow, deep sucks, sometimes pausing.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE30",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de31",
+          "type": "Binary",
+          "name": "Difficulty breastfeeding reported",
+          "text": "Difficulty breastfeeding reported",
+          "detail": "The breastfeeding assessment was not observed; however, the caregiver has reported difficulty breastfeeding.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE31",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Derived",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de32",
+          "type": "Binary",
+          "name": "Difficulty breastfeeding observed",
+          "text": "Difficulty breastfeeding observed",
+          "detail": "The health worker has observed that the infant has difficulty breastfeeding.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE32",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Derived",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de33",
+          "type": "Binary",
+          "name": "Breastfeeding assessment not possible",
+          "text": "Breastfeeding assessment not possible",
+          "detail": "The breastfeeding assessment was not possible.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE33",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-sec-second-temperature-measurement",
+          "type": "Instruction",
+          "name": "Second temperature measurement",
+          "text": "Second temperature measurement"
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de39",
+          "type": "Number",
+          "name": "Axillary temperature (second measurement)",
+          "text": "Axillary temperature (second measurement)",
+          "detail": "The infant's axillary temperature (temperature taken under the armpit), measured in °C. A second temperature measurement is required to confirm fever or low body temperature in a young infant, if it is the only severe sign (of possible severe bacterial…",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE39",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de40",
+          "type": "Binary",
+          "name": "Prefer to take rectal temperature (second measurement)",
+          "text": "Prefer to take rectal temperature (second measurement)",
+          "detail": "The health worker prefers to take the child's rectal temperature.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE40",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de41",
+          "type": "Number",
+          "name": "Rectal temperature (second measurement)",
+          "text": "Rectal temperature (second measurement)",
+          "detail": "The child's rectal temperature (temperature taken in the rectum), measured in °C. Only consider taking rectal temperature if trained. A second temperature measurement is required to confirm fever or low body temperature in a young infant, if it is the…",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE41",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de42",
+          "type": "Binary",
+          "name": "Second temperature measurement not feasible",
+          "text": "Second temperature measurement not feasible",
+          "detail": "The second temperature measurement is not feasible.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE42",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one (checkbox)",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-sec-malaria-test",
+          "type": "Instruction",
+          "name": "Malaria test",
+          "text": "Malaria test"
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de44",
+          "type": "Radio",
+          "name": "Malaria test",
+          "text": "Malaria test",
+          "detail": "There are two ways of doing a malaria test: 1. Examining a blood slide for malaria parasites using a microscope 2. Using an RDT to check blood for malaria antigens Always check the quality of your blood slides if using microscopy or RDTs to ensure that…",
+          "options": [
+            "Malaria-positive",
+            "Malaria-negative",
+            "Malaria status unknown/unavailable/invalid/not feasible"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE44",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de48",
+          "type": "Radio",
+          "name": "Type of malaria test",
+          "text": "Type of malaria test",
+          "detail": "The type of malaria test performed.",
+          "options": [
+            "RDT",
+            "Microscopy",
+            "Not recorded/unsure"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE48",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de52",
+          "type": "MultiSelect",
+          "name": "RDT species results",
+          "text": "RDT species results",
+          "detail": "Results of client's RDT species test.",
+          "options": [
+            "P. falciparum",
+            "Non-P. falciparum",
+            "P. vivax",
+            "P. ovale",
+            "P. malariae",
+            "P. knowlesi"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE52",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de59",
+          "type": "MultiSelect",
+          "name": "Microscopy species results",
+          "text": "Microscopy species results",
+          "detail": "The child's microscopy species result.",
+          "options": [
+            "P. falciparum",
+            "P. vivax",
+            "P. malariae",
+            "P. ovale",
+            "P. knowlesi",
+            "Mixed infection unknown species types",
+            "No species reported"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE59",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de67",
+          "type": "Number",
+          "name": "Parasite density (%)",
+          "text": "Parasite density (%)",
+          "detail": "The child's result for parasite density in percentage.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE67",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de68",
+          "type": "Binary",
+          "name": "Parasite density unknown",
+          "text": "Parasite density unknown",
+          "detail": "The child's result for parasite density is unknown.",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE68",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one (checkbox)",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de69",
+          "type": "Binary",
+          "name": "Prefer to provide per microlitre (μL)",
+          "text": "Prefer to provide per microlitre (μL)",
+          "detail": "The health worker would prefer to enter the parasite density per microlitre (μL).",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE69",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        },
+        {
+          "code": "whodakche-assessments-b24-g-de70",
+          "type": "Number",
+          "name": "Parasite density (μL)",
+          "text": "Parasite density (μL)",
+          "detail": "The child's result for parasite density per microlitre (μL).",
+          "_dak": {
+            "dataElementId": "CHE.B24.G.DE70",
+            "activity": "CHE.B22. Assessments.Tests.Laboratory Tests",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": "",
+            "definedOn": "CHE.B24.Group questions"
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Health Promotion",
+      "questions": [
+        {
+          "code": "whodakche-health-promotion-act-b17",
+          "type": "Instruction",
+          "name": "Health promotion",
+          "text": "Health promotion",
+          "detail": "CHE.B17. Health promotion",
+          "newScreen": false
+        },
+        {
+          "code": "whodakche-b17-de01",
+          "type": "Radio",
+          "name": "Date of last vitamin A supplementation",
+          "text": "Date of last vitamin A supplementation",
+          "detail": "Ask to see the child's health record to determine the last date of vitamin A supplementation. If it is not available, ask the caregiver if they knows.",
+          "options": [
+            "Less than 1 month ago",
+            "1–5 months ago",
+            "More than 6 months ago",
+            "Vitamin A supplementation not previously given",
+            "Date unknown"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B17.DE01",
+            "activity": "CHE.B17. Health promotion",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b17-de07",
+          "type": "Radio",
+          "name": "Can record of vitamin A supplementation be obtained at a future visit?",
+          "text": "Can record of vitamin A supplementation be obtained at a future visit?",
+          "detail": "The healthcare worker asks if the child's caregiver can provide a record of vitamin A supplementation at a future visit.",
+          "options": [
+            "Yes. Date documented but not here",
+            "No. Do not know when last dose was given"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B17.DE07",
+            "activity": "CHE.B17. Health promotion",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b17-de10",
+          "type": "Binary",
+          "name": "Treatment for malnutrition containing vitamin A received in the past month?",
+          "text": "Treatment for malnutrition containing vitamin A received in the past month?",
+          "detail": "Treatment for malnutrition containing vitamin A include F-75, F-100 or ready-to-use therapeutic food that complies with WHO specifications (and therefore already contains sufficient vitamin A), or vitamin A is part of other daily supplements.",
+          "_dak": {
+            "dataElementId": "CHE.B17.DE10",
+            "activity": "CHE.B17. Health promotion",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b17-de11",
+          "type": "Radio",
+          "name": "Date of last deworming treatment",
+          "text": "Date of last deworming treatment",
+          "detail": "Ask to see the child's health record to determine the last date of deworming treatment. If it is not available, ask the caregiver if they know.",
+          "options": [
+            "Less than 6 months ago",
+            "More than 6 months ago",
+            "Deworming treatment not previously given",
+            "Date unknown"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B17.DE11",
+            "activity": "CHE.B17. Health promotion",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b17-de16",
+          "type": "Radio",
+          "name": "Can record of deworming treatment be obtained at a future visit?",
+          "text": "Can record of deworming treatment be obtained at a future visit?",
+          "detail": "The health worker asks if the child's caregiver can provide a record of deworming treatment at a future visit.",
+          "options": [
+            "Yes. Date documented, but not here",
+            "No. Do not know when last dose was given"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B17.DE16",
+            "activity": "CHE.B17. Health promotion",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b17-de22",
+          "type": "Radio",
+          "name": "HIV prevalence",
+          "text": "HIV prevalence",
+          "detail": "The prevalence of HIV in the area of the child",
+          "options": [
+            "High HIV risk",
+            "Low HIV risk"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B17.DE22",
+            "activity": "CHE.B17. Health promotion",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b17-de25",
+          "type": "Radio",
+          "name": "Mother's HIV status",
+          "text": "Mother's HIV status",
+          "detail": "The child's mother's HIV status",
+          "options": [
+            "Mother HIV-positive",
+            "Mother HIV-negative",
+            "Mother HIV status unknown or not tested",
+            "Mother HIV status – Declined to answer"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B17.DE25",
+            "activity": "CHE.B17. Health promotion",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b17-de30",
+          "type": "Radio",
+          "name": "Child's last HIV test results",
+          "text": "Child's last HIV test results",
+          "detail": "The child's last HIV test results",
+          "options": [
+            "Child HIV-positive – virological",
+            "Child HIV-positive – serological",
+            "Child HIV-positive – unknown type of test",
+            "Child HIV-negative",
+            "Child HIV status unknown or not tested",
+            "Child HIV status – Declined to answer"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B17.DE30",
+            "activity": "CHE.B17. Health promotion",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b17-de37",
+          "type": "Radio",
+          "name": "Child breastfed at the time or 6 weeks before HIV test",
+          "text": "Child breastfed at the time or 6 weeks before HIV test",
+          "detail": "The health worker asks the caregiver if the child was breastfed at the time or 6 weeks before the HIV test.",
+          "options": [
+            "Yes",
+            "No",
+            "Unknown"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B17.DE37",
+            "activity": "CHE.B17. Health promotion",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b17-de41",
+          "type": "Radio",
+          "name": "Child 18 months or older when last tested for HIV",
+          "text": "Child 18 months or older when last tested for HIV",
+          "detail": "The health worker asks the caregiver if the child was 18 months or older when last tested for HIV.",
+          "options": [
+            "Yes",
+            "No",
+            "Unknown"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B17.DE41",
+            "activity": "CHE.B17. Health promotion",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b17-de45",
+          "type": "Radio",
+          "name": "Check the child’s vaccination record: has the child received all vaccines they are eligible for?",
+          "text": "Check the child’s vaccination record: has the child received all vaccines they are eligible for?",
+          "detail": "The health worker check's the child’s vaccination record and compares it with the vaccination schedule to ensure the child has received vaccinations they are eligible for.",
+          "options": [
+            "Yes",
+            "No, incomplete vaccination",
+            "No, the child has never received any vaccination to date",
+            "Unknown"
+          ],
+          "_dak": {
+            "dataElementId": "CHE.B17.DE45",
+            "activity": "CHE.B17. Health promotion",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b17-de50",
+          "type": "FreeText",
+          "name": "Immunizations for age",
+          "text": "Immunizations for age",
+          "detail": "The application shows the health worker a table of the immunizations the child should have had for their age. Link for the vaccine schedule.",
+          "_dak": {
+            "dataElementId": "CHE.B17.DE50",
+            "activity": "CHE.B17. Health promotion",
+            "dataType": "Display",
+            "multipleChoiceType": "SHOW all that apply based on age of child.",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Classification",
+      "questions": [
+        {
+          "code": "whodakche-classification-act-b23",
+          "type": "Instruction",
+          "name": "Classification",
+          "text": "Classification",
+          "detail": "CHE.B23. Classification",
+          "newScreen": false
+        },
+        {
+          "code": "whodakche-b23-danger-signs-classification",
+          "type": "MultiSelect",
+          "name": "Danger signs classification",
+          "text": "Danger signs classification",
+          "options": [
+            "Very severe disease",
+            "History of obstructed or absent breathing"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE01",
+              "CHE.B23.DE02"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-danger-signs",
+          "type": "Instruction",
+          "name": "Danger signs - refer urgently",
+          "text": "Quickly complete the assessment. Give the first dose of pre-referral ampicillin (IM) and gentamicin (IM), give diazepam (rectal) if convulsing now, treat to prevent low blood sugar, and refer URGENTLY to hospital.",
+          "detail": "WHO DAK decision support CHE.DT.03.TR01",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-danger-signs-classification": [
+              "Very severe disease",
+              "History of obstructed or absent breathing"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR01",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-danger-signs-issue",
+          "type": "PatientIssue",
+          "name": "Danger signs - refer urgently",
+          "text": "Danger signs - refer urgently",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Danger signs - urgent referral required"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-danger-signs-classification": [
+              "Very severe disease",
+              "History of obstructed or absent breathing"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR01",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-b23-life-threatening-illness-classification",
+          "type": "MultiSelect",
+          "name": "Life-threatening illness classification",
+          "text": "Life-threatening illness classification",
+          "options": [
+            "History of obstructed or absent breathing"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE85"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-life-threatening",
+          "type": "Instruction",
+          "name": "Life-threatening illness - refer urgently",
+          "text": "Refer URGENTLY to the hospital.",
+          "detail": "WHO DAK decision support CHE.DT.03.TR01",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-life-threatening-illness-classification": [
+              "History of obstructed or absent breathing"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR01",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-life-threatening-issue",
+          "type": "PatientIssue",
+          "name": "Life-threatening illness - refer urgently",
+          "text": "Life-threatening illness - refer urgently",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Life-threatening illness - urgent referral required"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-life-threatening-illness-classification": [
+              "History of obstructed or absent breathing"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR01",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-b23-cough-or-difficulty-breathing-classifica",
+          "type": "MultiSelect",
+          "name": "Cough or difficulty breathing classification",
+          "text": "Cough or difficulty breathing classification",
+          "options": [
+            "Severe pneumonia or very severe disease",
+            "Pneumonia",
+            "Cough or cold"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE03",
+              "CHE.B23.DE06",
+              "CHE.B23.DE10"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-severe-pneumonia",
+          "type": "Instruction",
+          "name": "Severe pneumonia - refer urgently",
+          "text": "Give the first dose of pre-referral ampicillin (IM) and gentamicin (IM). Give oxygen where oxygen saturation is below 90%. Refer URGENTLY to hospital.",
+          "detail": "WHO DAK decision support CHE.DT.03.TR04",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-cough-or-difficulty-breathing-classifica": [
+              "Severe pneumonia or very severe disease"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR04",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-severe-pneumonia-issue",
+          "type": "PatientIssue",
+          "name": "Severe pneumonia - refer urgently",
+          "text": "Severe pneumonia - refer urgently",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Severe pneumonia - urgent referral required"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-cough-or-difficulty-breathing-classifica": [
+              "Severe pneumonia or very severe disease"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR04",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-b23-diarrhoea-and-dehydration-classification",
+          "type": "MultiSelect",
+          "name": "Diarrhoea and dehydration classification",
+          "text": "Diarrhoea and dehydration classification",
+          "options": [
+            "Severe dehydration",
+            "Some dehydration",
+            "No dehydration",
+            "Severe persistent diarrhoea",
+            "Persistent diarrhoea",
+            "Dysentery"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE13",
+              "CHE.B23.DE14",
+              "CHE.B23.DE15",
+              "CHE.B23.DE16",
+              "CHE.B23.DE17",
+              "CHE.B23.DE18"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-severe-dehydration",
+          "type": "Instruction",
+          "name": "Severe dehydration - start Plan C",
+          "text": "Start Plan C and give fluid for severe dehydration. Refer URGENTLY to hospital where the child cannot be treated here, and advise the caregiver to continue breastfeeding on the way.",
+          "detail": "WHO DAK decision support CHE.DT.03.TR16",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-diarrhoea-and-dehydration-classification": [
+              "Severe dehydration"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR16",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-severe-dehydration-issue",
+          "type": "PatientIssue",
+          "name": "Severe dehydration - start Plan C",
+          "text": "Severe dehydration - start Plan C",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Severe dehydration - Plan C and urgent referral"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-diarrhoea-and-dehydration-classification": [
+              "Severe dehydration"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR16",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-b23-fever-classification",
+          "type": "MultiSelect",
+          "name": "Fever classification",
+          "text": "Fever classification",
+          "options": [
+            "Very severe febrile disease",
+            "Malaria",
+            "Possible bone/joint infection",
+            "Possible urine infection",
+            "Fever: no malaria",
+            "Fever",
+            "Severe complicated measles",
+            "Measles with eye or mouth complications",
+            "Measles"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE19",
+              "CHE.B23.DE20",
+              "CHE.B23.DE24",
+              "CHE.B23.DE25",
+              "CHE.B23.DE26",
+              "CHE.B23.DE28",
+              "CHE.B23.DE30",
+              "CHE.B23.DE31",
+              "CHE.B23.DE32"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-severe-febrile",
+          "type": "Instruction",
+          "name": "Very severe febrile disease - refer urgently",
+          "text": "Give the first dose of pre-referral ampicillin (IM) and gentamicin (IM), the first dose of artesunate where there is malaria risk, and vitamin A for measles. Refer URGENTLY to hospital.",
+          "detail": "WHO DAK decision support CHE.DT.03.TR22",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-fever-classification": [
+              "Very severe febrile disease",
+              "Severe complicated measles"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR22",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-severe-febrile-issue",
+          "type": "PatientIssue",
+          "name": "Very severe febrile disease - refer urgently",
+          "text": "Very severe febrile disease - refer urgently",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Very severe febrile disease - urgent referral required"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-fever-classification": [
+              "Very severe febrile disease",
+              "Severe complicated measles"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR22",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-b23-ear-problem-classification",
+          "type": "MultiSelect",
+          "name": "Ear problem classification",
+          "text": "Ear problem classification",
+          "options": [
+            "Mastoiditis",
+            "Acute ear infection",
+            "Chronic ear infection",
+            "No ear infection"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE33",
+              "CHE.B23.DE34",
+              "CHE.B23.DE35",
+              "CHE.B23.DE36"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-mastoiditis",
+          "type": "Instruction",
+          "name": "Mastoiditis - refer urgently",
+          "text": "Give the first dose of a pre-referral antibiotic and one dose of paracetamol for pain. Refer URGENTLY to hospital.",
+          "detail": "WHO DAK decision support CHE.DT.03.TR33",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-ear-problem-classification": [
+              "Mastoiditis"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR33",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-mastoiditis-issue",
+          "type": "PatientIssue",
+          "name": "Mastoiditis - refer urgently",
+          "text": "Mastoiditis - refer urgently",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Mastoiditis - urgent referral required"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-ear-problem-classification": [
+              "Mastoiditis"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR33",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-b23-skin-mouth-or-eye-problem-classification",
+          "type": "MultiSelect",
+          "name": "Skin, mouth or eye problem classification",
+          "text": "Skin, mouth or eye problem classification",
+          "options": [
+            "Eye infection",
+            "Clouding of the cornea",
+            "Abscess",
+            "Cellulitis",
+            "Papular itching rash (prurigo)",
+            "Ringworm (tinea)",
+            "Scabies",
+            "Chickenpox",
+            "Herpes zoster",
+            "Impetigo or folliculitis",
+            "Molluscum contagiosum (poxvirus)",
+            "Warts",
+            "Seborrhoea",
+            "Fixed drug reactions",
+            "Eczema",
+            "Steven–Johnson syndrome",
+            "Mouth sores or ulcer",
+            "Oral thrush"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE37",
+              "CHE.B23.DE38",
+              "CHE.B23.DE40",
+              "CHE.B23.DE42",
+              "CHE.B23.DE44",
+              "CHE.B23.DE45",
+              "CHE.B23.DE47",
+              "CHE.B23.DE48",
+              "CHE.B23.DE50",
+              "CHE.B23.DE52",
+              "CHE.B23.DE55",
+              "CHE.B23.DE56",
+              "CHE.B23.DE57",
+              "CHE.B23.DE59",
+              "CHE.B23.DE60",
+              "CHE.B23.DE61",
+              "CHE.B23.DE62",
+              "CHE.B23.DE64"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-severe-skin-eye",
+          "type": "Instruction",
+          "name": "Severe eye or skin condition - refer urgently",
+          "text": "Refer URGENTLY to hospital. Give vitamin A and apply tetracycline eye ointment where the cornea is clouded.",
+          "detail": "WHO DAK decision support CHE.DT.03.TR38",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-skin-mouth-or-eye-problem-classification": [
+              "Clouding of the cornea",
+              "Steven–Johnson syndrome"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR38",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-severe-skin-eye-issue",
+          "type": "PatientIssue",
+          "name": "Severe eye or skin condition - refer urgently",
+          "text": "Severe eye or skin condition - refer urgently",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Severe eye or skin condition - urgent referral required"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-skin-mouth-or-eye-problem-classification": [
+              "Clouding of the cornea",
+              "Steven–Johnson syndrome"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR38",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-b23-anaemia-classification",
+          "type": "MultiSelect",
+          "name": "Anaemia classification",
+          "text": "Anaemia classification",
+          "options": [
+            "Severe anaemia",
+            "Anaemia",
+            "No anaemia"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE65",
+              "CHE.B23.DE66",
+              "CHE.B23.DE67"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-severe-anaemia",
+          "type": "Instruction",
+          "name": "Severe anaemia - refer urgently",
+          "text": "Refer URGENTLY to hospital.",
+          "detail": "WHO DAK decision support CHE.DT.03.TR52",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-anaemia-classification": [
+              "Severe anaemia"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR52",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-severe-anaemia-issue",
+          "type": "PatientIssue",
+          "name": "Severe anaemia - refer urgently",
+          "text": "Severe anaemia - refer urgently",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Severe anaemia - urgent referral required"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-anaemia-classification": [
+              "Severe anaemia"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR52",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-b23-acute-malnutrition-classification",
+          "type": "MultiSelect",
+          "name": "Acute malnutrition classification",
+          "text": "Acute malnutrition classification",
+          "options": [
+            "Severe acute malnutrition (or very low weight for age [WFA] if less than 12 months old) with medical complications",
+            "Severe acute malnutrition (or very low WFA if less than 12 months old)",
+            "Severe acute malnutrition (or very low WFA if less than 12 months old) with medical complications",
+            "Moderate acute malnutrition",
+            "No acute malnutrition"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE68",
+              "CHE.B23.DE69",
+              "CHE.B23.DE70",
+              "CHE.B23.DE71",
+              "CHE.B23.DE72"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-complicated-sam",
+          "type": "Instruction",
+          "name": "Complicated severe acute malnutrition - refer urgently",
+          "text": "Give the first dose of a pre-referral antibiotic, treat to prevent low blood sugar, keep the child warm, and refer URGENTLY to hospital.",
+          "detail": "WHO DAK decision support CHE.DT.03.TR55",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-acute-malnutrition-classification": [
+              "Severe acute malnutrition (or very low weight for age [WFA] if less than 12 months old) with medical complications"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR55",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-complicated-sam-issue",
+          "type": "PatientIssue",
+          "name": "Complicated severe acute malnutrition - refer urgently",
+          "text": "Complicated severe acute malnutrition - refer urgently",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Complicated severe acute malnutrition - urgent referral required"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-acute-malnutrition-classification": [
+              "Severe acute malnutrition (or very low weight for age [WFA] if less than 12 months old) with medical complications"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR55",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-b23-young-infant-bacterial-infection-classif",
+          "type": "MultiSelect",
+          "name": "Young infant bacterial infection classification",
+          "text": "Young infant bacterial infection classification",
+          "options": [
+            "Possible serious bacterial infection OR very severe disease",
+            "Pneumonia",
+            "Localized infection",
+            "Infection unlikely"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE86",
+              "CHE.B23.DE87",
+              "CHE.B23.DE88",
+              "CHE.B23.DE89"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-psbi",
+          "type": "Instruction",
+          "name": "Possible serious bacterial infection - refer urgently",
+          "text": "Give the first dose of ampicillin (IM) 50 mg/kg and gentamicin (IM). Treat to prevent low blood sugar, keep the young infant warm, and refer URGENTLY to hospital.",
+          "detail": "WHO DAK decision support CHE.DT.04.TR02",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-young-infant-bacterial-infection-classif": [
+              "Possible serious bacterial infection OR very severe disease"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.04.TR02",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-psbi-issue",
+          "type": "PatientIssue",
+          "name": "Possible serious bacterial infection - refer urgently",
+          "text": "Possible serious bacterial infection - refer urgently",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Possible serious bacterial infection - urgent referral"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-young-infant-bacterial-infection-classif": [
+              "Possible serious bacterial infection OR very severe disease"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.04.TR02",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-b23-jaundice-classification",
+          "type": "MultiSelect",
+          "name": "Jaundice classification",
+          "text": "Jaundice classification",
+          "options": [
+            "Severe jaundice",
+            "Jaundice",
+            "Prolonged jaundice",
+            "No jaundice"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE90",
+              "CHE.B23.DE91",
+              "CHE.B23.DE92",
+              "CHE.B23.DE93"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-severe-jaundice",
+          "type": "Instruction",
+          "name": "Severe jaundice - refer urgently",
+          "text": "Treat to prevent low blood sugar, keep the young infant warm, and refer URGENTLY to hospital. Advise the mother to continue breastfeeding on the way.",
+          "detail": "WHO DAK decision support CHE.DT.04.TR06",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-jaundice-classification": [
+              "Severe jaundice"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.04.TR06",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-severe-jaundice-issue",
+          "type": "PatientIssue",
+          "name": "Severe jaundice - refer urgently",
+          "text": "Severe jaundice - refer urgently",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Severe jaundice - urgent referral required"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-jaundice-classification": [
+              "Severe jaundice"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.04.TR06",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-b23-young-infant-diarrhoea-classification",
+          "type": "MultiSelect",
+          "name": "Young infant diarrhoea classification",
+          "text": "Young infant diarrhoea classification",
+          "options": [
+            "Severe dehydration",
+            "Some dehydration",
+            "No dehydration"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE94",
+              "CHE.B23.DE95",
+              "CHE.B23.DE96"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-infant-severe-dehydration",
+          "type": "Instruction",
+          "name": "Young infant severe dehydration - refer urgently",
+          "text": "Start Plan C. Treat to prevent low blood sugar, keep the young infant warm, and refer URGENTLY to hospital.",
+          "detail": "WHO DAK decision support CHE.DT.04.TR10",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-young-infant-diarrhoea-classification": [
+              "Severe dehydration"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.04.TR10",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-infant-severe-dehydration-issue",
+          "type": "PatientIssue",
+          "name": "Young infant severe dehydration - refer urgently",
+          "text": "Young infant severe dehydration - refer urgently",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Young infant severe dehydration - urgent referral"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-young-infant-diarrhoea-classification": [
+              "Severe dehydration"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.04.TR10",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-b23-young-infant-weight-for-age-classificati",
+          "type": "MultiSelect",
+          "name": "Young infant weight for age classification",
+          "text": "Young infant weight for age classification",
+          "options": [
+            "Very low WFA"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE97"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-b23-young-infant-feeding-problem-classificat",
+          "type": "MultiSelect",
+          "name": "Young infant feeding problem classification",
+          "text": "Young infant feeding problem classification",
+          "options": [
+            "Feeding problem and / or low WFA",
+            "No feeding problem"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE98",
+              "CHE.B23.DE102"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-b23-health-promotion-classification",
+          "type": "MultiSelect",
+          "name": "Health promotion classification",
+          "text": "Health promotion classification",
+          "options": [
+            "Health promotion, screening and other problems"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE75"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-b23-immunization-status-classification",
+          "type": "MultiSelect",
+          "name": "Immunization status classification",
+          "text": "Immunization status classification",
+          "options": [
+            "Immunization(s) incomplete for age",
+            "Immunization status unknown"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE76",
+              "CHE.B23.DE77"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-immunization",
+          "type": "Instruction",
+          "name": "Immunizations due",
+          "text": "Give the immunizations the child is due for today unless they are contraindicated, and tell the caregiver when the next dose is due.",
+          "detail": "WHO DAK decision support CHE.DT.03.TR60",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-immunization-status-classification": [
+              "Immunization(s) incomplete for age",
+              "Immunization status unknown"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR60",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakche-b23-hiv-status-classification",
+          "type": "MultiSelect",
+          "name": "HIV status classification",
+          "text": "HIV status classification",
+          "options": [
+            "Confirmed HIV infection",
+            "HIV exposed",
+            "HIV infection unlikely",
+            "HIV infection status unknown"
+          ],
+          "_dak": {
+            "dataElementId": "",
+            "activity": "CHE.B23. Classification",
+            "dataType": "Derived",
+            "multipleChoiceType": "",
+            "required": "",
+            "selectedBecause": "classification",
+            "indicators": "",
+            "derivedFrom": [
+              "CHE.B23.DE80",
+              "CHE.B23.DE81",
+              "CHE.B23.DE82",
+              "CHE.B23.DE83"
+            ]
+          }
+        },
+        {
+          "code": "whodakche-ds-b23-hiv",
+          "type": "Instruction",
+          "name": "HIV infection or exposure - link to care",
+          "text": "Start or continue co-trimoxazole prophylaxis and link the child to HIV care. Test an exposed child according to the national schedule.",
+          "detail": "WHO DAK decision support CHE.DT.03.TR62",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakche-b23-hiv-status-classification": [
+              "Confirmed HIV infection",
+              "HIV exposed"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "CHE.DT.03.TR62",
+            "source": "Annex B"
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Severe Classification Summary",
+      "questions": [
+        {
+          "code": "whodakche-severe-act-b27",
+          "type": "Instruction",
+          "name": "Combined Data Element",
+          "text": "Combined Data Element",
+          "detail": "CHE.B27.Combined Data Element",
+          "newScreen": false
+        },
+        {
+          "code": "whodakche-b27-g-de01",
+          "type": "Binary",
+          "name": "Danger signs",
+          "text": "Danger signs",
+          "detail": "The child has one or more general danger signs.",
+          "_dak": {
+            "dataElementId": "CHE.B27.G.DE01",
+            "activity": "CHE.B27.Combined Data Element",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "indicator,core",
+            "indicators": "N/A"
+          }
+        },
+        {
+          "code": "whodakche-b27-g-de02",
+          "type": "Binary",
+          "name": "History of obstructed or absent breathing",
+          "text": "History of obstructed or absent breathing",
+          "detail": "The child had obstructed or absent breathing, which is subsequently stabilized.",
+          "_dak": {
+            "dataElementId": "CHE.B27.G.DE02",
+            "activity": "CHE.B27.Combined Data Element",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b27-g-de03",
+          "type": "Binary",
+          "name": "Severe acute malnutrition",
+          "text": "Severe acute malnutrition",
+          "detail": "The child has severe acute malnutrition.",
+          "_dak": {
+            "dataElementId": "CHE.B27.G.DE03",
+            "activity": "CHE.B27.Combined Data Element",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b27-g-de04",
+          "type": "Binary",
+          "name": "Medical complications of severe acute malnutrition",
+          "text": "Medical complications of severe acute malnutrition",
+          "detail": "The child has one or more medical complications of severe acute malnutrition: - any general danger sign; - any severe classification; - pneumonia​, persistent diarrhoea​, dysentery​, malaria, measles; - oedema of both feet.",
+          "_dak": {
+            "dataElementId": "CHE.B27.G.DE04",
+            "activity": "CHE.B27.Combined Data Element",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b27-g-de05",
+          "type": "Binary",
+          "name": "2–59 months – Severe classification other than severe dehydration",
+          "text": "2–59 months – Severe classification other than severe dehydration",
+          "detail": "The child has a severe classification other than severe dehydration.",
+          "_dak": {
+            "dataElementId": "CHE.B27.G.DE05",
+            "activity": "CHE.B27.Combined Data Element",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b27-g-de06",
+          "type": "Binary",
+          "name": "Fever",
+          "text": "Fever",
+          "detail": "The child has a fever (reported or measured).",
+          "_dak": {
+            "dataElementId": "CHE.B27.G.DE06",
+            "activity": "CHE.B27.Combined Data Element",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b27-g-de07",
+          "type": "Binary",
+          "name": "Severe dehydration with unconscious/lethargy or unable to drink AND no other signs of very severe disease",
+          "text": "Severe dehydration with unconscious/lethargy or unable to drink AND no other signs of very severe disease",
+          "_dak": {
+            "dataElementId": "CHE.B27.G.DE07",
+            "activity": "CHE.B27.Combined Data Element",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b27-g-de08",
+          "type": "Binary",
+          "name": "Possible serious bacterial infection (PSBI) other than temperature",
+          "text": "Possible serious bacterial infection (PSBI) other than temperature",
+          "detail": "The infant has signs of PSBI, other than measured temperature.",
+          "_dak": {
+            "dataElementId": "CHE.B27.G.DE08",
+            "activity": "CHE.B27.Combined Data Element",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b27-g-de09",
+          "type": "Binary",
+          "name": "PSBI",
+          "text": "PSBI",
+          "detail": "The infant has signs of PSBI.",
+          "_dak": {
+            "dataElementId": "CHE.B27.G.DE09",
+            "activity": "CHE.B27.Combined Data Element",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b27-g-de10",
+          "type": "Binary",
+          "name": "YI severe classification other than severe dehydration",
+          "text": "YI severe classification other than severe dehydration",
+          "detail": "The child has a severe classification other than severe dehydration.",
+          "_dak": {
+            "dataElementId": "CHE.B27.G.DE10",
+            "activity": "CHE.B27.Combined Data Element",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b27-g-de11",
+          "type": "Binary",
+          "name": "YI severe classification including severe dehydration",
+          "text": "YI severe classification including severe dehydration",
+          "detail": "The child has a severe classification other than severe dehydration.",
+          "_dak": {
+            "dataElementId": "CHE.B27.G.DE11",
+            "activity": "CHE.B27.Combined Data Element",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Malaria Setting and Test Availability",
+      "questions": [
+        {
+          "code": "whodakche-setting-malaria-act-b25",
+          "type": "Instruction",
+          "name": "Population-Malaria",
+          "text": "Population-Malaria",
+          "detail": "CHE.B25.Population-Malaria",
+          "newScreen": false
+        },
+        {
+          "code": "whodakche-b25-h-de01",
+          "type": "Radio",
+          "name": "Malaria risk",
+          "text": "Malaria risk",
+          "detail": "The country/region/facility's malaria risk",
+          "options": [
+            "High malaria risk",
+            "Low malaria risk",
+            "No malaria risk"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B25.H.DE01",
+            "activity": "CHE.B25.Population-Malaria",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b25-h-de05",
+          "type": "MultiSelect",
+          "name": "Types of malaria test available within 2 hours and quality-assured at primary care",
+          "text": "Types of malaria test available within 2 hours and quality-assured at primary care",
+          "detail": "The country/region/facility's types of malaria test available within 2 hours and quality-assured at primary care",
+          "options": [
+            "RDT only",
+            "Microscopy only",
+            "RDT and microscopy"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B25.H.DE05",
+            "activity": "CHE.B25.Population-Malaria",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b25-h-de09",
+          "type": "Binary",
+          "name": "RDTs in use allow for species identification",
+          "text": "RDTs in use allow for species identification",
+          "detail": "The country/region/facility has RDT tests in use that allow for species identification.",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B25.H.DE09",
+            "activity": "CHE.B25.Population-Malaria",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b25-h-de10",
+          "type": "MultiSelect",
+          "name": "Species that can be differentiated on RDT",
+          "text": "Species that can be differentiated on RDT",
+          "detail": "The species that can be differentiated on RDT",
+          "options": [
+            "P. falciparum",
+            "Non-P. falciparum",
+            "P. vivax",
+            "P. ovale",
+            "P. malariae",
+            "P. knowlesi"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B25.H.DE10",
+            "activity": "CHE.B25.Population-Malaria",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b25-h-de17",
+          "type": "Binary",
+          "name": "Microscopists expected to differentiate species",
+          "text": "Microscopists expected to differentiate species",
+          "detail": "The country/region/facility has microscopists who are expected to differentiate species.",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B25.H.DE17",
+            "activity": "CHE.B25.Population-Malaria",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b25-h-de18",
+          "type": "MultiSelect",
+          "name": "What species should be included in the microscopy evaluation?",
+          "text": "What species should be included in the microscopy evaluation?",
+          "detail": "The microscopy test species options for the country/region/facility",
+          "options": [
+            "P. falciparum",
+            "P. vivax",
+            "P. malariae",
+            "P. ovale",
+            "P. knowlesi"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B25.H.DE18",
+            "activity": "CHE.B25.Population-Malaria",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakche-b25-h-de24",
+          "type": "Binary",
+          "name": "Microscopists expected to evaluate parasite density",
+          "text": "Microscopists expected to evaluate parasite density",
+          "detail": "The country/region/facility has microscopists who are expected to evaluate parasite density",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B25.H.DE24",
+            "activity": "CHE.B25.Population-Malaria",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "HIV Prevalence Setting",
+      "questions": [
+        {
+          "code": "whodakche-setting-hiv-act-b26",
+          "type": "Instruction",
+          "name": "Population-HIV",
+          "text": "Population-HIV",
+          "detail": "CHE.B26.Population-HIV",
+          "newScreen": false
+        },
+        {
+          "code": "whodakche-b26-i-de01",
+          "type": "Radio",
+          "name": "HIV prevalence",
+          "text": "HIV prevalence",
+          "detail": "Proportion of the population living with HIV in the specified geographical area (country/region/facility catchment area).",
+          "options": [
+            "High HIV prevalence",
+            "Low HIV prevalence",
+            "No HIV prevalence"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "CHE.B26.I.DE01",
+            "activity": "CHE.B26.Population-HIV",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        }
+      ]
+    }
+  ]
+}

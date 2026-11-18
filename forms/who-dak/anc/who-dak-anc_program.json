@@ -1,0 +1,3844 @@
+{
+  "programName": "WHO DAK ANC",
+  "programCode": "who-dak-anc",
+  "country": "",
+  "homeServer": "",
+  "registry": {
+    "registryCode": "who-dak-anc",
+    "registryName": "WHO DAK ANC",
+    "currentlyAtType": "facility",
+    "visibilityStatus": "current",
+    "lossToFollowUpEnabled": true,
+    "lossToFollowUpThresholdDays": 56,
+    "clinicalStatuses": [
+      {
+        "code": "who-dak-anc-attending",
+        "name": "Attending ANC",
+        "color": "green"
+      },
+      {
+        "code": "who-dak-anc-live-birth",
+        "name": "Live birth",
+        "color": "blue"
+      },
+      {
+        "code": "who-dak-anc-stillbirth",
+        "name": "Stillbirth",
+        "color": "brown"
+      },
+      {
+        "code": "who-dak-anc-miscarriage",
+        "name": "Miscarriage",
+        "color": "orange"
+      },
+      {
+        "code": "who-dak-anc-abortion",
+        "name": "Abortion",
+        "color": "yellow"
+      },
+      {
+        "code": "who-dak-anc-died",
+        "name": "Woman died",
+        "color": "purple"
+      },
+      {
+        "code": "who-dak-anc-lost-to-follow-up",
+        "name": "Lost to follow-up",
+        "color": "red"
+      },
+      {
+        "code": "who-dak-anc-moved-away",
+        "name": "Moved away",
+        "color": "teal"
+      },
+      {
+        "code": "who-dak-anc-false-pregnancy",
+        "name": "False pregnancy",
+        "color": "pink"
+      }
+    ],
+    "conditions": [
+      {
+        "code": "who-dak-anc-cond-anaemia",
+        "name": "Anaemia"
+      },
+      {
+        "code": "who-dak-anc-cond-asb",
+        "name": "Asymptomatic bacteriuria"
+      },
+      {
+        "code": "who-dak-anc-cond-gdm",
+        "name": "Gestational diabetes mellitus"
+      },
+      {
+        "code": "who-dak-anc-cond-diabetes",
+        "name": "Diabetes mellitus (pre-existing)"
+      },
+      {
+        "code": "who-dak-anc-cond-hypertension",
+        "name": "Hypertension"
+      },
+      {
+        "code": "who-dak-anc-cond-severe-hypertension",
+        "name": "Severe hypertension"
+      },
+      {
+        "code": "who-dak-anc-cond-pre-eclampsia",
+        "name": "Pre-eclampsia"
+      },
+      {
+        "code": "who-dak-anc-cond-severe-pre-eclampsia",
+        "name": "Severe pre-eclampsia"
+      },
+      {
+        "code": "who-dak-anc-cond-hiv",
+        "name": "HIV"
+      },
+      {
+        "code": "who-dak-anc-cond-syphilis",
+        "name": "Syphilis"
+      },
+      {
+        "code": "who-dak-anc-cond-hbv",
+        "name": "Hepatitis B (HBV)"
+      },
+      {
+        "code": "who-dak-anc-cond-hcv",
+        "name": "Hepatitis C (HCV)"
+      },
+      {
+        "code": "who-dak-anc-cond-tb",
+        "name": "Tuberculosis"
+      },
+      {
+        "code": "who-dak-anc-cond-epilepsy",
+        "name": "Epilepsy"
+      },
+      {
+        "code": "who-dak-anc-cond-kidney-disease",
+        "name": "Kidney disease"
+      },
+      {
+        "code": "who-dak-anc-cond-autoimmune",
+        "name": "Autoimmune disease"
+      },
+      {
+        "code": "who-dak-anc-cond-blood-disorder",
+        "name": "Blood disorder"
+      },
+      {
+        "code": "who-dak-anc-cond-cancer-gynaecological",
+        "name": "Cancer - gynaecological"
+      }
+    ],
+    "conditionCategories": [
+      {
+        "code": "suspected",
+        "name": "Suspected"
+      },
+      {
+        "code": "underInvestigation",
+        "name": "Under investigation"
+      },
+      {
+        "code": "confirmed",
+        "name": "Confirmed"
+      },
+      {
+        "code": "inRemission",
+        "name": "In remission"
+      }
+    ]
+  },
+  "surveys": [
+    {
+      "code": "registration",
+      "name": "ANC Registration",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "quickcheck",
+      "name": "Quick Check",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "profile",
+      "name": "Profile and History",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "symptoms",
+      "name": "Symptoms and Follow-up",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "physicalexam",
+      "name": "Physical Examination",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "labtests",
+      "name": "Laboratory Tests and Imaging",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "counselling",
+      "name": "Counselling and Treatment",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "referral",
+      "name": "ANC Referral",
+      "surveyType": "referral",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "episodeend",
+      "name": "ANC Episode Outcome",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    }
+  ],
+  "surveySheets": [
+    {
+      "surveyName": "ANC Registration",
+      "questions": [
+        {
+          "code": "whodakanc-registration-act-a7",
+          "type": "Instruction",
+          "name": "Create client record OR ANC.A8. Validate client details",
+          "text": "Create client record OR ANC.A8. Validate client details",
+          "detail": "ANC.A7. Create client record OR ANC.A8. Validate client details",
+          "newScreen": false
+        },
+        {
+          "code": "whodakanc-a7-de1",
+          "type": "FreeText",
+          "name": "Unique identification",
+          "text": "Unique identification",
+          "detail": "Unique identifier generated for new clients or a universal ID, if used in the country",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.A7.DE1",
+            "activity": "ANC.A7. Create client record OR ANC.A8. Validate client details",
+            "dataType": "ID",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-a7-de2",
+          "type": "FreeText",
+          "name": "First name",
+          "text": "First name",
+          "detail": "Client's first name",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.A7.DE2",
+            "activity": "ANC.A7. Create client record OR ANC.A8. Validate client details",
+            "dataType": "String",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-a7-de3",
+          "type": "FreeText",
+          "name": "Last name",
+          "text": "Last name",
+          "detail": "Client's family name or last name",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.A7.DE3",
+            "activity": "ANC.A7. Create client record OR ANC.A8. Validate client details",
+            "dataType": "String",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-a7-de4",
+          "type": "DateTime",
+          "name": "Contact date",
+          "text": "Contact date",
+          "detail": "The date and time of the client's contact",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.A7.DE4",
+            "activity": "ANC.A7. Create client record OR ANC.A8. Validate client details",
+            "dataType": "DateTime",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required,indicator",
+            "indicators": "ANC.IND.4 Percentage of pregnant women with at least four ANC contacts ANC.IND.5 Percentage of pregnant women with a minimum of eight antenatal care contacts"
+          }
+        },
+        {
+          "code": "whodakanc-a7-de7",
+          "type": "FreeText",
+          "name": "Address",
+          "text": "Address",
+          "detail": "Client's home address or address that the client is consenting to disclose",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.A7.DE7",
+            "activity": "ANC.A7. Create client record OR ANC.A8. Validate client details",
+            "dataType": "String",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-a7-de8",
+          "type": "Number",
+          "name": "Mobile phone number",
+          "text": "Mobile phone number",
+          "detail": "Client's mobile phone number",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.A7.DE8",
+            "activity": "ANC.A7. Create client record OR ANC.A8. Validate client details",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-a7-de9",
+          "type": "Binary",
+          "name": "Woman wants to receive reminders during pregnancy",
+          "text": "Woman wants to receive reminders during pregnancy",
+          "detail": "Whether or not the woman wants to receive SMS or other messages regarding her ANC contacts and health status during pregnancy",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.A7.DE9",
+            "activity": "ANC.A7. Create client record OR ANC.A8. Validate client details",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-a7-de12",
+          "type": "Number",
+          "name": "ANC contact number",
+          "text": "ANC contact number",
+          "detail": "The ANC contact or visit number – recommended minimum is 8 contacts",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.A7.DE12",
+            "activity": "ANC.A7. Create client record OR ANC.A8. Validate client details",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Quick Check",
+      "questions": [
+        {
+          "code": "whodakanc-quickcheck-act-b4",
+          "type": "Instruction",
+          "name": "Confirm pregnancy",
+          "text": "Confirm pregnancy",
+          "detail": "ANC.B4. Confirm pregnancy",
+          "newScreen": false
+        },
+        {
+          "code": "whodakanc-b4-de1",
+          "type": "Binary",
+          "name": "Pregnancy confirmed",
+          "text": "Pregnancy confirmed",
+          "detail": "Pregnancy has been confirmed",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B4.DE1",
+            "activity": "ANC.B4. Confirm pregnancy",
+            "dataType": "Boolean",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-quickcheck-act-b5",
+          "type": "Instruction",
+          "name": "Quick check",
+          "text": "Quick check",
+          "detail": "ANC.B5. Quick check",
+          "newScreen": true
+        },
+        {
+          "code": "whodakanc-b5-de1",
+          "type": "Radio",
+          "name": "Reason for coming to facility",
+          "text": "Reason for coming to facility",
+          "detail": "Records the reason why the woman came to the health-care facility today",
+          "options": [
+            "First contact",
+            "Scheduled contact",
+            "Specific complaint"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B5.DE1",
+            "activity": "ANC.B5. Quick check",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b5-de48",
+          "type": "MultiSelect",
+          "name": "Danger signs",
+          "text": "Danger signs",
+          "detail": "Before each contact, the health worker should check whether the woman has any of the danger signs listed here – if yes, she should refer to the hospital urgently; if no, she should continue to the normal contact",
+          "options": [
+            "No danger signs",
+            "Bleeding vaginally",
+            "Central cyanosis",
+            "Convulsing",
+            "Fever",
+            "Imminent delivery",
+            "Labour",
+            "Looks very ill",
+            "Severe headache",
+            "Severe pain",
+            "Severe vomiting",
+            "Severe abdominal pain",
+            "Unconscious",
+            "Visual disturbance"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B5.DE48",
+            "activity": "ANC.B5. Quick check",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-ds-dt01-danger-signs-a",
+          "type": "Instruction",
+          "name": "Danger sign - refer urgently",
+          "text": "This danger sign means the woman needs urgent management: refer her to hospital urgently, or continue the contact if clinical judgement says the sign can be managed here.",
+          "detail": "WHO DAK decision support ANC.DT.01 (1 of 2)",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakanc-b5-de48": [
+              "Bleeding vaginally",
+              "Central cyanosis",
+              "Convulsing",
+              "Fever",
+              "Imminent delivery",
+              "Labour"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "ANC.DT.01 (1 of 2)",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakanc-ds-dt01-danger-signs-a-issue",
+          "type": "PatientIssue",
+          "name": "Danger sign - refer urgently",
+          "text": "Danger sign - refer urgently",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Danger sign recorded at ANC quick check"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakanc-b5-de48": [
+              "Bleeding vaginally",
+              "Central cyanosis",
+              "Convulsing",
+              "Fever",
+              "Imminent delivery",
+              "Labour"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "ANC.DT.01 (1 of 2)",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakanc-ds-dt01-danger-signs-b",
+          "type": "Instruction",
+          "name": "Danger sign - refer urgently",
+          "text": "This danger sign means the woman needs urgent management: refer her to hospital urgently, or continue the contact if clinical judgement says the sign can be managed here.",
+          "detail": "WHO DAK decision support ANC.DT.01 (2 of 2)",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakanc-b5-de48": [
+              "Looks very ill",
+              "Severe headache",
+              "Severe pain",
+              "Severe vomiting",
+              "Severe abdominal pain",
+              "Unconscious",
+              "Visual disturbance"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "ANC.DT.01 (2 of 2)",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakanc-ds-dt01-danger-signs-b-issue",
+          "type": "PatientIssue",
+          "name": "Danger sign - refer urgently",
+          "text": "Danger sign - refer urgently",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Danger sign recorded at ANC quick check"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakanc-b5-de48": [
+              "Looks very ill",
+              "Severe headache",
+              "Severe pain",
+              "Severe vomiting",
+              "Severe abdominal pain",
+              "Unconscious",
+              "Visual disturbance"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "ANC.DT.01 (2 of 2)",
+            "source": "Annex B"
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Profile and History",
+      "questions": [
+        {
+          "code": "whodakanc-profile-act-b6",
+          "type": "Instruction",
+          "name": "Collect woman's profile and history",
+          "text": "Collect woman's profile and history",
+          "detail": "ANC.B6. Collect woman's profile and history",
+          "newScreen": false
+        },
+        {
+          "code": "whodakanc-b6-de1",
+          "type": "Radio",
+          "name": "Highest level of education achieved",
+          "text": "Highest level of education achieved",
+          "detail": "The highest level of schooling the woman has reached",
+          "options": [
+            "Does not know level of education",
+            "No education",
+            "Primary school",
+            "Secondary school",
+            "Higher education"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE1",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de7",
+          "type": "MultiSelect",
+          "name": "Occupation",
+          "text": "Occupation",
+          "detail": "The woman's occupation (select all that apply)",
+          "options": [
+            "Student",
+            "Unemployed",
+            "Formal employment",
+            "Employment that puts woman at increased risk for HIV (e.g. sex worker)",
+            "Informal employment (other)",
+            "Other (specify)"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE7",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-profile-sec-gestational-age",
+          "type": "Instruction",
+          "name": "Gestational age",
+          "text": "Gestational age"
+        },
+        {
+          "code": "whodakanc-b6-de14",
+          "type": "Date",
+          "name": "Last menstrual period (LMP) date",
+          "text": "Last menstrual period (LMP) date",
+          "detail": "The woman's last menstrual period (LMP) date; this is defined as the first day of her most recent period",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE14",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de15",
+          "type": "Binary",
+          "name": "Ultrasound done",
+          "text": "Ultrasound done",
+          "detail": "Whether or not the woman has had an ultrasound scan done at any point in this pregnancy",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE15",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de16",
+          "type": "Date",
+          "name": "Ultrasound date",
+          "text": "Ultrasound date",
+          "detail": "Date that the ultrasound was done",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE16",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de17",
+          "type": "Number",
+          "name": "Gestational age",
+          "text": "Gestational age",
+          "detail": "Gestational age in weeks and/or days depending on the source of gestational age",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE17",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required,indicator",
+            "indicators": "ANC.IND.1 Percentage of pregnant women with first ANC contact in the first trimester (before 12 weeks of gestation)"
+          }
+        },
+        {
+          "code": "whodakanc-b6-de18",
+          "type": "Radio",
+          "name": "Source of gestational age",
+          "text": "Source of gestational age",
+          "detail": "Gestational age can be calculated multiple ways – this data element describes where the gestational age above has been calculated from",
+          "options": [
+            "Last menstrual period (LMP)",
+            "Ultrasound",
+            "Symphysis Fundal Height (SFH) or abdominal palpation"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE18",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de22",
+          "type": "Date",
+          "name": "Expected date of delivery (EDD)",
+          "text": "Expected date of delivery (EDD)",
+          "detail": "Expected date of delivery based on gestational age",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE22",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de23",
+          "type": "Number",
+          "name": "Number of previous pregnancies",
+          "text": "Number of previous pregnancies",
+          "detail": "This calculates the total number of all previous pregnancies (i.e. not including this current pregnancy); this is done for easier obstetric history calculations",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE23",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de24",
+          "type": "Number",
+          "name": "Number of pregnancies (gravida)",
+          "text": "Number of pregnancies (gravida)",
+          "detail": "Total number of times the woman has been pregnant (including this pregnancy); also referred to as gravida",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE24",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de25",
+          "type": "Number",
+          "name": "Number of miscarriages and/or abortions",
+          "text": "Number of miscarriages and/or abortions",
+          "detail": "Total number of pregnancies lost/ended due to miscarriages and/or abortions before 22 weeks / 5 months",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE25",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Quantity",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de26",
+          "type": "Number",
+          "name": "Number of live births",
+          "text": "Number of live births",
+          "detail": "Total number of live births after 22 weeks",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE26",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Quantity",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de31",
+          "type": "Number",
+          "name": "Number of stillbirths",
+          "text": "Number of stillbirths",
+          "detail": "Total number of stillbirths after 22 weeks",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE31",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Quantity",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de32",
+          "type": "Number",
+          "name": "Parity",
+          "text": "Parity",
+          "detail": "Calculated parity is the total number of live and stillbirths",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE32",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Quantity",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de33",
+          "type": "Number",
+          "name": "Number of caesarian sections",
+          "text": "Number of caesarian sections",
+          "detail": "Total number of caesarean sections",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE33",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Quantity",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de34",
+          "type": "MultiSelect",
+          "name": "Past pregnancy complications",
+          "text": "Past pregnancy complications",
+          "detail": "Mark whether the woman has had any complications or problems in any previous pregnancy",
+          "options": [
+            "None",
+            "Don't know",
+            "Pre-eclampsia",
+            "Eclampsia",
+            "Alcohol use",
+            "Baby died within 24 hours of birth",
+            "Convulsions",
+            "Forceps",
+            "Gestational diabetes",
+            "Heavy bleeding (during or after delivery)",
+            "Macrosomia",
+            "Perineal tear (3rd or 4th degree)",
+            "Substance use",
+            "Tobacco use",
+            "Vacuum delivery",
+            "Other (specify)"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE34",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de100",
+          "type": "Radio",
+          "name": "Tetanus toxoid-containing vaccine (TTCV) immunization history",
+          "text": "Tetanus toxoid-containing vaccine (TTCV) immunization history",
+          "detail": "The woman's history of receiving tetanus toxoid-containing vaccine (TTCV)",
+          "options": [
+            "Fully immunized",
+            "Under-immunized",
+            "No doses",
+            "Unknown"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE100",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de105",
+          "type": "Radio",
+          "name": "Flu immunization history",
+          "text": "Flu immunization history",
+          "detail": "Whether or not this year's seasonal flu vaccine has been provided",
+          "options": [
+            "Fully immunized",
+            "No doses",
+            "Unknown"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE105",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de109",
+          "type": "MultiSelect",
+          "name": "Current medications",
+          "text": "Current medications",
+          "detail": "Select all of the medications the woman is currently taking",
+          "options": [
+            "None",
+            "Don't know",
+            "Analgesic",
+            "Antacids",
+            "Anti-convulsive",
+            "Anti-diabetic",
+            "Anthelmintic",
+            "Anti-hypertensive",
+            "Anti-malarials",
+            "Antiretrovirals (ARVs)",
+            "Antitussive",
+            "Antivirals",
+            "Aspirin",
+            "Asthma",
+            "Calcium",
+            "Cotrimoxazole",
+            "Doxylamine",
+            "Folic acid",
+            "Hematinic",
+            "Hemorrhoidal medication",
+            "Iron",
+            "Magnesium",
+            "Metoclopramide",
+            "Multivitamin",
+            "Oral pre-exposure prophylaxis (PrEP) for HIV",
+            "Other antibiotics",
+            "Thyroid medication",
+            "Vitamin A",
+            "Other (specify)"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE109",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de139",
+          "type": "MultiSelect",
+          "name": "Daily caffeine intake",
+          "text": "Daily caffeine intake",
+          "detail": "Assesses whether the woman consumes more than 300 mg of caffeine per day",
+          "options": [
+            "More than 2 cups (200 ml) of filtered or commercially brewed coffee",
+            "More than 4 cups of tea",
+            "More than 12 bars (50 g) of chocolate",
+            "More than one can of soda or energy drink",
+            "None of the above"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE139",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de145",
+          "type": "MultiSelect",
+          "name": "Current alcohol and/or other substance use",
+          "text": "Current alcohol and/or other substance use",
+          "detail": "Whether or not the woman currently consumes any alcohol or substances",
+          "options": [
+            "None",
+            "Alcohol",
+            "Cocaine",
+            "Injectable drugs",
+            "Marijuana",
+            "Other (specify)"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE145",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de146",
+          "type": "Binary",
+          "name": "Clinical enquiry for alcohol and other substance use done",
+          "text": "Clinical enquiry for alcohol and other substance use done",
+          "detail": "Whether or not the health worker has performed a clinical enquiry into alcohol and substance use",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE146",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b6-de153",
+          "type": "Binary",
+          "name": "Tobacco use",
+          "text": "Tobacco use",
+          "detail": "Whether the woman uses tobacco products",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B6.DE153",
+            "activity": "ANC.B6. Collect woman's profile and history",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Symptoms and Follow-up",
+      "questions": [
+        {
+          "code": "whodakanc-symptoms-act-b7",
+          "type": "Instruction",
+          "name": "Check symptoms and follow-up",
+          "text": "Check symptoms and follow-up",
+          "detail": "ANC.B7. Check symptoms and follow-up",
+          "newScreen": false
+        },
+        {
+          "code": "whodakanc-b7-de1",
+          "type": "FreeText",
+          "name": "Medication follow-up",
+          "text": "Medication follow-up",
+          "detail": "Which of the medications(including supplements and vitamins) is the woman taking and any side effects?",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B7.DE1",
+            "activity": "ANC.B7. Check symptoms and follow-up",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b7-ded9",
+          "type": "MultiSelect",
+          "name": "Persistent behaviours",
+          "text": "Persistent behaviours",
+          "detail": "Which of the following behaviours persist? Select which of the following behaviours persist after being reported during last contact",
+          "options": [
+            "High caffeine intake",
+            "No condom use during sex",
+            "Alcohol use",
+            "Substance use",
+            "None"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B7.DED9",
+            "activity": "ANC.B7. Check symptoms and follow-up",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b7-de11",
+          "type": "Binary",
+          "name": "Tobacco use",
+          "text": "Tobacco use",
+          "detail": "Whether the client uses any tobacco products",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B7.DE11",
+            "activity": "ANC.B7. Check symptoms and follow-up",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b7-de12",
+          "type": "Binary",
+          "name": "Recently quit tobacco products",
+          "text": "Recently quit tobacco products",
+          "detail": "Whether the client has recently quit using any tobacco products",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B7.DE12",
+            "activity": "ANC.B7. Check symptoms and follow-up",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b7-de13",
+          "type": "Binary",
+          "name": "Exposure to second-hand smoke",
+          "text": "Exposure to second-hand smoke",
+          "detail": "Anyone in the household smokes tobacco products – whether the client is exposed to second-hand smoke from anyone in her household",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B7.DE13",
+            "activity": "ANC.B7. Check symptoms and follow-up",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b7-de18",
+          "type": "MultiSelect",
+          "name": "Persistent physiological symptoms",
+          "text": "Persistent physiological symptoms",
+          "detail": "Which of the following physiological symptoms persist? Select which of the following physiological symptoms persist after being reported during last contact",
+          "options": [
+            "None",
+            "Abnormal vaginal discharge (physiological) (foul smelling) (curd like)",
+            "Breathing difficulty",
+            "Breathless during routine activities",
+            "Constipation",
+            "Contractions",
+            "Cough lasting more than 3 weeks",
+            "Fever",
+            "Gets tired easily",
+            "Headache",
+            "Heartburn",
+            "Leg cramps",
+            "Leg redness",
+            "Nausea",
+            "Oedema",
+            "Pain – during urination (dysuria)",
+            "Pain – Leg",
+            "Pain – Low back",
+            "Pain – Pelvic",
+            "Extreme pelvic pain, cannot walk (symphysis pubis dysfunction)",
+            "Vaginal bleeding",
+            "Varicose veins",
+            "Visual disturbance",
+            "Vomiting"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B7.DE18",
+            "activity": "ANC.B7. Check symptoms and follow-up",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b7-de43",
+          "type": "MultiSelect",
+          "name": "Current physiological symptoms",
+          "text": "Current physiological symptoms",
+          "detail": "The physiological symptoms that the woman is experiencing right now: select \"None\" if she is experiencing none of these symptoms",
+          "options": [
+            "None",
+            "Abnormal pulse rate",
+            "Abnormal vaginal discharge (physiological) (foul smelling) (curd like)",
+            "Breathing difficulty",
+            "Breathless during routine activities",
+            "Constipation",
+            "Contractions",
+            "Cough lasting more than 3 weeks",
+            "Fever",
+            "Gets tired easily",
+            "Headache",
+            "Heartburn",
+            "Leg cramps",
+            "Leg redness",
+            "Nausea",
+            "Oedema",
+            "Pain – during urination (dysuria)",
+            "Pain – Leg",
+            "Pain – Low back",
+            "Pain – Pelvic",
+            "Extreme pelvic pain – can't walk (symphysis pubis dysfunction)",
+            "Pain – Other",
+            "Vaginal bleeding",
+            "Varicose veins",
+            "Visual disturbance",
+            "Vomiting",
+            "Other current physiological symptoms (specify)"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B7.DE43",
+            "activity": "ANC.B7. Check symptoms and follow-up",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-symptoms-sec-intimate-partner-violence-ipv",
+          "type": "Instruction",
+          "name": "Intimate partner violence (IPV)",
+          "text": "Intimate partner violence (IPV)"
+        },
+        {
+          "code": "whodakanc-b7-de98",
+          "type": "Radio",
+          "name": "Fetal movement",
+          "text": "Fetal movement",
+          "detail": "Whether the woman has felt the baby move or not or if the baby's movements have decreased",
+          "options": [
+            "Normal fetal movement",
+            "Reduced or poor fetal movement",
+            "No fetal movement"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B7.DE98",
+            "activity": "ANC.B7. Check symptoms and follow-up",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Physical Examination",
+      "questions": [
+        {
+          "code": "whodakanc-physicalexam-act-b8",
+          "type": "Instruction",
+          "name": "Conduct physical exam",
+          "text": "Conduct physical exam",
+          "detail": "ANC.B8. Conduct physical exam",
+          "newScreen": false
+        },
+        {
+          "code": "whodakanc-physicalexam-sec-height-and-weight",
+          "type": "Instruction",
+          "name": "Height and weight",
+          "text": "Height and weight"
+        },
+        {
+          "code": "whodakanc-b8-de1",
+          "type": "Number",
+          "name": "Height",
+          "text": "Height",
+          "detail": "The woman's current height in centimetres",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE1",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b8-de3",
+          "type": "Number",
+          "name": "Current weight",
+          "text": "Current weight",
+          "detail": "The woman's current weight in kilograms",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE3",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b8-de4",
+          "type": "Number",
+          "name": "BMI",
+          "text": "BMI",
+          "detail": "Body mass index (BMI): calculated by taking weight in kg divided by the squared height in meters, i.e. kg/(m^2)",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE4",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Quantity",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b8-de5",
+          "type": "Radio",
+          "name": "Weight category",
+          "text": "Weight category",
+          "detail": "Weight category is calculated from BMI",
+          "options": [
+            "Underweight",
+            "Normal weight",
+            "Overweight",
+            "Obese"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE5",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b8-de10",
+          "type": "Radio",
+          "name": "Expected weight gain",
+          "text": "Expected weight gain",
+          "detail": "Expected weight gain during pregnancy is based on the woman's weight category",
+          "options": [
+            "5–9 kg",
+            "7–11.5 kg",
+            "11.5–16 kg",
+            "12.5–18 kg"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE10",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b8-de15",
+          "type": "Number",
+          "name": "Average weight gain per week",
+          "text": "Average weight gain per week",
+          "detail": "Average weight gain per week since last contact (kg); this would only display starting at the 2nd contact",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE15",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b8-de16",
+          "type": "Number",
+          "name": "Total weight gain (kg)",
+          "text": "Total weight gain (kg)",
+          "detail": "Total weight gain in pregnancy so far (kg)",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE16",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-physicalexam-sec-blood-pressure",
+          "type": "Instruction",
+          "name": "Blood pressure",
+          "text": "Blood pressure"
+        },
+        {
+          "code": "whodakanc-b8-de17",
+          "type": "Number",
+          "name": "Systolic blood pressure",
+          "text": "Systolic blood pressure",
+          "detail": "Systolic blood pressure (SBP) in mmHg",
+          "config": {
+            "rounding": 0
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE17",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "indicator",
+            "indicators": "ANC.IND.7 Percentage of pregnant women with at least one blood pressure measure during ANC ANC.IND.8 Percentage of pregnant women with at least one blood pressure measure in the third trimester during ANC"
+          }
+        },
+        {
+          "code": "whodakanc-ds-dt04-systolic",
+          "type": "Instruction",
+          "name": "Systolic blood pressure 140 or above - measure again",
+          "text": "Let the woman rest for 10-15 minutes and measure her blood pressure again. Record the second reading in the repeat blood pressure fields below.",
+          "detail": "WHO DAK decision support ANC.DT.04",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakanc-b8-de17": {
+              "type": "range",
+              "start": 140,
+              "end": 1000
+            }
+          },
+          "_decisionSupport": {
+            "rule": "ANC.DT.04",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakanc-b8-de19",
+          "type": "Number",
+          "name": "Diastolic blood pressure",
+          "text": "Diastolic blood pressure",
+          "detail": "Diastolic blood pressure (DBP) in mmHg",
+          "config": {
+            "rounding": 0
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE19",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "indicator",
+            "indicators": "ANC.IND.7 Percentage of pregnant women with at least one blood pressure measure during ANC ANC.IND.8 Percentage of pregnant women with at least one blood pressure measure in the third trimester during ANC"
+          }
+        },
+        {
+          "code": "whodakanc-ds-dt04-diastolic",
+          "type": "Instruction",
+          "name": "Diastolic blood pressure 90 or above - measure again",
+          "text": "Let the woman rest for 10-15 minutes and measure her blood pressure again. Record the second reading in the repeat blood pressure fields below.",
+          "detail": "WHO DAK decision support ANC.DT.04",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakanc-b8-de19": {
+              "type": "range",
+              "start": 90,
+              "end": 1000
+            }
+          },
+          "_decisionSupport": {
+            "rule": "ANC.DT.04",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakanc-b8-de20",
+          "type": "Number",
+          "name": "Repeat systolic blood pressure",
+          "text": "Repeat systolic blood pressure",
+          "detail": "Repeat measurement of the woman's systolic blood pressure in mmHg after 10–15 minutes rest",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE20",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b8-de21",
+          "type": "Number",
+          "name": "Repeat diastolic blood pressure",
+          "text": "Repeat diastolic blood pressure",
+          "detail": "Repeat measurement of the woman's diastolic blood pressure in mmHg after 10–15 minutes rest",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE21",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b8-de27",
+          "type": "MultiSelect",
+          "name": "Symptoms of severe pre-eclampsia",
+          "text": "Symptoms of severe pre-eclampsia",
+          "detail": "Check if the woman has any of the following symptoms of severe pre-eclampsia",
+          "options": [
+            "No symptoms of severe pre-eclampsia",
+            "Severe headache",
+            "Visual disturbance",
+            "Epigastric pain",
+            "Dizziness",
+            "Vomiting"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE27",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-physicalexam-sec-temperature-pulse-and-pallor",
+          "type": "Instruction",
+          "name": "Temperature, pulse and pallor",
+          "text": "Temperature, pulse and pallor"
+        },
+        {
+          "code": "whodakanc-b8-de34",
+          "type": "Number",
+          "name": "Body temperature",
+          "text": "Body temperature",
+          "detail": "The woman's body temperature in degrees Celsius (°C) (first reading)",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE34",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b8-de35",
+          "type": "Number",
+          "name": "Second body temperature",
+          "text": "Second body temperature",
+          "detail": "The woman's body temperature in degrees Celsius (°C) (second reading)",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE35",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b8-de36",
+          "type": "Number",
+          "name": "Pulse rate",
+          "text": "Pulse rate",
+          "detail": "The woman's pulse rate in beats per minute (bpm)",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE36",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b8-de37",
+          "type": "Number",
+          "name": "Second pulse rate",
+          "text": "Second pulse rate",
+          "detail": "The woman's second pulse rate in beats per minute (bpm)",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE37",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-physicalexam-sec-fetal-assessment",
+          "type": "Instruction",
+          "name": "Fetal assessment",
+          "text": "Fetal assessment"
+        },
+        {
+          "code": "whodakanc-b8-de106",
+          "type": "Binary",
+          "name": "Fetal heartbeat present",
+          "text": "Fetal heartbeat present",
+          "detail": "Whether or not the health worker observes a fetal heartbeat",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE106",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required,indicator",
+            "indicators": "ANC.IND.9 Percentage of pregnant women whose baby’s heartbeat was listened to at least once during ANC"
+          }
+        },
+        {
+          "code": "whodakanc-b8-de108",
+          "type": "Number",
+          "name": "Second fetal heart rate",
+          "text": "Second fetal heart rate",
+          "detail": "The second fetal heart rate reading in beats per minute (bpm)",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE108",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b8-de111",
+          "type": "Radio",
+          "name": "Fetal presentation",
+          "text": "Fetal presentation",
+          "detail": "If a single fetus only, indicate the presentation of the fetus in the uterus",
+          "options": [
+            "Unknown",
+            "Cephalic",
+            "Pelvic",
+            "Transverse",
+            "Other"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE111",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b8-de117",
+          "type": "Radio",
+          "name": "Presenting signs/conditions for IPV",
+          "text": "Presenting signs/conditions for IPV",
+          "detail": "Signs or conditions that are due to or trigger suspicion of intimate partner violence?",
+          "options": [
+            "Unexplained traumatic injury to the abdomen",
+            "Unexplained traumatic injury – other",
+            "Other (specify)"
+          ],
+          "_dak": {
+            "dataElementId": "ANC.B8.DE117",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Coding",
+            "multipleChoiceType": "",
+            "required": "O",
+            "selectedBecause": "indicator",
+            "indicators": "Number of different types of health symptoms/conditions presenting or diagnosed linked to experience of violence (disaggregated by type or symptom or condition)"
+          }
+        },
+        {
+          "code": "whodakanc-b8-de122",
+          "type": "Radio",
+          "name": "Reason clinical enquiry not done",
+          "text": "Reason clinical enquiry not done",
+          "options": [
+            "Referred instead",
+            "Trained provider unavailable",
+            "Private/safe space unavailable",
+            "Confidentiality not be assured",
+            "Other (specify)"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B8.DE122",
+            "activity": "ANC.B8. Conduct physical exam",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Laboratory Tests and Imaging",
+      "questions": [
+        {
+          "code": "whodakanc-labtests-act-b9",
+          "type": "Instruction",
+          "name": "Conduct laboratory tests and imaging",
+          "text": "Conduct laboratory tests and imaging",
+          "detail": "ANC.B9. Conduct laboratory tests and imaging",
+          "newScreen": false
+        },
+        {
+          "code": "whodakanc-labtests-sec-ultrasound-scan",
+          "type": "Instruction",
+          "name": "Ultrasound scan",
+          "text": "Ultrasound scan"
+        },
+        {
+          "code": "whodakanc-b9-de1",
+          "type": "Binary",
+          "name": "Ultrasound required",
+          "text": "Ultrasound required",
+          "detail": "Woman requires an ultrasound scan",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE1",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de2",
+          "type": "Binary",
+          "name": "Ultrasound scan ordered",
+          "text": "Ultrasound scan ordered",
+          "detail": "An ultrasound scan has been ordered",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE2",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de3",
+          "type": "Binary",
+          "name": "Ultrasound scan conducted",
+          "text": "Ultrasound scan conducted",
+          "detail": "Whether an ultrasound scan was conducted during a specific contact",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE3",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required,indicator",
+            "indicators": "ANC.IND.10 Percentage of pregnant women with an ultrasound scan before 24 weeks"
+          }
+        },
+        {
+          "code": "whodakanc-b9-de21",
+          "type": "Binary",
+          "name": "Blood type test ordered",
+          "text": "Blood type test ordered",
+          "detail": "Blood type test has been ordered",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE21",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de22",
+          "type": "Binary",
+          "name": "Blood type test conducted",
+          "text": "Blood type test conducted",
+          "detail": "Blood type test has been conducted",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE22",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-labtests-sec-hiv-test",
+          "type": "Instruction",
+          "name": "HIV test",
+          "text": "HIV test"
+        },
+        {
+          "code": "whodakanc-b9-de33",
+          "type": "Binary",
+          "name": "HIV test required",
+          "text": "HIV test required",
+          "detail": "HIV test is required",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE33",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de34",
+          "type": "Binary",
+          "name": "HIV test ordered",
+          "text": "HIV test ordered",
+          "detail": "HIV test has been ordered",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE34",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required,indicator",
+            "indicators": "ANC.IND.12 Percentage of pregnant women counselled and tested for HIV"
+          }
+        },
+        {
+          "code": "whodakanc-b9-de35",
+          "type": "Binary",
+          "name": "HIV test conducted",
+          "text": "HIV test conducted",
+          "detail": "An HIV test is required for all pregnant women at the first contact in pregnancy and again at the first contact of the 3rd trimester if the HIV prevalence in the pregnant woman population is ≥ 5%. A test is not required if the woman is already confirmed…",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE35",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required,indicator",
+            "indicators": "ANC.IND.12 Percentage of pregnant women counselled and tested for HIV"
+          }
+        },
+        {
+          "code": "whodakanc-b9-de59",
+          "type": "Binary",
+          "name": "Hepatitis B test required",
+          "text": "Hepatitis B test required",
+          "detail": "Hepatitis B test is required",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE59",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de60",
+          "type": "Binary",
+          "name": "Hepatitis B test conducted",
+          "text": "Hepatitis B test conducted",
+          "detail": "Select the status of the Hep B test – record result, ordered (pending) or not done",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE60",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de61",
+          "type": "Binary",
+          "name": "Hepatitis B test ordered",
+          "text": "Hepatitis B test ordered",
+          "detail": "Hepatitis B test has been ordered",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE61",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de77",
+          "type": "Binary",
+          "name": "Hepatitis C test required",
+          "text": "Hepatitis C test required",
+          "detail": "Hepatitis C test is required",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE77",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de78",
+          "type": "Binary",
+          "name": "Hepatitis C test conducted",
+          "text": "Hepatitis C test conducted",
+          "detail": "In a setting where the proportion of HCV antibody seroprevalence in the general population is ≥ 2% or the woman is HIV positive, injects drugs or is a sex worker, then a Hep C test is required",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE78",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de79",
+          "type": "Binary",
+          "name": "Hepatitis C test ordered",
+          "text": "Hepatitis C test ordered",
+          "detail": "Hepatitis C test has been ordered",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE79",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de95",
+          "type": "Binary",
+          "name": "Syphilis test required",
+          "text": "Syphilis test required",
+          "detail": "Syphilis test is required",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE95",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de96",
+          "type": "Binary",
+          "name": "Syphilis test conducted",
+          "text": "Syphilis test conducted",
+          "detail": "A syphilis test is recommended for all pregnant women at the first contact and again at the first contact of 3rd trimester; women who are already confirmed positive for syphilis do not need to be tested",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE96",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required,indicator",
+            "indicators": "ANC.IND.3 Percentage of pregnant women screened for syphilis during ANC"
+          }
+        },
+        {
+          "code": "whodakanc-b9-de97",
+          "type": "Binary",
+          "name": "Syphilis test ordered",
+          "text": "Syphilis test ordered",
+          "detail": "Syphilis test has been ordered",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE97",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required,indicator",
+            "indicators": "ANC.IND.3 Percentage of pregnant women screened for syphilis during ANC"
+          }
+        },
+        {
+          "code": "whodakanc-b9-de113",
+          "type": "Binary",
+          "name": "Urine test required",
+          "text": "Urine test required",
+          "detail": "Urine test is required",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE113",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de114",
+          "type": "Binary",
+          "name": "Urine test conducted",
+          "text": "Urine test conducted",
+          "detail": "A urine test is required at the first contact, last contact in 2nd trimester, and 2nd contact in 3rd trimester OR anytime the woman reports pain during urination (dysuria). A dipstick test is required if the woman has a repeat high BP reading (140/90 or…",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE114",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de115",
+          "type": "Binary",
+          "name": "Urine test ordered",
+          "text": "Urine test ordered",
+          "detail": "Urine test has been ordered",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE115",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de144",
+          "type": "Radio",
+          "name": "Urine dipstick result – protein",
+          "text": "Urine dipstick result – protein",
+          "detail": "Enter the result for the dipstick test – protein",
+          "options": [
+            "None",
+            "+",
+            "++",
+            "+++",
+            "++++"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE144",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de159",
+          "type": "Binary",
+          "name": "Blood glucose test conducted",
+          "text": "Blood glucose test conducted",
+          "detail": "While there is no specific recommendation about when routinely screening for hyperglycemia in pregnancy, pregnant women should be tested at some point during the pregnancy",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE159",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de160",
+          "type": "Binary",
+          "name": "Blood glucose test ordered",
+          "text": "Blood glucose test ordered",
+          "detail": "Blood glucose test has been ordered",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE160",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de175",
+          "type": "Binary",
+          "name": "Blood haemoglobin test conducted",
+          "text": "Blood haemoglobin test conducted",
+          "detail": "A blood haemoglobin test (Hb test) is required for all women multiple times during pregnancy to determine whether she's anaemic",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE175",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de176",
+          "type": "Binary",
+          "name": "Blood haemoglobin test ordered",
+          "text": "Blood haemoglobin test ordered",
+          "detail": "Whether or not the blood haemoglobin test (Hb test) has been ordered",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE176",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de193",
+          "type": "Binary",
+          "name": "TB screening recommended",
+          "text": "TB screening recommended",
+          "detail": "TB screening is recommended",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE193",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de194",
+          "type": "Binary",
+          "name": "TB screening conducted",
+          "text": "TB screening conducted",
+          "detail": "In settings where the tuberculosis (TB) prevalence in the general population is 100/100,000 population or higher or in settings with subpopulations that have very poor access to health care, or if the woman is HIV positive, TB screening is recommended",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE194",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b9-de195",
+          "type": "Binary",
+          "name": "TB screening ordered",
+          "text": "TB screening ordered",
+          "detail": "TB screening has been ordered",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B9.DE195",
+            "activity": "ANC.B9. Conduct laboratory tests and imaging",
+            "dataType": "Boolean",
+            "multipleChoiceType": "",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "Counselling and Treatment",
+      "questions": [
+        {
+          "code": "whodakanc-counselling-act-b10-1",
+          "type": "Instruction",
+          "name": "Behaviour counselling",
+          "text": "Behaviour counselling",
+          "detail": "ANC.B10.1 Behaviour counselling",
+          "newScreen": false
+        },
+        {
+          "code": "whodakanc-b10-de1",
+          "type": "Binary",
+          "name": "Counselling conducted on caffeine reduction",
+          "text": "Counselling conducted on caffeine reduction",
+          "detail": "Whether or not counselling was done on lowering daily caffeine intake",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE1",
+            "activity": "ANC.B10.1 Behaviour counselling",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de5",
+          "type": "Binary",
+          "name": "Counselling conducted on tobacco cessation",
+          "text": "Counselling conducted on tobacco cessation",
+          "detail": "Whether or not counselling was done on tobacco cessation",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE5",
+            "activity": "ANC.B10.1 Behaviour counselling",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de9",
+          "type": "Binary",
+          "name": "Counselling conducted on second-hand smoke",
+          "text": "Counselling conducted on second-hand smoke",
+          "detail": "Whether or not counselling was done on second-hand smoke cessation",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE9",
+            "activity": "ANC.B10.1 Behaviour counselling",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de17",
+          "type": "Binary",
+          "name": "Counselling conducted on alcohol / substance use",
+          "text": "Counselling conducted on alcohol / substance use",
+          "detail": "Whether or not counselling was done on alcohol and substance use cessation",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE17",
+            "activity": "ANC.B10.1 Behaviour counselling",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-counselling-act-b10-3",
+          "type": "Instruction",
+          "name": "Diet counselling",
+          "text": "Diet counselling",
+          "detail": "ANC.B10.3 Diet counselling",
+          "newScreen": true
+        },
+        {
+          "code": "whodakanc-b10-de61",
+          "type": "Binary",
+          "name": "Counselling conducted on healthy eating and keeping physically active",
+          "text": "Counselling conducted on healthy eating and keeping physically active",
+          "detail": "Whether or not counselling was done on healthy eating and keeping physically active during pregnancy",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE61",
+            "activity": "ANC.B10.3 Diet counselling",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de70",
+          "type": "MultiSelect",
+          "name": "Reason counselling on balanced energy and protein dietary supplementation was not conducted",
+          "text": "Reason counselling on balanced energy and protein dietary supplementation was not conducted",
+          "detail": "Select the reason why counselling on balanced energy and protein intake was not done",
+          "options": [
+            "Referred instead",
+            "Other (specify)"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE70",
+            "activity": "ANC.B10.3 Diet counselling",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-counselling-act-b10-5",
+          "type": "Instruction",
+          "name": "Nutrition supplementation",
+          "text": "Nutrition supplementation",
+          "detail": "ANC.B10.5 Nutrition supplementation",
+          "newScreen": true
+        },
+        {
+          "code": "whodakanc-b10-de91",
+          "type": "Number",
+          "name": "Amount of iron prescribed",
+          "text": "Amount of iron prescribed",
+          "detail": "Amount of iron supplements prescribed in milligrams for intake",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE91",
+            "activity": "ANC.B10.5 Nutrition supplementation",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de95",
+          "type": "Number",
+          "name": "Amount of daily dose of folic acid prescribed",
+          "text": "Amount of daily dose of folic acid prescribed",
+          "detail": "Amount of folic acid supplements prescribed in milligrams for daily intake",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE95",
+            "activity": "ANC.B10.5 Nutrition supplementation",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-counselling-act-b-10-6",
+          "type": "Instruction",
+          "name": "Risk reduction & general counselling",
+          "text": "Risk reduction & general counselling",
+          "detail": "ANC.B.10.6 Risk reduction & general counselling",
+          "newScreen": true
+        },
+        {
+          "code": "whodakanc-b10-de114",
+          "type": "Binary",
+          "name": "Pre-eclampsia risk counselling provided",
+          "text": "Pre-eclampsia risk counselling provided",
+          "detail": "Whether or not counselling on pre-eclampsia was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE114",
+            "activity": "ANC.B.10.6 Risk reduction & general counselling",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de115",
+          "type": "Number",
+          "name": "Amount of daily aspirin prescribed until delivery",
+          "text": "Amount of daily aspirin prescribed until delivery",
+          "detail": "Amount in milligrams (mg) of aspirin prescribed",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE115",
+            "activity": "ANC.B.10.6 Risk reduction & general counselling",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-counselling-sec-hiv-risk",
+          "type": "Instruction",
+          "name": "HIV risk",
+          "text": "HIV risk"
+        },
+        {
+          "code": "whodakanc-b10-de125",
+          "type": "Binary",
+          "name": "Counselling conducted on HIV risk",
+          "text": "Counselling conducted on HIV risk",
+          "detail": "Whether counselling on HIV risk was conducted for a client who is at a high risk of HIV",
+          "_dak": {
+            "dataElementId": "ANC.B10.DE125",
+            "activity": "ANC.B.10.6 Risk reduction & general counselling",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "indicator",
+            "indicators": "ANC.IND.12 Percentage of pregnant women counselled and tested for HIV"
+          }
+        },
+        {
+          "code": "whodakanc-b10-de126",
+          "type": "Binary",
+          "name": "PrEP for HIV prevention provided",
+          "text": "PrEP for HIV prevention provided",
+          "detail": "Whether or not the client has been counselled on use of oral pre-exposure prophylaxis (PrEP) as a means to reduce risk of HIV transmission and provided with oral PrEP",
+          "_dak": {
+            "dataElementId": "ANC.B10.DE126",
+            "activity": "ANC.B.10.6 Risk reduction & general counselling",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "indicator",
+            "indicators": "ANC.IND.13 Percentage of pregnant women who received oral preexposure prophylaxis (PrEP)"
+          }
+        },
+        {
+          "code": "whodakanc-counselling-sec-family-planning",
+          "type": "Instruction",
+          "name": "Family planning",
+          "text": "Family planning"
+        },
+        {
+          "code": "whodakanc-b10-de144",
+          "type": "Binary",
+          "name": "Counselling on postpartum family planning conducted",
+          "text": "Counselling on postpartum family planning conducted",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE144",
+            "activity": "ANC.B.10.6 Risk reduction & general counselling",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-counselling-act-b-10-7",
+          "type": "Instruction",
+          "name": "Immunizations",
+          "text": "Immunizations",
+          "detail": "ANC.B.10.7 Immunizations",
+          "newScreen": true
+        },
+        {
+          "code": "whodakanc-b10-de165",
+          "type": "Binary",
+          "name": "Tetanus toxoid (TT) 1 immunization provided",
+          "text": "Tetanus toxoid (TT) 1 immunization provided",
+          "detail": "Whether or not the first tetanus toxoid-containing vaccine (TT1) dose was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE165",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de166",
+          "type": "Date",
+          "name": "Date tetanus toxoid 1 immunization was received",
+          "text": "Date tetanus toxoid 1 immunization was received",
+          "detail": "Date on which TT1 was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE166",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de167",
+          "type": "Binary",
+          "name": "Tetanus toxoid (TT) 2 immunization provided",
+          "text": "Tetanus toxoid (TT) 2 immunization provided",
+          "detail": "Whether or not the second tetanus toxoid-containing vaccine (TT2) dose was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE167",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de168",
+          "type": "Date",
+          "name": "Date tetanus toxoid 2 immunization was received",
+          "text": "Date tetanus toxoid 2 immunization was received",
+          "detail": "Date on which TT2 was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE168",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de169",
+          "type": "Binary",
+          "name": "Tetanus toxoid (TT) 3 immunization provided",
+          "text": "Tetanus toxoid (TT) 3 immunization provided",
+          "detail": "Whether or not the third tetanus toxoid-containing vaccine (TT3) dose was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE169",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de170",
+          "type": "Date",
+          "name": "Date tetanus toxoid 3 immunization was received",
+          "text": "Date tetanus toxoid 3 immunization was received",
+          "detail": "Date on which TT3 was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE170",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de171",
+          "type": "Binary",
+          "name": "Tetanus toxoid (TT) 4 immunization provided",
+          "text": "Tetanus toxoid (TT) 4 immunization provided",
+          "detail": "Whether or not the fourth tetanus toxoid-containing vaccine (TT4) dose was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE171",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de172",
+          "type": "Date",
+          "name": "Date tetanus toxoid 4 immunization was received",
+          "text": "Date tetanus toxoid 4 immunization was received",
+          "detail": "Date on which TT4 was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE172",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de173",
+          "type": "Binary",
+          "name": "Tetanus toxoid (TT) 5 immunization provided",
+          "text": "Tetanus toxoid (TT) 5 immunization provided",
+          "detail": "Whether or not the fifth tetanus toxoid-containing vaccine (TT5) dose was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE173",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de174",
+          "type": "Date",
+          "name": "Date tetanus toxoid 5 immunization was received",
+          "text": "Date tetanus toxoid 5 immunization was received",
+          "detail": "Date on which TT5 was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE174",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de175",
+          "type": "Radio",
+          "name": "Reason tetanus toxoid (TT) vaccination not provided",
+          "text": "Reason tetanus toxoid (TT) vaccination not provided",
+          "detail": "Select the reason why the TT dose was not given",
+          "options": [
+            "No vaccine available",
+            "Woman is ill",
+            "Woman refused",
+            "Allergies",
+            "Other (specify)"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE175",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-counselling-sec-hep-b-immunization",
+          "type": "Instruction",
+          "name": "Hep B immunization",
+          "text": "Hep B immunization"
+        },
+        {
+          "code": "whodakanc-b10-de182",
+          "type": "Binary",
+          "name": "Hepatitis B-1 immunization provided",
+          "text": "Hepatitis B-1 immunization provided",
+          "detail": "Whether the first dose of hepatitis B immunization was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE182",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de183",
+          "type": "Date",
+          "name": "Date hepatitis B-1 immunization was received",
+          "text": "Date hepatitis B-1 immunization was received",
+          "detail": "Date on which the first dose of hepatitis B immunization was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE183",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de184",
+          "type": "Binary",
+          "name": "Hepatitis B-2 immunization provided",
+          "text": "Hepatitis B-2 immunization provided",
+          "detail": "Whether the second dose of hepatitis B immunization was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE184",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de185",
+          "type": "Date",
+          "name": "Date hepatitis B-2 immunization was received",
+          "text": "Date hepatitis B-2 immunization was received",
+          "detail": "Date on which the second dose of hepatitis B immunization was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE185",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de186",
+          "type": "Binary",
+          "name": "Hepatitis B-3 immunization provided",
+          "text": "Hepatitis B-3 immunization provided",
+          "detail": "Whether the third dose of hepatitis B immunization was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE186",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de187",
+          "type": "Date",
+          "name": "Date hepatitis B-3 immunization was received",
+          "text": "Date hepatitis B-3 immunization was received",
+          "detail": "Date on which the third dose of hepatitis B immunization was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE187",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de188",
+          "type": "Binary",
+          "name": "No doses of hepatitis B",
+          "text": "No doses of hepatitis B",
+          "detail": "No dose, or zero doses, of hepatitis B immunization has ever been provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE188",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de189",
+          "type": "Radio",
+          "name": "Reason Hep B vaccination not provided",
+          "text": "Reason Hep B vaccination not provided",
+          "detail": "Select the reason why the Hep B dose was not given",
+          "options": [
+            "No vaccine available",
+            "Woman is ill",
+            "Woman refused",
+            "Allergies",
+            "Other (specify)"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE189",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de195",
+          "type": "Binary",
+          "name": "Flu immunization provided",
+          "text": "Flu immunization provided",
+          "detail": "Whether or not the seasonal flu immunization was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE195",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de196",
+          "type": "Date",
+          "name": "Date flu immunization was received",
+          "text": "Date flu immunization was received",
+          "detail": "Date on which this year's seasonal flu dose has been given",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE196",
+            "activity": "ANC.B.10.7 Immunizations",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-counselling-act-b-10-8",
+          "type": "Instruction",
+          "name": "Intimate partner violence first-line support",
+          "text": "Intimate partner violence first-line support",
+          "detail": "ANC.B.10.8 Intimate partner violence first-line support",
+          "newScreen": true
+        },
+        {
+          "code": "whodakanc-b10-de228",
+          "type": "Radio",
+          "name": "First-line support",
+          "text": "First-line support",
+          "detail": "Type of first-line support provided for IPV",
+          "options": [
+            "Treated",
+            "Referred",
+            "Other (specify)"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE228",
+            "activity": "ANC.B.10.8 Intimate partner violence first-line support",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de210",
+          "type": "Radio",
+          "name": "What additional type of care provided",
+          "text": "What additional type of care provided",
+          "detail": "What care was provided for survivor/woman subject to intimate partner violence",
+          "options": [
+            "No action necessary",
+            "Safety assessment",
+            "Mental health care",
+            "Care for other presenting signs and symptoms",
+            "Referred"
+          ],
+          "_dak": {
+            "dataElementId": "ANC.B10.DE210",
+            "activity": "ANC.B.10.8 Intimate partner violence first-line support",
+            "dataType": "Coding",
+            "multipleChoiceType": "",
+            "required": "O",
+            "selectedBecause": "indicator",
+            "indicators": "Proportion of sexual assault/rape survivors who received appropriate medical care (that is, STI and HIV prophylaxis, emergency contraception, abortion according to law) and psychological care and support (that is, first-line support, referrals to counselling and other services needed)"
+          }
+        },
+        {
+          "code": "whodakanc-counselling-act-b10-9",
+          "type": "Instruction",
+          "name": "Deworming & malaria prophylaxis",
+          "text": "Deworming & malaria prophylaxis",
+          "detail": "ANC.B10.9 Deworming & malaria prophylaxis",
+          "newScreen": true
+        },
+        {
+          "code": "whodakanc-counselling-sec-malaria-prophylaxis",
+          "type": "Instruction",
+          "name": "Malaria prophylaxis",
+          "text": "Malaria prophylaxis"
+        },
+        {
+          "code": "whodakanc-b10-de245",
+          "type": "Binary",
+          "name": "IPTp-SP dose 1 provided",
+          "text": "IPTp-SP dose 1 provided",
+          "detail": "Whether or not IPTp-SP dose 1 was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE245",
+            "activity": "ANC.B10.9 Deworming & malaria prophylaxis",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de247",
+          "type": "Binary",
+          "name": "IPTp-SP dose 2 provided",
+          "text": "IPTp-SP dose 2 provided",
+          "detail": "Whether or not IPTp-SP dose 2 was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE247",
+            "activity": "ANC.B10.9 Deworming & malaria prophylaxis",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-b10-de249",
+          "type": "Binary",
+          "name": "IPTp-SP dose 3 provided",
+          "text": "IPTp-SP dose 3 provided",
+          "detail": "Whether or not IPTp-SP dose 3 was provided",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.B10.DE249",
+            "activity": "ANC.B10.9 Deworming & malaria prophylaxis",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required,indicator",
+            "indicators": "ANC.IND.11 Percentage of women who received three doses or more of intermittent preventive therapy for malaria (IPTp) during their last pregnancy"
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "ANC Referral",
+      "questions": [
+        {
+          "code": "whodakanc-referral-act-c1",
+          "type": "Instruction",
+          "name": "Emergency referral?",
+          "text": "Emergency referral?",
+          "detail": "ANC.C1. Emergency referral?",
+          "newScreen": false
+        },
+        {
+          "code": "whodakanc-c-de1",
+          "type": "Binary",
+          "name": "Emergency referral",
+          "text": "Emergency referral",
+          "detail": "Referral for urgent care",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.C.DE1",
+            "activity": "ANC.C1. Emergency referral?",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-referral-act-c6",
+          "type": "Instruction",
+          "name": "Provide information to referral facility",
+          "text": "Provide information to referral facility",
+          "detail": "ANC.C6. Provide information to referral facility",
+          "newScreen": true
+        },
+        {
+          "code": "whodakanc-c-de2",
+          "type": "MultiSelect",
+          "name": "Reason for referral",
+          "text": "Reason for referral",
+          "detail": "Reason why the client is being referred",
+          "options": [
+            "Referral for screening including diagnostics and lab testing",
+            "Referral for other general services"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.C.DE2",
+            "activity": "ANC.C6. Provide information to referral facility",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-c-de5",
+          "type": "Binary",
+          "name": "Any treatment given before referral?",
+          "text": "Any treatment given before referral?",
+          "detail": "If woman was referred, was any treatment provided before referral?",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.C.DE5",
+            "activity": "ANC.C6. Provide information to referral facility",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-c-de6",
+          "type": "DateTime",
+          "name": "Date of scheduled referral",
+          "text": "Date of scheduled referral",
+          "detail": "When the referral is scheduled",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.C.DE6",
+            "activity": "ANC.C6. Provide information to referral facility",
+            "dataType": "DateTime",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-c-de7",
+          "type": "FreeText",
+          "name": "Location of referral",
+          "text": "Location of referral",
+          "detail": "Where the client is being referred to",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.C.DE7",
+            "activity": "ANC.C6. Provide information to referral facility",
+            "dataType": "String",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-c-de8",
+          "type": "DateTime",
+          "name": "Date referral was made",
+          "text": "Date referral was made",
+          "detail": "The date the referral was made",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.C.DE8",
+            "activity": "ANC.C6. Provide information to referral facility",
+            "dataType": "DateTime",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-c-de9",
+          "type": "FreeText",
+          "name": "Provider who made referral",
+          "text": "Provider who made referral",
+          "detail": "The name of the provider who made the referral",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.C.DE9",
+            "activity": "ANC.C6. Provide information to referral facility",
+            "dataType": "String",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-c-de10",
+          "type": "FreeText",
+          "name": "Provider's facility",
+          "text": "Provider's facility",
+          "detail": "Facility client is being referred from",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.C.DE10",
+            "activity": "ANC.C6. Provide information to referral facility",
+            "dataType": "String",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-c-de11",
+          "type": "Number",
+          "name": "Provider's telephone number",
+          "text": "Provider's telephone number",
+          "detail": "The contact details of the provider making the referral",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.C.DE11",
+            "activity": "ANC.C6. Provide information to referral facility",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-c-de12",
+          "type": "FreeText",
+          "name": "Referral notes",
+          "text": "Referral notes",
+          "detail": "Any additional relevant details of clinical significance for the referral facility to provide continuity of care",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.C.DE12",
+            "activity": "ANC.C6. Provide information to referral facility",
+            "dataType": "String",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-c-de13",
+          "type": "FreeText",
+          "name": "Client history summary",
+          "text": "Client history summary",
+          "detail": "With interoperable systems, the provider receiving the referral should be able to access the client's health record digitally. However, in the absence of this, the referral provider should receive a summary of the client's health records that includes…",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.C.DE13",
+            "activity": "ANC.C6. Provide information to referral facility",
+            "dataType": "String",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "ANC Episode Outcome",
+      "questions": [
+        {
+          "code": "whodakanc-episodeend-act-end",
+          "type": "Instruction",
+          "name": "ANC.End",
+          "text": "ANC.End",
+          "detail": "ANC.End",
+          "newScreen": false
+        },
+        {
+          "code": "whodakanc-end-1",
+          "type": "Radio",
+          "name": "Reason for closing ANC record",
+          "text": "Reason for closing ANC record",
+          "detail": "Select the reason why you are closing the woman's ANC record",
+          "options": [
+            "Live birth",
+            "Stillbirth",
+            "Miscarriage",
+            "Abortion",
+            "Woman died",
+            "Lost to follow-up",
+            "Moved away",
+            "False pregnancy",
+            "Wrong entry",
+            "Other (specify)"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.End.1",
+            "activity": "ANC.End",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-end-12",
+          "type": "Date",
+          "name": "Delivery date",
+          "text": "Delivery date",
+          "detail": "Date on which the woman delivered",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.End.12",
+            "activity": "ANC.End",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-end-13",
+          "type": "Radio",
+          "name": "Place of delivery",
+          "text": "Place of delivery",
+          "detail": "Place where the woman delivered",
+          "options": [
+            "Health-care facility",
+            "Home",
+            "Other (specify)"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "ANC.End.13",
+            "activity": "ANC.End",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-end-17",
+          "type": "Binary",
+          "name": "Preterm Birth",
+          "text": "Preterm Birth",
+          "detail": "The woman gave birth when the gestational age was less than 37 weeks",
+          "_dak": {
+            "dataElementId": "ANC.End.17",
+            "activity": "ANC.End",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-end-18",
+          "type": "Radio",
+          "name": "Delivery mode",
+          "text": "Delivery mode",
+          "detail": "How the woman gave birth/delivered",
+          "options": [
+            "Normal",
+            "Forceps",
+            "Vacuum",
+            "C-section"
+          ],
+          "_dak": {
+            "dataElementId": "ANC.End.18",
+            "activity": "ANC.End",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-end-23",
+          "type": "Number",
+          "name": "Birth weight",
+          "text": "Birth weight",
+          "detail": "Enter the birth weight of the baby in kg",
+          "_dak": {
+            "dataElementId": "ANC.End.23",
+            "activity": "ANC.End",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-end-24",
+          "type": "Binary",
+          "name": "Exclusively breastfeeding?",
+          "text": "Exclusively breastfeeding?",
+          "detail": "Specify whether the woman is exclusively breastfeeding",
+          "_dak": {
+            "dataElementId": "ANC.End.24",
+            "activity": "ANC.End",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-end-25",
+          "type": "MultiSelect",
+          "name": "Delivery complications",
+          "text": "Delivery complications",
+          "detail": "Any complications that occurred during delivery",
+          "options": [
+            "No complications",
+            "Postpartum haemorrhage",
+            "Antepartum haemorrhage",
+            "Placenta praevia",
+            "Placental abruption",
+            "Cord prolapse",
+            "Obstructed labour",
+            "Abnormal presentation",
+            "Pre-eclampsia",
+            "Eclampsia",
+            "Perineal tear (3rd, or 4th degree)",
+            "Other (specify)"
+          ],
+          "_dak": {
+            "dataElementId": "ANC.End.25",
+            "activity": "ANC.End",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-end-38",
+          "type": "Date",
+          "name": "Date of miscarriage or abortion",
+          "text": "Date of miscarriage or abortion",
+          "detail": "Date of the miscarriage/abortion",
+          "_dak": {
+            "dataElementId": "ANC.End.38",
+            "activity": "ANC.End",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-end-39",
+          "type": "Date",
+          "name": "Date of death",
+          "text": "Date of death",
+          "detail": "Date that the woman died",
+          "_dak": {
+            "dataElementId": "ANC.End.39",
+            "activity": "ANC.End",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakanc-end-40",
+          "type": "Radio",
+          "name": "Cause of death",
+          "text": "Cause of death",
+          "detail": "Cause of the woman's death",
+          "options": [
+            "Unknown",
+            "Abortion-related complications",
+            "Obstructed labour",
+            "Pre-eclampsia",
+            "Eclampsia",
+            "Postpartum haemorrhage",
+            "Antepartum haemorrhage",
+            "Placental abruption",
+            "Infection",
+            "Other (specify)"
+          ],
+          "_dak": {
+            "dataElementId": "ANC.End.40",
+            "activity": "ANC.End",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        }
+      ]
+    }
+  ]
+}

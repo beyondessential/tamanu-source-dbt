@@ -1,0 +1,2522 @@
+{
+  "programName": "WHO DAK FP",
+  "programCode": "who-dak-fp",
+  "country": "",
+  "homeServer": "",
+  "registry": {
+    "registryCode": "who-dak-fp",
+    "registryName": "WHO DAK FP",
+    "currentlyAtType": "facility",
+    "visibilityStatus": "current",
+    "lossToFollowUpEnabled": true,
+    "lossToFollowUpThresholdDays": 119,
+    "clinicalStatuses": [
+      {
+        "code": "who-dak-fp-using-method",
+        "name": "Using a method",
+        "color": "green"
+      },
+      {
+        "code": "who-dak-fp-permanent-method",
+        "name": "Permanent method",
+        "color": "blue"
+      },
+      {
+        "code": "who-dak-fp-awaiting-method",
+        "name": "Awaiting method or procedure",
+        "color": "yellow"
+      },
+      {
+        "code": "who-dak-fp-no-method",
+        "name": "No method - unmet need",
+        "color": "orange"
+      },
+      {
+        "code": "who-dak-fp-referred",
+        "name": "Referred",
+        "color": "teal"
+      },
+      {
+        "code": "who-dak-fp-seeking-pregnancy",
+        "name": "Stopped - seeking pregnancy",
+        "color": "pink"
+      },
+      {
+        "code": "who-dak-fp-stopped",
+        "name": "Stopped contraception",
+        "color": "brown"
+      },
+      {
+        "code": "who-dak-fp-lost-to-follow-up",
+        "name": "Lost to follow-up",
+        "color": "red"
+      },
+      {
+        "code": "who-dak-fp-transferred-out",
+        "name": "Transferred out",
+        "color": "grey"
+      }
+    ],
+    "conditions": [
+      {
+        "code": "who-dak-fp-cond-hypertension",
+        "name": "Hypertension"
+      },
+      {
+        "code": "who-dak-fp-cond-cardiovascular",
+        "name": "Cardiovascular disease"
+      },
+      {
+        "code": "who-dak-fp-cond-vte",
+        "name": "Venous thromboembolism"
+      },
+      {
+        "code": "who-dak-fp-cond-diabetes",
+        "name": "Diabetes mellitus"
+      },
+      {
+        "code": "who-dak-fp-cond-migraine-aura",
+        "name": "Migraine with aura"
+      },
+      {
+        "code": "who-dak-fp-cond-epilepsy",
+        "name": "Epilepsy"
+      },
+      {
+        "code": "who-dak-fp-cond-depression",
+        "name": "Depressive disorders"
+      },
+      {
+        "code": "who-dak-fp-cond-sle",
+        "name": "Systemic lupus erythematosus"
+      },
+      {
+        "code": "who-dak-fp-cond-anaemia",
+        "name": "Anaemia"
+      },
+      {
+        "code": "who-dak-fp-cond-thyroid",
+        "name": "Thyroid disorder"
+      },
+      {
+        "code": "who-dak-fp-cond-gall-bladder",
+        "name": "Gall bladder disease"
+      },
+      {
+        "code": "who-dak-fp-cond-liver-disorder",
+        "name": "Liver disorder"
+      },
+      {
+        "code": "who-dak-fp-cond-viral-hepatitis",
+        "name": "Viral hepatitis"
+      },
+      {
+        "code": "who-dak-fp-cond-kidney-disease",
+        "name": "Kidney disease"
+      },
+      {
+        "code": "who-dak-fp-cond-breast-cancer",
+        "name": "Breast cancer"
+      },
+      {
+        "code": "who-dak-fp-cond-cervical-cancer",
+        "name": "Cervical cancer"
+      },
+      {
+        "code": "who-dak-fp-cond-gynae-cancer",
+        "name": "Endometrial or ovarian cancer"
+      },
+      {
+        "code": "who-dak-fp-cond-gtd",
+        "name": "Gestational trophoblastic disease"
+      },
+      {
+        "code": "who-dak-fp-cond-fibroids",
+        "name": "Uterine fibroids"
+      },
+      {
+        "code": "who-dak-fp-cond-pid",
+        "name": "Pelvic inflammatory disease"
+      },
+      {
+        "code": "who-dak-fp-cond-sti",
+        "name": "Sexually transmitted infection"
+      },
+      {
+        "code": "who-dak-fp-cond-hiv",
+        "name": "HIV"
+      },
+      {
+        "code": "who-dak-fp-cond-syphilis",
+        "name": "Syphilis"
+      },
+      {
+        "code": "who-dak-fp-cond-tb",
+        "name": "Tuberculosis"
+      },
+      {
+        "code": "who-dak-fp-cond-schistosomiasis",
+        "name": "Schistosomiasis"
+      },
+      {
+        "code": "who-dak-fp-cond-unexplained-bleeding",
+        "name": "Unexplained vaginal bleeding"
+      }
+    ],
+    "conditionCategories": [
+      {
+        "code": "suspected",
+        "name": "Suspected"
+      },
+      {
+        "code": "underInvestigation",
+        "name": "Under investigation"
+      },
+      {
+        "code": "confirmed",
+        "name": "Confirmed"
+      },
+      {
+        "code": "inRemission",
+        "name": "In remission"
+      }
+    ]
+  },
+  "surveys": [
+    {
+      "code": "registration",
+      "name": "FP Registration",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "counselling",
+      "name": "FP Counselling",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "serviceprovision",
+      "name": "FP Service Provision",
+      "surveyType": "programs",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    },
+    {
+      "code": "referral",
+      "name": "FP Referral",
+      "surveyType": "referral",
+      "status": "publish",
+      "isSensitive": false,
+      "visibilityStatus": "current",
+      "notifiable": false
+    }
+  ],
+  "surveySheets": [
+    {
+      "surveyName": "FP Registration",
+      "questions": [
+        {
+          "code": "whodakfp-registration-act-a2",
+          "type": "Instruction",
+          "name": "Gather client details",
+          "text": "Gather client details",
+          "detail": "FP.A2. Gather client details",
+          "newScreen": false
+        },
+        {
+          "code": "whodakfp-a-de1",
+          "type": "DateTime",
+          "name": "Visit date",
+          "text": "Visit date",
+          "detail": "The date and time of the client's visit",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.A.DE1",
+            "activity": "FP.A2. Gather client details",
+            "dataType": "DateTime",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-a-de2",
+          "type": "FreeText",
+          "name": "[Administrative Area]",
+          "text": "[Administrative Area]",
+          "detail": "This should be a context-specific list of administrative areas – villages, districts, etc. The purpose of this data element is to allow for grouping and flagging of client data to a particular facility's catchment area.",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.A.DE2",
+            "activity": "FP.A2. Gather client details",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-a-de3",
+          "type": "Binary",
+          "name": "Referral",
+          "text": "Referral",
+          "detail": "If client was referred for care",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.A.DE3",
+            "activity": "FP.A2. Gather client details",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-a-de7",
+          "type": "FreeText",
+          "name": "Unique identification",
+          "text": "Unique identification",
+          "detail": "Unique identifier generated for new clients or a universal ID, if used in the country",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.A.DE7",
+            "activity": "FP.A2. Gather client details",
+            "dataType": "ID",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-a-de8",
+          "type": "FreeText",
+          "name": "First name",
+          "text": "First name",
+          "detail": "Client's first name",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.A.DE8",
+            "activity": "FP.A2. Gather client details",
+            "dataType": "String",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-a-de9",
+          "type": "FreeText",
+          "name": "Last name",
+          "text": "Last name",
+          "detail": "Client's family name or last name",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.A.DE9",
+            "activity": "FP.A2. Gather client details",
+            "dataType": "String",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-a-de16",
+          "type": "Radio",
+          "name": "Sex",
+          "text": "Sex",
+          "detail": "Sex of the client",
+          "options": [
+            "Female",
+            "Male",
+            "Other"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.A.DE16",
+            "activity": "FP.A2. Gather client details",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-a-de20",
+          "type": "FreeText",
+          "name": "Address",
+          "text": "Address",
+          "detail": "Client's home address or address that the client is consenting to disclose",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.A.DE20",
+            "activity": "FP.A2. Gather client details",
+            "dataType": "String",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-a-de53",
+          "type": "Number",
+          "name": "Mobile phone number",
+          "text": "Mobile phone number",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.A.DE53",
+            "activity": "FP.A2. Gather client details",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "FP Counselling",
+      "questions": [
+        {
+          "code": "whodakfp-counselling-act-b1",
+          "type": "Instruction",
+          "name": "Determine reason for visit",
+          "text": "Determine reason for visit",
+          "detail": "FP.B1. Determine reason for visit",
+          "newScreen": false
+        },
+        {
+          "code": "whodakfp-b-de1",
+          "type": "MultiSelect",
+          "name": "Reason for visit",
+          "text": "Reason for visit",
+          "detail": "Establish reason for visit",
+          "options": [
+            "New",
+            "Follow-up",
+            "Emergency contraception"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.B.DE1",
+            "activity": "FP.B1. Determine reason for visit",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de5",
+          "type": "MultiSelect",
+          "name": "Reason for follow-up",
+          "text": "Reason for follow-up",
+          "detail": "Establish reason for follow-up",
+          "options": [
+            "Wishes to stop contraception",
+            "Issues and concerns / method failure",
+            "Contraceptive continuation",
+            "Implant removal",
+            "IUD removal",
+            "Other (specify)"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.B.DE5",
+            "activity": "FP.B1. Determine reason for visit",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-ds-dt01-returning-with-problems",
+          "type": "Instruction",
+          "name": "Returning client with a problem - allow more time",
+          "text": "Give time to clients who need it: returning clients with problems need the most. Understand the problem and help resolve it, whether that means managing side effects, treating a condition, or helping the client switch method.",
+          "detail": "WHO DAK decision support FP.DT.01",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakfp-b-de5": [
+              "Issues and concerns / method failure"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "FP.DT.01",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakfp-ds-dt01-routine-continuation",
+          "type": "Instruction",
+          "name": "Routine continuation - little counselling needed",
+          "text": "Many clients return with no problems and need little counselling. Provide more supplies or routine follow-up, ask whether the client has any questions, and confirm the method is still the one they want.",
+          "detail": "WHO DAK decision support FP.DT.01",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakfp-b-de5": [
+              "Contraceptive continuation"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "FP.DT.01",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakfp-b-de12",
+          "type": "MultiSelect",
+          "name": "Reason for stopping contraception or method",
+          "text": "Reason for stopping contraception or method",
+          "detail": "If stopping a method, the reason why",
+          "options": [
+            "Seeking pregnancy",
+            "Reported failure",
+            "Other (specify)"
+          ],
+          "_dak": {
+            "dataElementId": "FP.B.DE12",
+            "activity": "FP.B1. Determine reason for visit",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de16",
+          "type": "Radio",
+          "name": "Pregnancy intention",
+          "text": "Pregnancy intention",
+          "detail": "Client's intention or desire in the next year to either become pregnant or prevent a future pregnancy",
+          "options": [
+            "Wants to become pregnant",
+            "Does not want to become pregnant",
+            "Unsure"
+          ],
+          "_dak": {
+            "dataElementId": "FP.B.DE16",
+            "activity": "FP.B1. Determine reason for visit",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-counselling-act-b2",
+          "type": "Instruction",
+          "name": "Take vital signs",
+          "text": "Take vital signs",
+          "detail": "FP.B2.Take vital signs",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-b-de20",
+          "type": "Number",
+          "name": "Height",
+          "text": "Height",
+          "detail": "The client's current height in centimetres",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.B.DE20",
+            "activity": "FP.B2.Take vital signs",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de21",
+          "type": "Number",
+          "name": "Body weight",
+          "text": "Body weight",
+          "detail": "The client's current weight in kilograms",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.B.DE21",
+            "activity": "FP.B2.Take vital signs",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de22",
+          "type": "Number",
+          "name": "BMI",
+          "text": "BMI",
+          "detail": "Body mass index",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.B.DE22",
+            "activity": "FP.B2.Take vital signs",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-counselling-sec-blood-pressure",
+          "type": "Instruction",
+          "name": "Blood pressure",
+          "text": "Blood pressure"
+        },
+        {
+          "code": "whodakfp-b-de23",
+          "type": "Binary",
+          "name": "Blood pressure cannot be taken",
+          "text": "Blood pressure cannot be taken",
+          "detail": "If the client's blood pressure cannot be taken, this should be indicated here. Pop-up alert could be provided for client's blood pressure to be taken at later date.",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.B.DE23",
+            "activity": "FP.B2.Take vital signs",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de24",
+          "type": "Number",
+          "name": "Systolic blood pressure",
+          "text": "Systolic blood pressure",
+          "detail": "Systolic blood pressure in mmHg",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.B.DE24",
+            "activity": "FP.B2.Take vital signs",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de25",
+          "type": "Number",
+          "name": "Diastolic blood pressure",
+          "text": "Diastolic blood pressure",
+          "detail": "Diastolic blood pressure in mmHg",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.B.DE25",
+            "activity": "FP.B2.Take vital signs",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-counselling-act-b3",
+          "type": "Instruction",
+          "name": "Capture or update client history",
+          "text": "Capture or update client history",
+          "detail": "FP.B3. Capture or update client history",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-counselling-sec-sexual-history",
+          "type": "Instruction",
+          "name": "Sexual history",
+          "text": "Sexual history"
+        },
+        {
+          "code": "whodakfp-b-de28",
+          "type": "Number",
+          "name": "Days since unprotected sex",
+          "text": "Days since unprotected sex",
+          "detail": "Number of days since the client has had unprotected sex",
+          "_dak": {
+            "dataElementId": "FP.B.DE28",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de29",
+          "type": "Binary",
+          "name": "Never used contraception",
+          "text": "Never used contraception",
+          "detail": "If the client has never previously used any modern method of contraception",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.B.DE29",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required,indicator",
+            "indicators": "FP.IND.01"
+          }
+        },
+        {
+          "code": "whodakfp-counselling-sec-pregnancy-history",
+          "type": "Instruction",
+          "name": "Pregnancy history",
+          "text": "Pregnancy history"
+        },
+        {
+          "code": "whodakfp-b-de33",
+          "type": "Binary",
+          "name": "Postpartum",
+          "text": "Postpartum",
+          "detail": "Whether client has given birth in the past 6 weeks. This data element can be calculated or input--does not need to be entered by health worker",
+          "_dak": {
+            "dataElementId": "FP.B.DE33",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de34",
+          "type": "Number",
+          "name": "Time since delivery",
+          "text": "Time since delivery",
+          "detail": "For a postpartum woman, the amount of time since she gave birth. This data element can be calculated or input by the provider",
+          "_dak": {
+            "dataElementId": "FP.B.DE34",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de35",
+          "type": "Radio",
+          "name": "Breastfeeding",
+          "text": "Breastfeeding",
+          "detail": "Is the woman currently breastfeeding",
+          "options": [
+            "Exclusive breastfeeding",
+            "Fully breastfeeding",
+            "Nearly fully breastfeeding",
+            "Partially breastfeeding"
+          ],
+          "_dak": {
+            "dataElementId": "FP.B.DE35",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Coding",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de42",
+          "type": "Binary",
+          "name": "Miscarriage or abortion within past 4 weeks",
+          "text": "Miscarriage or abortion within past 4 weeks",
+          "detail": "Select if the woman had an abortion or a miscarriage within the past 4 weeks",
+          "_dak": {
+            "dataElementId": "FP.B.DE42",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de47",
+          "type": "Date",
+          "name": "Start date of last normal menses",
+          "text": "Start date of last normal menses",
+          "detail": "The date when the client had her first day of her last normal menses.",
+          "_dak": {
+            "dataElementId": "FP.B.DE47",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de48",
+          "type": "Number",
+          "name": "Days since start of last normal menses",
+          "text": "Days since start of last normal menses",
+          "detail": "Number of days since her last normal period started",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.B.DE48",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de49",
+          "type": "Binary",
+          "name": "Missed or late menses",
+          "text": "Missed or late menses",
+          "detail": "If the woman's monthly bleeding was missed or is late",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.B.DE49",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de50",
+          "type": "Binary",
+          "name": "Amenorrhea",
+          "text": "Amenorrhea",
+          "detail": "If the woman has never had menses or if the woman has had no menses for 3 cycles over the time span of 6 months",
+          "_dak": {
+            "dataElementId": "FP.B.DE50",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de51",
+          "type": "MultiSelect",
+          "name": "Method at intake",
+          "text": "Method at intake",
+          "detail": "Method the client reports currently using at intake",
+          "options": [
+            "Unspecified IUD",
+            "Copper-bearing intrauterine devices (Cu-IUDs)",
+            "Levonorgestrel IUD (LNG-IUD)",
+            "Unspecified implants",
+            "Etonogestrel (ETG) one-rod",
+            "Levonorgestrel (LNG) two-rod",
+            "Unspecified injectables",
+            "DMPA-IM",
+            "DMPA-SC",
+            "Norethisterone enanthate (NET-EN)",
+            "Progestogen-only pills (POPs)",
+            "Combined oral contraceptives (COCs)",
+            "Combined contraceptive patch",
+            "Combined contraceptive vaginal ring (CVR)",
+            "Progesterone-releasing vaginal ring (PVR)",
+            "Lactational amenorrhea method (LAM)",
+            "Unspecified barrier method",
+            "Male condoms",
+            "Female condoms",
+            "Emergency contraceptive pills (ECPs)",
+            "Fertility awareness-based methods (FAB)",
+            "Male sterilization",
+            "Female sterilization",
+            "Withdrawal",
+            "No method",
+            "Female relying on male method",
+            "Male relying on female method"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.B.DE51",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required,indicator",
+            "indicators": "FP.IND.02"
+          }
+        },
+        {
+          "code": "whodakfp-counselling-sec-date-method-administered",
+          "type": "Instruction",
+          "name": "Date method administered",
+          "text": "Date method administered"
+        },
+        {
+          "code": "whodakfp-b-de79",
+          "type": "Date",
+          "name": "IUD insertion date",
+          "text": "IUD insertion date",
+          "detail": "Date of IUD insertion if client is currently using: \"Copper-bearing intrauterine device (Cu-IUD)\" OR \"Levonorgestrel intrauterine devices (LNG-IUD)\" OR \"Unspecified IUD\"",
+          "_dak": {
+            "dataElementId": "FP.B.DE79",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de80",
+          "type": "Date",
+          "name": "Implant date",
+          "text": "Implant date",
+          "detail": "Date of last implant if currently using: \"Etonogestrel (ETG) one-rod\" OR \"Levonorgestrel (LNG) two-rod\" OR \"Unspecified implants\"",
+          "_dak": {
+            "dataElementId": "FP.B.DE80",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de81",
+          "type": "Date",
+          "name": "Injection date",
+          "text": "Injection date",
+          "detail": "Date of last injection if currently using: \"DMPA-IM\" OR \"DMPA-SC\" OR \"Norethisterone enanthate (NET-EN)\" OR \"Unspecified injectables\"",
+          "_dak": {
+            "dataElementId": "FP.B.DE81",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de82",
+          "type": "Date",
+          "name": "Sterilization date",
+          "text": "Sterilization date",
+          "detail": "Date of male sterilization (vasectomy) or female sterilization, if male sterilization (vasectomy) was not reversed",
+          "_dak": {
+            "dataElementId": "FP.B.DE82",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de83",
+          "type": "MultiSelect",
+          "name": "Reason for no contraceptive method",
+          "text": "Reason for no contraceptive method",
+          "detail": "If client is not currently using a method, the reason should be recorded",
+          "options": [
+            "Abstinence",
+            "Religious reasons",
+            "Side-effects of contraception",
+            "Reported failure of contraceptive methods",
+            "Does not want to use contraception",
+            "Partner/family member does not want the client to use contraception",
+            "Cannot afford contraception",
+            "Currently pregnant",
+            "Currently breastfeeding",
+            "Recently gave birth",
+            "Same-sex partner(s)",
+            "Sterile or infertile for non-contraceptive reasons",
+            "History of female or male sterilization",
+            "Partner has history of sterilization",
+            "Does not care about pregnancy",
+            "Seeking pregnancy",
+            "Out of stock – Method",
+            "Out of stock – Supplies",
+            "Forgot to use contraception / lapse in use",
+            "Does not know/not sure",
+            "Other (specify)"
+          ],
+          "_dak": {
+            "dataElementId": "FP.B.DE83",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de105",
+          "type": "MultiSelect",
+          "name": "Methods previously used",
+          "text": "Methods previously used",
+          "detail": "Record all the contraceptive methods the client has a history of using",
+          "options": [
+            "Unspecified IUD",
+            "Copper-bearing intrauterine devices (Cu-IUDs)",
+            "Levonorgestrel IUD (LNG-IUD)",
+            "Unspecified implants",
+            "Etonogestrel (ETG) one-rod",
+            "Levonorgestrel (LNG) two-rod",
+            "Unspecified injectables",
+            "DMPA-IM",
+            "DMPA-SC",
+            "Norethisterone enanthate (NET-EN)",
+            "Progestogen-only pills (POPs)",
+            "Combined oral contraceptives (COCs)",
+            "Combined contraceptive patch",
+            "Combined contraceptive vaginal ring (CVR)",
+            "Progesterone-releasing vaginal ring (PVR)",
+            "Lactational amenorrhea method (LAM)",
+            "Unspecified barrier method",
+            "Male condoms",
+            "Female condoms",
+            "Emergency contraceptive pills (ECPs)",
+            "Fertility awareness-based methods (FAB)",
+            "Male sterilization",
+            "Female sterilization",
+            "Withdrawal",
+            "No method",
+            "Female relying on male method",
+            "Male relying on female method"
+          ],
+          "_dak": {
+            "dataElementId": "FP.B.DE105",
+            "activity": "FP.B3. Capture or update client history",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-counselling-act-b4",
+          "type": "Instruction",
+          "name": "Conduct risk assessment",
+          "text": "Conduct risk assessment",
+          "detail": "FP.B4. Conduct risk assessment",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-b-de133",
+          "type": "Binary",
+          "name": "STI risk assessment conducted",
+          "text": "STI risk assessment conducted",
+          "detail": "Whether or not an assessment was conducted to determine if the client has a high risk of STIs",
+          "_dak": {
+            "dataElementId": "FP.B.DE133",
+            "activity": "FP.B4. Conduct risk assessment",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de134",
+          "type": "MultiSelect",
+          "name": "STI risk assessment factors",
+          "text": "STI risk assessment factors",
+          "detail": "STI risk factors relevant to the population (e.g. sexually active, new partner in the past three months, partner has an STI)",
+          "options": [
+            "Adolescent female",
+            "HIV+",
+            "Frequent change in sexual partners",
+            "Multiple sexual partners",
+            "Sex worker",
+            "Sex worker client",
+            "Separated from regular sex partners for long periods of time",
+            "Unprotected sex",
+            "Sex with partner who has recently been diagnosed with or treated for an STI",
+            "Sex with partner who has STI symptoms",
+            "History of STI in the last year",
+            "Skin piercing",
+            "No risk factors"
+          ],
+          "_dak": {
+            "dataElementId": "FP.B.DE134",
+            "activity": "FP.B4. Conduct risk assessment",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-ds-dt03-sti-risk-a",
+          "type": "Instruction",
+          "name": "Increased risk of STIs - counsel on dual protection",
+          "text": "This client is at increased risk of sexually transmitted infections. Male and female condoms prevent STIs when used consistently and correctly, so discuss dual protection: condoms alone, or condoms together with another contraceptive method.",
+          "detail": "WHO DAK decision support FP.DT.03 (1 of 3)",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakfp-b-de134": [
+              "Adolescent female",
+              "HIV+",
+              "Frequent change in sexual partners",
+              "Multiple sexual partners"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "FP.DT.03 (1 of 3)",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakfp-ds-dt03-sti-risk-a-issue",
+          "type": "PatientIssue",
+          "name": "Increased risk of STIs - counsel on dual protection",
+          "text": "Increased risk of STIs - counsel on dual protection",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Increased risk of STIs recorded at FP counselling"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakfp-b-de134": [
+              "Adolescent female",
+              "HIV+",
+              "Frequent change in sexual partners",
+              "Multiple sexual partners"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "FP.DT.03 (1 of 3)",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakfp-ds-dt03-sti-risk-b",
+          "type": "Instruction",
+          "name": "Increased risk of STIs - counsel on dual protection",
+          "text": "This client is at increased risk of sexually transmitted infections. Male and female condoms prevent STIs when used consistently and correctly, so discuss dual protection: condoms alone, or condoms together with another contraceptive method.",
+          "detail": "WHO DAK decision support FP.DT.03 (2 of 3)",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakfp-b-de134": [
+              "Sex worker",
+              "Sex worker client",
+              "Unprotected sex",
+              "Skin piercing",
+              "History of STI in the last year"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "FP.DT.03 (2 of 3)",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakfp-ds-dt03-sti-risk-b-issue",
+          "type": "PatientIssue",
+          "name": "Increased risk of STIs - counsel on dual protection",
+          "text": "Increased risk of STIs - counsel on dual protection",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Increased risk of STIs recorded at FP counselling"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakfp-b-de134": [
+              "Sex worker",
+              "Sex worker client",
+              "Unprotected sex",
+              "Skin piercing",
+              "History of STI in the last year"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "FP.DT.03 (2 of 3)",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakfp-ds-dt03-sti-risk-c",
+          "type": "Instruction",
+          "name": "Increased risk of STIs - counsel on dual protection",
+          "text": "This client is at increased risk of sexually transmitted infections. Male and female condoms prevent STIs when used consistently and correctly, so discuss dual protection: condoms alone, or condoms together with another contraceptive method.",
+          "detail": "WHO DAK decision support FP.DT.03 (3 of 3)",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakfp-b-de134": [
+              "Sex with partner who has STI symptoms",
+              "Sex with partner who has recently been diagnosed with or treated for an STI",
+              "Separated from regular sex partners for long periods of time"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "FP.DT.03 (3 of 3)",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakfp-ds-dt03-sti-risk-c-issue",
+          "type": "PatientIssue",
+          "name": "Increased risk of STIs - counsel on dual protection",
+          "text": "Increased risk of STIs - counsel on dual protection",
+          "config": {
+            "issueType": "warning",
+            "issueNote": "Increased risk of STIs recorded at FP counselling"
+          },
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakfp-b-de134": [
+              "Sex with partner who has STI symptoms",
+              "Sex with partner who has recently been diagnosed with or treated for an STI",
+              "Separated from regular sex partners for long periods of time"
+            ]
+          },
+          "_decisionSupport": {
+            "rule": "FP.DT.03 (3 of 3)",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakfp-b-de148",
+          "type": "Binary",
+          "name": "Increased risk of STIs",
+          "text": "Increased risk of STIs",
+          "detail": "The client is at an increased risk of STIs as determined by the STI risk assessment factors",
+          "_dak": {
+            "dataElementId": "FP.B.DE148",
+            "activity": "FP.B4. Conduct risk assessment",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-counselling-act-b6",
+          "type": "Instruction",
+          "name": "Discuss issues and concerns",
+          "text": "Discuss issues and concerns",
+          "detail": "FP.B6. Discuss issues and concerns",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-b-de149",
+          "type": "MultiSelect",
+          "name": "Issues and concerns",
+          "text": "Issues and concerns",
+          "detail": "For returning/follow-up clients, if there are issues and concerns with contraception the client would like to discuss (e.g. Side-effects or symptoms with current method, administration, missed pills, late injections, or change in health conditions which…",
+          "options": [
+            "Change in health conditions",
+            "New medications",
+            "Partner can feel IUD strings during intercourse",
+            "Severe pain in lower abdomen",
+            "Suspected perforation",
+            "Implant dislocated",
+            "IUD partial expulsion",
+            "IUD complete expulsion",
+            "Missing strings",
+            "Missed pills",
+            "Late injections",
+            "Support for self-injecting",
+            "Issues with combined contraceptive patch",
+            "Issues with vaginal ring",
+            "Pain after insertion or removal",
+            "Infection at the incision site",
+            "Infection at the insertion site",
+            "Abscess",
+            "Issues with using condom",
+            "Irritation",
+            "Condom used incorrectly",
+            "Difficulty persuading partner to use method",
+            "Condom squeaks or makes noise during sex",
+            "Severe allergic reaction to latex",
+            "Acne",
+            "Spotting or light bleeding",
+            "Heavy or prolonged bleeding",
+            "Irregular bleeding",
+            "Change in timing of monthly bleeding",
+            "Amenorrhea",
+            "Unexplained vaginal bleeding (suspicious for serious condition), before evaluation",
+            "Menstrual pain",
+            "Possible anaemia",
+            "Bleeding or blood clots",
+            "Breast tenderness",
+            "Headaches",
+            "Migraine headaches",
+            "Ischaemic heart disease",
+            "Heart attack",
+            "Mood changes or changes in sex drive",
+            "Nausea",
+            "Vomiting",
+            "Severe diarrhoea",
+            "Dizziness",
+            "Suspected pregnancy",
+            "Ectopic pregnancy",
+            "Ruptured ectopic pregnancy",
+            "Pelvic inflammatory disease (PID)",
+            "Stroke",
+            "Toxic shock syndrome",
+            "Weight change",
+            "Deep vein thrombosis",
+            "Pulmonary embolism",
+            "Other (Specify)"
+          ],
+          "_dak": {
+            "dataElementId": "FP.B.DE149",
+            "activity": "FP.B6. Discuss issues and concerns",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-counselling-act-b7",
+          "type": "Instruction",
+          "name": "Keep method?",
+          "text": "Keep method?",
+          "detail": "FP.B7. Keep method?",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-b-de209",
+          "type": "MultiSelect",
+          "name": "Keep method?",
+          "text": "Keep method?",
+          "detail": "Whether client wants to continue with current method OR stop using current method AND/OR switch method",
+          "options": [
+            "Stop using method",
+            "Continue with method",
+            "Switch method"
+          ],
+          "_dak": {
+            "dataElementId": "FP.B.DE209",
+            "activity": "FP.B7. Keep method?",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-counselling-act-b9",
+          "type": "Instruction",
+          "name": "Need resupply?",
+          "text": "Need resupply?",
+          "detail": "FP.B9. Need resupply?",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-b-de214",
+          "type": "Binary",
+          "name": "Need resupply?",
+          "text": "Need resupply?",
+          "detail": "If the client wishes to continue with the current method, does the client need a resupply of the method?",
+          "_dak": {
+            "dataElementId": "FP.B.DE214",
+            "activity": "FP.B9. Need resupply?",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-counselling-act-b10",
+          "type": "Instruction",
+          "name": "Procedure required?",
+          "text": "Procedure required?",
+          "detail": "FP.B10. Procedure required?",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-b-de213",
+          "type": "Binary",
+          "name": "Method removal procedure required?",
+          "text": "Method removal procedure required?",
+          "detail": "If the client wishes to stop using the current method, is a removal procedure required?",
+          "_dak": {
+            "dataElementId": "FP.B.DE213",
+            "activity": "FP.B10. Procedure required?",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-counselling-act-b11-1",
+          "type": "Instruction",
+          "name": "Method in mind",
+          "text": "Method in mind",
+          "detail": "FP.B11.1. Method in mind",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-b-de215",
+          "type": "Binary",
+          "name": "Method in mind",
+          "text": "Method in mind",
+          "detail": "Whether the client has a method in mind coming in to the visit",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.B.DE215",
+            "activity": "FP.B11.1. Method in mind",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-ds-dt06-method-in-mind",
+          "type": "Instruction",
+          "name": "Client has a method in mind - check their understanding",
+          "text": "Check that the client's understanding of the method is accurate. Support their choice if they are medically eligible, and discuss how to use the method and what to do about side effects.",
+          "detail": "WHO DAK decision support FP.DT.06",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakfp-b-de215": "Yes"
+          },
+          "_decisionSupport": {
+            "rule": "FP.DT.06",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakfp-ds-dt06-no-method-in-mind",
+          "type": "Instruction",
+          "name": "No method in mind - allow the most time",
+          "text": "New clients with no method in mind need the most time. Discuss the client's situation and plans, what matters most to them about a method, and which of the methods available here fit what they describe.",
+          "detail": "WHO DAK decision support FP.DT.06",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakfp-b-de215": "No"
+          },
+          "_decisionSupport": {
+            "rule": "FP.DT.06",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakfp-counselling-act-b11-3",
+          "type": "Instruction",
+          "name": "Select methods of interest",
+          "text": "Select methods of interest",
+          "detail": "FP.B11.3. Select methods of interest",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-b-de216",
+          "type": "MultiSelect",
+          "name": "Method requested",
+          "text": "Method requested",
+          "detail": "The first pick of method desired by the client, prior to medical eligibility tests. This may be the method in mind or the method selected after discussing the full range of methods.",
+          "options": [
+            "Copper-bearing intrauterine devices (Cu-IUDs)",
+            "Levonorgestrel IUD (LNG-IUD)",
+            "Etonogestrel (ETG) one-rod",
+            "Levonorgestrel (LNG) two-rod",
+            "DMPA-IM",
+            "DMPA-SC",
+            "Norethisterone enanthate (NET-EN)",
+            "Progestogen-only pills (POPs)",
+            "Combined oral contraceptives (COCs)",
+            "Combined contraceptive patch",
+            "Combined contraceptive vaginal ring (CVR)",
+            "Progesterone-releasing vaginal ring (PVR)",
+            "Lactational amenorrhea method (LAM)",
+            "Male condoms",
+            "Female condoms",
+            "Emergency contraceptive pills (ECPs)",
+            "Fertility awareness-based methods (FAB)",
+            "Male sterilization",
+            "Female sterilization",
+            "Withdrawal"
+          ],
+          "_dak": {
+            "dataElementId": "FP.B.DE216",
+            "activity": "FP.B11.3. Select methods of interest",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "C",
+            "selectedBecause": "indicator",
+            "indicators": "FP.IND.04"
+          }
+        },
+        {
+          "code": "whodakfp-counselling-act-b11-4",
+          "type": "Instruction",
+          "name": "Screen for medical eligibility",
+          "text": "Screen for medical eligibility",
+          "detail": "FP.B11.4. Screen for medical eligibility",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-b11-4-current-medications",
+          "type": "Radio",
+          "name": "Current medications",
+          "text": "Current medications",
+          "detail": "Medications the client is currently taking",
+          "options": [
+            "NRTIs (e.g. ABC, TDF, AZT, 3TC, DDI, FTC, C265, D4T)",
+            "EFV",
+            "ETR",
+            "NVP",
+            "RPV",
+            "Protease inhibitors (e.g. ATV/r, LPV/r, DRV/r, RTV)",
+            "Integrase inhibitors (e.g. RAL)",
+            "Anticonvulsant therapy (e.g. phenytoin, carbamazepine, barbiturates, primidone, topiramate, oxcarbazepine)",
+            "Anticonvulsant therapy with lamotrigine",
+            "Antimicrobial therapy",
+            "Antimicrobial therapy with rifampicin or rifabutin",
+            "CYP3A4 inducers",
+            "Repeated emergency contraceptive pill (ECP) use",
+            "Other (specify)"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "",
+            "activity": "FP.B11.4. Screen for medical eligibility",
+            "dataType": "Coding",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-b-de257",
+          "type": "MultiSelect",
+          "name": "Health condition(s)",
+          "text": "Health condition(s)",
+          "detail": "Health conditions that are relevant to determining medical eligibility for contraceptive methods",
+          "options": [
+            "No reported health conditions",
+            "Puerperal sepsis postpartum",
+            "Mild pre-eclampsia",
+            "Severe pre-eclampsia/eclampsia",
+            "Prolonged rupture of membranes postpartum",
+            "Severe antepartum or postpartum haemorrhage",
+            "Severe trauma to the genital tract",
+            "Uterine rupture or perforation",
+            "Past ectopic pregnancy",
+            "History of pelvic surgery",
+            "Uncomplicated",
+            "Post-abortion sepsis or fever",
+            "Severe post-abortion haemorrhage",
+            "Obese",
+            "Smokes cigarettes",
+            "Smokes < 15 cigarettes per day",
+            "Smokes ≥ 15 cigarettes per day",
+            "History of gestational diabetes",
+            "Non-insulin dependent diabetes",
+            "Insulin-dependent diabetes",
+            "Diabetes with nephropathy",
+            "Diabetes with retinopathy",
+            "Diabetes with neuropathy",
+            "Diabetes > 20 years duration",
+            "Other vascular disease > 20 years duration",
+            "History of hypertension, but blood pressure cannot be evaluated",
+            "History of hypertension during pregnancy, and blood pressure can be evaluated",
+            "Adequately controlled hypertension, and blood pressure can be evaluated",
+            "Vascular disease",
+            "Dyslipidaemias",
+            "Multiple risk factors for arterial cardiovascular disease",
+            "Ischaemic heart disease",
+            "Stroke",
+            "Uncomplicated valvular heart disease",
+            "Complicated valvular heart disease",
+            "SLE with positive (or unknown) antiphospholipid antibodies",
+            "SLE with severe thrombocytopenia",
+            "SLE on immunosuppressive treatment",
+            "SLE with no complications",
+            "Risk factors for venous thromboembolism (VTE)",
+            "History of DVT",
+            "History of PE",
+            "Acute DVT",
+            "Acute PE",
+            "DVT/PE and established on anticoagulant therapy",
+            "Family history of DVT/PE",
+            "Major surgery with prolonged immobilization",
+            "Major surgery without prolonged immobilization",
+            "Minor surgery without immobilization",
+            "Varicose veins",
+            "Superficial venous thrombosis",
+            "Known thrombogenetic mutations",
+            "Non-migrainous",
+            "Migraine without aura",
+            "Migraine with aura",
+            "Epilepsy",
+            "Depressive disorders",
+            "Perimenopause",
+            "Vaginal discharge",
+            "Irregular vaginal bleeding patterns",
+            "Heavy or prolonged vaginal bleeding patterns",
+            "Unexplained vaginal bleeding",
+            "Severe dysmenorrhea",
+            "Endometriosis",
+            "Benign ovarian tumours",
+            "Gestational trophoblastic disease with decreasing or undetectable ß-hCG level",
+            "Gestational trophoblastic disease with persistently elevated β-hCG levels or malignant disease",
+            "Cervical ectropion",
+            "Cervical intraepithelial neoplasia (CIN)",
+            "Cervical cancer (awaiting treatment)",
+            "Endometrial cancer",
+            "Ovarian cancer",
+            "Undiagnosed mass",
+            "Benign breast disease",
+            "Family history of cancer",
+            "Currently has breast cancer",
+            "Past history of breast cancer",
+            "Uterine fibroids without distortion",
+            "Uterine fibroids with distortion",
+            "Anatomical abnormalities that distort the uterine cavity",
+            "Anatomical abnormalities that do not distort the uterine cavity",
+            "Past pelvic inflammatory disease (PID) with subsequent pregnancy",
+            "Past pelvic inflammatory disease (PID) without subsequent pregnancy",
+            "Current pelvic inflammatory disease (PID)",
+            "Current purulent cervicitis",
+            "Current chlamydia",
+            "Current gonorrhea",
+            "Other STIs",
+            "High risk of HIV disease",
+            "HIV disease stage 1",
+            "HIV disease stage 2",
+            "HIV disease stage 3",
+            "HIV disease 4",
+            "Simple goitre",
+            "Hyperthyroid",
+            "Hypothyroid",
+            "Symptomatic gall bladder disease (treated by cholecystectomy)",
+            "Symptomatic gall bladder disease(medically treated)",
+            "Current symptoms of gall bladder disease",
+            "Asymptomatic gall bladder disease",
+            "History of pregnancy-related cholestasis",
+            "Past combined oral contraceptives-related cholestasis",
+            "Liver disorders",
+            "Acute or flare viral hepatitis",
+            "Carrier viral hepatitis",
+            "Chronic viral hepatitis",
+            "Mild (compensated) cirrhosis",
+            "Severe (decompensated) cirrhosis",
+            "Schistosomiasis with liver fibrosis",
+            "Benign focal nodular hyperplasia of the liver",
+            "Benign hepatocellular adenoma",
+            "Malignant liver tumour (hepatoma/hepatocellular carcinoma)",
+            "Thalassemia",
+            "Sickle cell disease",
+            "Iron-deficiency anaemia",
+            "Schistosomiasis (complicated and uncomplicated)",
+            "Non-pelvic tuberculosis",
+            "Known pelvic tuberculosis",
+            "Malaria",
+            "History of toxic shock syndrome",
+            "Allergy to latex",
+            "Vaginitis",
+            "Urinary tract infection",
+            "Balanitis",
+            "Epididymitis",
+            "Orchitis",
+            "Previous scrotal injury",
+            "Large varicocele",
+            "Large hydrocele",
+            "Filiariasis or elephantiasis",
+            "Intrascrotal mass",
+            "Cryptorchidism",
+            "Inguinal hernia",
+            "Severe trauma to the gental tract",
+            "Post-abortion uterine perforation",
+            "Acute haematometra",
+            "Local infection",
+            "Coagulation disorders",
+            "Acute",
+            "Chronic",
+            "Systemic infection or gasteroenteritis",
+            "Fixed uterus due to previous surgery or infection",
+            "Abdominal wall or umbilical hernia",
+            "Diaphragmatic hernia",
+            "Kidney disease",
+            "Severe nutritional deficiencies",
+            "Previous abdominal or pelvic surgery",
+            "Elective",
+            "Emergency (without previous counselling)",
+            "Infectious condition",
+            "Sterilization concurrent with caesarean section",
+            "Scrotal skin infection",
+            "Chronic disease that elevates body temperature",
+            "Acute disease that elevates body temperature"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.B.DE257",
+            "activity": "FP.B11.4. Screen for medical eligibility",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-counselling-act-b11-6",
+          "type": "Instruction",
+          "name": "Choose method",
+          "text": "Choose method",
+          "detail": "FP.B11.6. Choose method",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-b-de430",
+          "type": "MultiSelect",
+          "name": "Chosen method",
+          "text": "Chosen method",
+          "detail": "The client's chosen method after discussing with the health worker as well as the client's medical eligibility for \"Requested methods\"",
+          "options": [
+            "Copper-bearing intrauterine devices (Cu-IUDs)",
+            "Levonorgestrel IUD (LNG-IUD)",
+            "Etonogestrel (ETG) one-rod",
+            "Levonorgestrel (LNG) two-rod",
+            "DMPA-IM",
+            "DMPA-SC",
+            "Norethisterone enanthate (NET-EN)",
+            "Progestogen-only pills (POPs)",
+            "Combined oral contraceptives (COCs)",
+            "Combined contraceptive patch",
+            "Combined contraceptive vaginal ring (CVR)",
+            "Progesterone-releasing vaginal ring (PVR)",
+            "Lactational amenorrhea method (LAM)",
+            "Male condoms",
+            "Female condoms",
+            "Emergency contraceptive pills (ECPs)",
+            "Fertility awareness-based methods (FAB)",
+            "Male sterilization",
+            "Female sterilization",
+            "Withdrawal",
+            "No method"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.B.DE430",
+            "activity": "FP.B11.6. Choose method",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-counselling-act-b14",
+          "type": "Instruction",
+          "name": "Determine where service can be provided",
+          "text": "Determine where service can be provided",
+          "detail": "FP.B14. Determine where service can be provided",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-b-de452",
+          "type": "Radio",
+          "name": "Where method will be provided",
+          "text": "Where method will be provided",
+          "detail": "Where the client will be receiving the method. This depends on the available stock and the skill of the health worker present.",
+          "options": [
+            "Provided on site",
+            "Referral",
+            "Home/self-administered"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.B.DE452",
+            "activity": "FP.B14. Determine where service can be provided",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "FP Service Provision",
+      "questions": [
+        {
+          "code": "whodakfp-serviceprovision-act-c3",
+          "type": "Instruction",
+          "name": "Use pregnancy checklist",
+          "text": "Use pregnancy checklist",
+          "detail": "FP.C3. Use pregnancy checklist",
+          "newScreen": false
+        },
+        {
+          "code": "whodakfp-c-de1",
+          "type": "Binary",
+          "name": "Last menstrual bleeding started within the past 7 days",
+          "text": "Last menstrual bleeding started within the past 7 days",
+          "detail": "Whether the client has started menstrual bleeding within the past 7 days.",
+          "_dak": {
+            "dataElementId": "FP.C.DE1",
+            "activity": "FP.C3. Use pregnancy checklist",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-c-de2",
+          "type": "Binary",
+          "name": "Abstained from sexual intercourse since last normal menses, delivery, miscarriage or abortion",
+          "text": "Abstained from sexual intercourse since last normal menses, delivery, miscarriage or abortion",
+          "detail": "Whether the client has abstained from sexual intercourse since her last normal menses, delivery, miscarriage or abortion.",
+          "_dak": {
+            "dataElementId": "FP.C.DE2",
+            "activity": "FP.C3. Use pregnancy checklist",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-c-de3",
+          "type": "Binary",
+          "name": "Consistently and correctly using reliable contraceptive method",
+          "text": "Consistently and correctly using reliable contraceptive method",
+          "detail": "Whether the client has had sexual intercourse since last normal menses, delivery, miscarriage or abortion – but with reliable contraceptive method that is consistently and correctly used",
+          "_dak": {
+            "dataElementId": "FP.C.DE3",
+            "activity": "FP.C3. Use pregnancy checklist",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-c-de4",
+          "type": "Binary",
+          "name": "Gave birth in the last 4 weeks",
+          "text": "Gave birth in the last 4 weeks",
+          "detail": "Whether the client has had a baby in the last 4 weeks. This can automatically be calculated, therefore it should not be editable.",
+          "_dak": {
+            "dataElementId": "FP.C.DE4",
+            "activity": "FP.C3. Use pregnancy checklist",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-c-de5",
+          "type": "Binary",
+          "name": "Gave birth less than 6 months ago, fully or nearly fully breastfeeding, and amenorrhoeic",
+          "text": "Gave birth less than 6 months ago, fully or nearly fully breastfeeding, and amenorrhoeic",
+          "detail": "Whether the client has had a baby less than 6 months ago, fully or nearly fully breastfeeding, and no monthly bleeding since then (amenorrhea). This can automatically be calculated, therefore it should not be editable.",
+          "_dak": {
+            "dataElementId": "FP.C.DE5",
+            "activity": "FP.C3. Use pregnancy checklist",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-c-de6",
+          "type": "Binary",
+          "name": "Miscarriage or abortion in the past 7 days",
+          "text": "Miscarriage or abortion in the past 7 days",
+          "detail": "Whether the client has had a miscarriage or abortion in the past 7 days. This can automatically be calculated, therefore it should not be editable.",
+          "_dak": {
+            "dataElementId": "FP.C.DE6",
+            "activity": "FP.C3. Use pregnancy checklist",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-c-de7",
+          "type": "Binary",
+          "name": "Miscarriage or abortion in the past 12 days",
+          "text": "Miscarriage or abortion in the past 12 days",
+          "detail": "Whether the client has had a miscarriage or abortion in the past 12 days. This can automatically be calculated, therefore it should not be editable.",
+          "_dak": {
+            "dataElementId": "FP.C.DE7",
+            "activity": "FP.C3. Use pregnancy checklist",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-serviceprovision-act-c4",
+          "type": "Instruction",
+          "name": "Pregnancy ruled out",
+          "text": "Pregnancy ruled out",
+          "detail": "FP.C4. Pregnancy ruled out",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-c-de8",
+          "type": "Binary",
+          "name": "Reasonably certain a woman is not pregnant",
+          "text": "Reasonably certain a woman is not pregnant",
+          "detail": "Given the answers from the client on the pregnancy checklist, are you able to determine that the client is not pregnant with reasonable certainty?",
+          "_dak": {
+            "dataElementId": "FP.C.DE8",
+            "activity": "FP.C4. Pregnancy ruled out",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-ds-dt10-pregnancy-not-excluded",
+          "type": "Instruction",
+          "name": "Pregnancy not ruled out - test before starting",
+          "text": "No checklist question was answered yes, so pregnancy cannot be reasonably excluded. Perform a pregnancy test before starting a hormonal method or inserting an IUD, or offer a barrier method now and the client's chosen method once pregnancy is excluded.",
+          "detail": "WHO DAK decision support FP.DT.10",
+          "visibilityCriteria": {
+            "_conjunction": "and",
+            "whodakfp-c-de8": "No"
+          },
+          "_decisionSupport": {
+            "rule": "FP.DT.10",
+            "source": "Annex B"
+          }
+        },
+        {
+          "code": "whodakfp-serviceprovision-act-c5",
+          "type": "Instruction",
+          "name": "Perform pregnancy test",
+          "text": "Perform pregnancy test",
+          "detail": "FP.C5. Perform pregnancy test",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-c-de9",
+          "type": "Radio",
+          "name": "Pregnancy test result",
+          "text": "Pregnancy test result",
+          "detail": "Result of a pregnancy test",
+          "options": [
+            "Pregnant",
+            "Not pregnant"
+          ],
+          "_dak": {
+            "dataElementId": "FP.C.DE9",
+            "activity": "FP.C5. Perform pregnancy test",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select one",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-serviceprovision-act-c6",
+          "type": "Instruction",
+          "name": "Get informed consent",
+          "text": "Get informed consent",
+          "detail": "FP.C6. Get informed consent",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-c-de12",
+          "type": "Binary",
+          "name": "Informed consent",
+          "text": "Informed consent",
+          "detail": "Does the client give informed consent to receiving the services?",
+          "_dak": {
+            "dataElementId": "FP.C.DE12",
+            "activity": "FP.C6. Get informed consent",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-serviceprovision-act-c9",
+          "type": "Instruction",
+          "name": "Provide method",
+          "text": "Provide method",
+          "detail": "FP.C9. Provide method",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-c-de17",
+          "type": "MultiSelect",
+          "name": "Method or service provided",
+          "text": "Method or service provided",
+          "detail": "Contraceptive method that was provided to the client. What method did the client leave with (supplies, training in how to use the method, or otherwise)?",
+          "options": [
+            "Copper-bearing intrauterine devices (Cu-IUDs)",
+            "Levonorgestrel-releasing IUD (LNG-IUD)",
+            "Copper-bearing intrauterine device (Cu-IUD) removal",
+            "Levonorgestrel intrauterine device (LNG-IUD) removal",
+            "Etonogestrel (ETG) one-rod",
+            "Levonorgestrel (LNG) two-rod",
+            "Etonogestrel (ETG) one-rod implant removal",
+            "Levonorgestrel (LNG) two-rod implant removal",
+            "Unspecified implant removal",
+            "DMPA-IM",
+            "DMPA-SC",
+            "Norethisterone enanthate (NET-EN)",
+            "Progestogen-only pills (POPs)",
+            "Combined oral contraceptives (COCs)",
+            "Combined contraceptive patch",
+            "Combined contraceptive vaginal ring (CVR)",
+            "Progesterone-releasing vaginal ring (PVR)",
+            "Lactational amenorrhea method (LAM)",
+            "Male condoms",
+            "Female condoms",
+            "Emergency contraceptive pills (ECPs)",
+            "Fertility awareness-based methods (FAB)",
+            "Male sterilization",
+            "Female sterilization",
+            "Withdrawal",
+            "No method"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.C.DE17",
+            "activity": "FP.C9. Provide method",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-c-de44",
+          "type": "FreeText",
+          "name": "Provider that served the client",
+          "text": "Provider that served the client",
+          "detail": "The provider that served the client: the provider's unique identification, login credentials or name",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.C.DE44",
+            "activity": "FP.C9. Provide method",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select One",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-c-de46",
+          "type": "Date",
+          "name": "Service provision date",
+          "text": "Service provision date",
+          "detail": "The date on which the method(s) or service(s) was/were provided.",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.C.DE46",
+            "activity": "FP.C9. Provide method",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-c-de47",
+          "type": "MultiSelect",
+          "name": "Reason for no method at exit",
+          "text": "Reason for no method at exit",
+          "detail": "Reason for no contraceptive method use reported at exit (as the client leaves the health service provider)",
+          "options": [
+            "Chooses not to use",
+            "Out of stock-Method",
+            "Out of stock – Equipment /supplies",
+            "IUD insertion attempted but not done",
+            "Client requires referral",
+            "Other (specify)"
+          ],
+          "_dak": {
+            "dataElementId": "FP.C.DE47",
+            "activity": "FP.C9. Provide method",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-c-de54",
+          "type": "MultiSelect",
+          "name": "Reason client did not receive chosen method",
+          "text": "Reason client did not receive chosen method",
+          "detail": "If the client had a chosen method, but was not able to receive that chosen method, the reason should be documented here",
+          "options": [
+            "Out of stock – Method",
+            "Out of stock – Equipment /supplies",
+            "Health worker skill mismatch",
+            "Client requires referral",
+            "Other (specify)"
+          ],
+          "_dak": {
+            "dataElementId": "FP.C.DE54",
+            "activity": "FP.C9. Provide method",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "O",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-serviceprovision-act-c10",
+          "type": "Instruction",
+          "name": "Discuss dual protection & back-up method",
+          "text": "Discuss dual protection & back-up method",
+          "detail": "FP.C10. Discuss dual protection & back-up method",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-c-de60",
+          "type": "Binary",
+          "name": "Back-up method needed",
+          "text": "Back-up method needed",
+          "detail": "Whether a back-up method based on client history and method initiation or start date",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.C.DE60",
+            "activity": "FP.C10. Discuss dual protection & back-up method",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-c-de62",
+          "type": "MultiSelect",
+          "name": "Type of back-up method selected",
+          "text": "Type of back-up method selected",
+          "options": [
+            "Male condom",
+            "Female condom",
+            "Abstinence",
+            "Emergency contraceptive pills (ECPs)",
+            "Other (specify)"
+          ],
+          "_dak": {
+            "dataElementId": "FP.C.DE62",
+            "activity": "FP.C10. Discuss dual protection & back-up method",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-serviceprovision-act-c12",
+          "type": "Instruction",
+          "name": "Determine follow-up requirements",
+          "text": "Determine follow-up requirements",
+          "detail": "FP.C12. Determine follow-up requirements",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-c-de68",
+          "type": "Date",
+          "name": "Recommended follow-up date",
+          "text": "Recommended follow-up date",
+          "detail": "Date when follow up is recommended based on follow-up requirements",
+          "_dak": {
+            "dataElementId": "FP.C.DE68",
+            "activity": "FP.C12. Determine follow-up requirements",
+            "dataType": "Date",
+            "multipleChoiceType": "N/A",
+            "required": "C",
+            "selectedBecause": "core",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-serviceprovision-act-c13",
+          "type": "Instruction",
+          "name": "Follow-up required?",
+          "text": "Follow-up required?",
+          "detail": "FP.C13. Follow-up required?",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-c-de69",
+          "type": "Binary",
+          "name": "Follow-up recommended",
+          "text": "Follow-up recommended",
+          "detail": "A follow-up appointment is recommended based on follow-up requirements",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.C.DE69",
+            "activity": "FP.C13. Follow-up required?",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        }
+      ]
+    },
+    {
+      "surveyName": "FP Referral",
+      "questions": [
+        {
+          "code": "whodakfp-referral-act-d1",
+          "type": "Instruction",
+          "name": "Emergency referral?",
+          "text": "Emergency referral?",
+          "detail": "FP.D1. Emergency referral?",
+          "newScreen": false
+        },
+        {
+          "code": "whodakfp-d-de1",
+          "type": "Binary",
+          "name": "Emergency referral",
+          "text": "Emergency referral",
+          "detail": "Referral for urgent care",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.D.DE1",
+            "activity": "FP.D1. Emergency referral?",
+            "dataType": "Boolean",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-referral-act-d6",
+          "type": "Instruction",
+          "name": "Provide information to referral facility",
+          "text": "Provide information to referral facility",
+          "detail": "FP.D6. Provide information to referral facility",
+          "newScreen": true
+        },
+        {
+          "code": "whodakfp-d-de2",
+          "type": "MultiSelect",
+          "name": "Reason for referral",
+          "text": "Reason for referral",
+          "detail": "Reason why the patient is being referred.",
+          "options": [
+            "Referral for family planning (procedure)",
+            "Referral for screening including diagnostics and lab testing",
+            "Referral for other general services"
+          ],
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.D.DE2",
+            "activity": "FP.D6. Provide information to referral facility",
+            "dataType": "Coding",
+            "multipleChoiceType": "Select all that apply",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-d-de6",
+          "type": "DateTime",
+          "name": "Date of scheduled referral appointment",
+          "text": "Date of scheduled referral appointment",
+          "detail": "When the referral is scheduled",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.D.DE6",
+            "activity": "FP.D6. Provide information to referral facility",
+            "dataType": "DateTime",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-d-de7",
+          "type": "DateTime",
+          "name": "Date referral was made",
+          "text": "Date referral was made",
+          "detail": "The date the referral was made",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.D.DE7",
+            "activity": "FP.D6. Provide information to referral facility",
+            "dataType": "DateTime",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-d-de8",
+          "type": "FreeText",
+          "name": "Location of scheduled referral appointment",
+          "text": "Location of scheduled referral appointment",
+          "detail": "Where the client is being referred to",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.D.DE8",
+            "activity": "FP.D6. Provide information to referral facility",
+            "dataType": "String",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-d-de9",
+          "type": "FreeText",
+          "name": "Provider who made referral",
+          "text": "Provider who made referral",
+          "detail": "The name of the provider who made the referral",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.D.DE9",
+            "activity": "FP.D6. Provide information to referral facility",
+            "dataType": "String",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-d-de10",
+          "type": "FreeText",
+          "name": "Provider's facility",
+          "text": "Provider's facility",
+          "detail": "Facility client is being referred from",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.D.DE10",
+            "activity": "FP.D6. Provide information to referral facility",
+            "dataType": "String",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-d-de11",
+          "type": "Number",
+          "name": "Provider's telephone number",
+          "text": "Provider's telephone number",
+          "detail": "The contact details or telephone number of the provider making the referral",
+          "config": {
+            "rounding": 0
+          },
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.D.DE11",
+            "activity": "FP.D6. Provide information to referral facility",
+            "dataType": "Quantity",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-d-de12",
+          "type": "FreeText",
+          "name": "Referral notes",
+          "text": "Referral notes",
+          "detail": "Any additional relevant details of clinical significance for the referral facility to provide quality care",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.D.DE12",
+            "activity": "FP.D6. Provide information to referral facility",
+            "dataType": "String",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        },
+        {
+          "code": "whodakfp-d-de13",
+          "type": "FreeText",
+          "name": "Client history summary",
+          "text": "Client history summary",
+          "detail": "With interoperable systems, the provider receiving the referral should be able to access the client's health record digitally. However, in the absence of this, the referral provider should receive a summary of the client's health records that includes…",
+          "validationCriteria": {
+            "mandatory": true
+          },
+          "_dak": {
+            "dataElementId": "FP.D.DE13",
+            "activity": "FP.D6. Provide information to referral facility",
+            "dataType": "String",
+            "multipleChoiceType": "N/A",
+            "required": "R",
+            "selectedBecause": "required",
+            "indicators": ""
+          }
+        }
+      ]
+    }
+  ]
+}
