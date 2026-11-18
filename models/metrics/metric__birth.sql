@@ -32,7 +32,7 @@ person as (
         per.*,
         pat.village_id
     from {{ ref('clinical__person') }} per
-    left join {{ ref('patients') }} pat on pat.id = per.person_id
+    left join patients pat on pat.id = per.person_id
 ),
 
 patient_additional_data as (
