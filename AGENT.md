@@ -145,6 +145,21 @@ bundle rather than a seed table:
   `tamanu-dbt-<deployment>/csv/metric_definitions_<deployment>.csv` and are
   merged in by the generation script (keyed on `metric_id`)
 
+## WHO DAK element dictionaries and question maps
+
+`tupaia-data-product` generates each WHO DAK domain's element dictionary and question map and
+owns them (maui-team D12). This repo carries copies for the domains whose models a branch has:
+
+- Source: `csv/who_dak/map__who_dak_<domain>_{elements,questions}.csv`, byte-identical copies of
+  the files of the same name in `tupaia-data-product` `tamanu/who-dak/<domain>/`. Never edit them
+  here; copy them across again
+- Models: `models/maps/who_dak/map__who_dak_<domain>_*.sql`, views over a values list generated
+  by `python scripts/generate_who_dak_maps.py`, so they reach a deployment without `dbt seed`.
+  Never edit them directly; CI fails on drift
+- A `who_dak` model reads an answer's DAK element by joining `map__who_dak_<domain>_questions` on
+  survey id and question code, and never derives a question code from an element id
+- A change to a copy goes onto every supported branch carrying that domain's models
+
 ## Running commands
 
 Run project commands through the secrets runner, `uv run python .maui/scripts/with_secrets.py
