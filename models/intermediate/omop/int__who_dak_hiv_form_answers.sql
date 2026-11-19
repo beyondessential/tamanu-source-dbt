@@ -2,10 +2,10 @@
 -- elements the indicator metric reads pivoted into columns (BL-002).
 --
 -- The forms are generated from the DAK's Web Annex A data dictionary by tupaia-data-product
--- (tamanu/who-dak/hiv/), so a question code is the DAK data element id: HIV.D.DE38 -> the
--- program data element `pde-whodakhiv-d-de38`. That mapping is why the indicator definitions
--- in Annex C can be read against these answers at all, and it is the only place in the chain
--- where a code is hardcoded -- so it is done once, here, rather than in the metric.
+-- (tamanu/who-dak/hiv/), which also generates the question map naming the DAK data element each
+-- question collects. Answers reach their elements through that map, map__who_dak_hiv_questions,
+-- which is why the indicator definitions in Annex C can be read against these answers at all.
+-- The elements are named once, here, rather than in the metric.
 --
 -- Answers arrive as text in survey_response_answers.body whatever the question type, so each
 -- column casts to the type Annex A declares. A malformed answer casts to NULL rather than
@@ -16,30 +16,30 @@
 -- Spec: specs/dbt-model/metric__who_dak_hiv_indicators.md, BL-002..BL-004.
 
 {% set elements = {
-    'hiv_status': 'whodakhiv-b-de115',
-    'hiv_test_date': 'whodakhiv-b-de110',
-    'hiv_test_result': 'whodakhiv-b-de111',
-    'hiv_test_result_returned_date': 'whodakhiv-b-de60',
-    'hiv_diagnosis_date': 'whodakhiv-b-de71',
-    'on_art': 'whodakhiv-d-de38',
-    'art_start_date': 'whodakhiv-d-de39',
-    'baseline_cd4_count': 'whodakhiv-d-de367',
-    'baseline_cd4_test_date': 'whodakhiv-d-de368',
-    'viral_load_sample_date': 'whodakhiv-d-de194',
-    'viral_load_result': 'whodakhiv-d-de387',
-    'viral_load_reason': 'whodakhiv-d-de391',
-    'dsd_eligible': 'whodakhiv-d-de760',
-    'dsd_eligibility_assessed_date': 'whodakhiv-d-de761',
-    'dsd_enrolled': 'whodakhiv-d-de762',
-    'dsd_start_date': 'whodakhiv-d-de763',
-    'art_stopped_date': 'whodakhiv-d-de41',
-    'art_stopped_reason': 'whodakhiv-d-de217',
-    'regimen_substitution_reason': 'whodakhiv-d-de418',
-    'substitution_first_line_date': 'whodakhiv-d-de481',
-    'substitution_second_line_date': 'whodakhiv-d-de487',
-    'substitution_third_line_date': 'whodakhiv-d-de493',
-    'key_population_hts': 'whodakhiv-b-de50',
-    'key_population_pmtct': 'whodakhiv-e-de114',
+    'hiv_status': 'HIV.B.DE115',
+    'hiv_test_date': 'HIV.B.DE110',
+    'hiv_test_result': 'HIV.B.DE111',
+    'hiv_test_result_returned_date': 'HIV.B.DE60',
+    'hiv_diagnosis_date': 'HIV.B.DE71',
+    'on_art': 'HIV.D.DE38',
+    'art_start_date': 'HIV.D.DE39',
+    'baseline_cd4_count': 'HIV.D.DE367',
+    'baseline_cd4_test_date': 'HIV.D.DE368',
+    'viral_load_sample_date': 'HIV.D.DE194',
+    'viral_load_result': 'HIV.D.DE387',
+    'viral_load_reason': 'HIV.D.DE391',
+    'dsd_eligible': 'HIV.D.DE760',
+    'dsd_eligibility_assessed_date': 'HIV.D.DE761',
+    'dsd_enrolled': 'HIV.D.DE762',
+    'dsd_start_date': 'HIV.D.DE763',
+    'art_stopped_date': 'HIV.D.DE41',
+    'art_stopped_reason': 'HIV.D.DE217',
+    'regimen_substitution_reason': 'HIV.D.DE418',
+    'substitution_first_line_date': 'HIV.D.DE481',
+    'substitution_second_line_date': 'HIV.D.DE487',
+    'substitution_third_line_date': 'HIV.D.DE493',
+    'key_population_hts': 'HIV.B.DE50',
+    'key_population_pmtct': 'HIV.E.DE114',
 } %}
 
 with responses as (
@@ -66,11 +66,20 @@ person as (
     select * from {{ ref('clinical__person') }}
 ),
 
+question_map as (
+    select * from {{ ref('map__who_dak_hiv_questions') }}
+),
+
+program_data_elements as (
+    select * from {{ ref('program_data_elements') }}
+),
+
 -- the DAK program's own submissions. The program code is idified by the importer
 -- (`who-dak-hiv` -> `whodakhiv`), so the survey id prefix is what identifies them (BL-002)
 dak_responses as (
     select
         r.id as response_id,
+        r.survey_id,
         r.end_datetime as submitted_datetime,
         s.code as survey_code,
         e.patient_id,
@@ -82,22 +91,37 @@ dak_responses as (
     where s.id like 'program-whodakhiv-%'
 ),
 
+-- BL-002: the program data element of each question that collects an element this model reads,
+-- on the survey that asks it, from the question map
+mapped_elements as (
+    select
+        pde.id as data_element_id,
+        qm.survey_id,
+        qm.element_id
+    from question_map qm
+    join program_data_elements pde on pde.code = qm.question_code
+    where qm.option is null
+        and qm.element_id in (
+            {%- for element_id in elements.values() %}
+                '{{ element_id }}'{{ "," if not loop.last }}
+            {%- endfor %}
+        )
+),
+
 -- one column per data element the indicators read. A form asks a question at most once, so
 -- max() picks the single answer rather than aggregating several (BL-003)
 pivoted as (
     select
         a.response_id,
-    {%- for column, code in elements.items() %}
-        max(case when a.data_element_id = 'pde-{{ code }}' then nullif(trim(a.body), '') end)
-            as {{ column }}_raw{{ "," if not loop.last }}
-    
+    {%- for column, element_id in elements.items() %}
+        max(case when me.element_id = '{{ element_id }}' then nullif(trim(a.body), '') end)
+            as {{ column }}_raw{{ "," if not loop.last }}  -- noqa: LT02
     {%- endfor %}
     from answers a
-    where a.data_element_id in (
-            {%- for code in elements.values() %}
-                'pde-{{ code }}'{{ "," if not loop.last }}
-            {%- endfor %}
-        )
+    join responses r on r.id = a.response_id
+    join mapped_elements me
+        on me.data_element_id = a.data_element_id
+        and me.survey_id = r.survey_id
     group by a.response_id
 ),
 
@@ -149,9 +173,8 @@ typed as (
         case
             when lower(v.{{ column }}_raw) in ('yes', 'true') then true
             when lower(v.{{ column }}_raw) in ('no', 'false') then false
-        end as {{ column }}{{ "," if not loop.last }}
-
-    {% endfor %}
+        end as {{ column }}{{ "," if not loop.last }}  -- noqa: LT02
+    {%- endfor %}
 
     from dak_responses r
     join pivoted v on v.response_id = r.response_id

@@ -11,9 +11,9 @@
 | **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
-| **Linear issue** | [MAUI-6838](https://linear.app/bes/issue/MAUI-6838), [MAUI-7179](https://linear.app/bes/issue/MAUI-7179) |
+| **Linear issue** | [MAUI-6838](https://linear.app/bes/issue/MAUI-6838), [MAUI-7179](https://linear.app/bes/issue/MAUI-7179), [MAUI-7199](https://linear.app/bes/issue/MAUI-7199) |
 | **Created** | 2026-10-21 |
-| **Last updated** | 2026-11-17 |
+| **Last updated** | 2026-11-19 |
 
 ## Purpose
 
@@ -25,7 +25,8 @@ elements, so an indicator computed here means the same thing on every deployment
 A deployment reaches the DAK definition by either of two routes, and the metric reads both:
 
 - **Native:** it captures antenatal care on the `who-dak-anc` program forms that
-  `tupaia-data-product` generates from Annex A, whose question codes *are* the DAK element ids.
+  `tupaia-data-product` generates from Annex A, with a question map naming the DAK element each
+  question collects.
 - **Mapped:** it keeps its own antenatal forms and maps their questions to DAK element ids in its
   own `dbt_project.yml`.
 
@@ -64,6 +65,7 @@ Between them they read:
 | `survey_responses` | Form submissions — survey, encounter, submission times |
 | `survey_response_answers` | The answers, as text |
 | `program_data_elements` | Resolves an answer's data element to its code |
+| `map__who_dak_anc_questions` | Each native question's DAK element, and the native contact forms |
 | `encounters` | The submission's patient and location, and contact encounters |
 | `encounter_history` | Every location a contact encounter occupied |
 | `locations` | The location's facility and location group |
@@ -126,13 +128,13 @@ out.
 
 - **BL-001:** Each output row's `metric_id` is registered in `documentations/metrics/who_dak_anc.yml`.
 - **BL-002:** Native answers are read from submissions whose survey id starts
-  `program-whodakanc-`, and a DAK element id maps to its question code by lower-casing the part
-  after `ANC.` and replacing `.` with `-`: `ANC.A7.DE4` is `whodakanc-a7-de4`.
+  `program-whodakanc-`, each reaching its DAK element through `map__who_dak_anc_questions` by
+  survey id and question code.
 - **BL-003:** Mapped answers are read from the surveys named in `who_dak_anc_local_surveys`, each
   `data_elements` entry mapping a DAK element id to the local question's data element code, and a
   mapped answer is read exactly as a native answer to that element.
-- **BL-004:** A contact form is the native ANC Registration form
-  (`program-whodakanc-registration`) or a mapped survey with `is_contact: true`.
+- **BL-004:** A contact form is a native survey `map__who_dak_anc_questions` gives the role
+  `contact`, or a mapped survey with `is_contact: true`.
 - **BL-005:** A contact is a patient with at least one contact source on a day, so two for the
   same patient on the same day are one contact.
 - **BL-006:** A contact's day is its contact form's `ANC.A7.DE4` *Contact date*, falling back to the
@@ -211,5 +213,6 @@ out.
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-11-19 | Maui team | Native answers reach their DAK elements, and native contact forms are found, through the generated question map `map__who_dak_anc_questions` (MAUI-7199). |
 | 2026-11-17 | Maui team | Reads the profile elements LMP, EDD, gravida, miscarriages/abortions and parity, and the tetanus toxoid dose dates. A deployment can count encounters at named antenatal clinic location groups as contacts, and work out gestational age and gravida where not recorded. The forms and contacts are built in `int__who_dak_anc_submissions` and `int__who_dak_anc_contacts`, shared with `derived__episode_pregnancy_samoa` (MAUI-7179). |
 | 2026-10-21 | Maui team | Initial spec, approved. The antenatal contact count, read from the WHO DAK ANC forms or from a deployment's own forms mapped to DAK element ids. Replaces the `antenatal_contact` and `antenatal_booking` definitions — a booking is a pregnancy's first contact, not a separate metric_id (MAUI-6838). |
