@@ -96,6 +96,7 @@ source `metric__outpatient_visit` reads -- see that spec for their own BL clause
 | `is_auto_discharge` | boolean | Discharge was system-generated -- same value on every row of a visit (unchanged). `not_null` (AC-014) |
 | `segment_time__minutes` | numeric | **This segment's own duration**, minutes to 2 dp (BL-004). NULL while open |
 | `department` | text | **This segment's own department**, resolved to a name (BL-005). Never NULL, `'Not recorded'` fallback |
+| `location_group_name` | text | Location group (clinic/area) of the visit's intake location, resolved to a name (BL-006). Same value on every row of a visit. Never NULL (AC-019), `'Not recorded'` fallback |
 
 ## Data tables
 
@@ -170,6 +171,13 @@ value -- an unscoped data table over this metric is not a meaningful "total" of 
   `metric__outpatient_visit.department` (its BL-013) uses, applied per segment instead of only
   to the intake segment. Never NULL, `'Not recorded'` fallback, same array-filter-safety
   reasoning.
+- **BL-006 (location group):** `location_group_name` is the name of the location group of the
+  visit's intake location -- the same location `facility_id` and `location_id` come from --
+  resolved through `locations.location_group_id` to `bases/location_groups`. Left-joined and
+  coalesced to `'Not recorded'`, never NULL (AC-019): a location in no group, or a
+  since-deleted group, still counts. Same column name and resolution as
+  `metric__outpatient_visit`'s BL-015, so a consumer reads the area name from the metric instead
+  of joining `locations` and `location_groups` itself (MAUI-7209).
 
 ## Acceptance criteria
 
@@ -193,6 +201,7 @@ value -- an unscoped data table over this metric is not a meaningful "total" of 
 | AC-016 | `department` is `not_null` | BL-005 | `not_null` |
 | AC-017 | Segment fan-out behaves as specified: multiple departments across a visit's history, a revisited department producing multiple rows (not collapsed), the synthesized-single-segment case, a NULL segment department, population parity with `opd_visit`, and an open final segment | BL-001..BL-005 | `unit_test` (`tests/unit_tests/metric__opd_visit_department.yml`) |
 | AC-018 | `segment_id` is `not_null` | grain | `not_null` |
+| AC-019 | `location_group_name` is `not_null`; it is the intake location's group, and `'Not recorded'` for a location in no group | BL-006 | `not_null` (`ac_019_metric__opd_visit_department_location_group_name_not_null`) + unit test `ac_017_metric__opd_visit_department_segment_fan_out` |
 
 ## Registry entry
 
@@ -216,6 +225,7 @@ facility_id,location_id,sex,clinician_id,is_admitted,admission_clinician_id,is_a
 | `ref__provider` | `ref/` | This segment's own clinician display name (BL-003) |
 | `discharges` | `bases/` | Discharge note, copied unchanged from the visit |
 | `departments` | `bases/` | This segment's own department name (BL-005) |
+| `location_groups` | `bases/` | Name of the intake location's group (BL-006) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 
 ## Consumers
