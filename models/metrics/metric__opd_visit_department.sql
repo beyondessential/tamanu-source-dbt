@@ -34,6 +34,10 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
+location_groups as (
+    select * from {{ ref('location_groups') }}
+),
+
 discharges as (
     select * from {{ ref('discharges') }}
 ),
@@ -126,6 +130,8 @@ outpatient_visits as (
         i.visit_occurrence_id,
         loc.facility_id,
         loc.id as location_id,
+        -- BL-006: same column and resolution as metric__outpatient_visit's BL-015
+        coalesce(lg.name, 'Not recorded') as location_group_name,
         pr.gender_source_value as sex,
         {{ age_years('i.visit_detail_start_date', 'pr') }} as age_years,
         adm.visit_occurrence_id is not null as is_admitted,
@@ -146,6 +152,9 @@ outpatient_visits as (
     -- NULL facility
     join locations loc
         on loc.id = i.care_site_id
+    -- BL-006: left join -- a location in no group, or a since-deleted group, still counts
+    left join location_groups lg
+        on lg.id = loc.location_group_id
     left join admission_segments adm
         on adm.visit_occurrence_id = i.visit_occurrence_id
     left join discharges dis
@@ -188,7 +197,8 @@ select
     ov.admission_clinician_name,
     ov.is_auto_discharge,
     round(s.segment_time__seconds / 60.0, 2) as segment_time__minutes,
-    coalesce(dept.name, 'Not recorded') as department
+    coalesce(dept.name, 'Not recorded') as department,
+    ov.location_group_name
 from outpatient_visits ov
 join opd_segments s
     on s.visit_occurrence_id = ov.visit_occurrence_id
