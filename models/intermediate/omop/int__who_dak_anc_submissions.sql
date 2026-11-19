@@ -2,12 +2,12 @@
 -- the DAK data elements it carries, cast to Annex A's types.
 -- See specs/dbt-model/metric__who_dak_anc_indicators.md for the BL clauses this model implements.
 --
--- Reads DAK data elements from two routes: the generated who-dak-anc forms, whose question codes
--- are the DAK element ids, and a deployment's own forms mapped to DAK element ids through the
--- who_dak_anc_local_surveys var. Both land in one (submission, element) shape, so nothing after
--- element_answers knows which route an answer came by.
+-- Reads DAK data elements from two routes: the generated who-dak-anc forms, whose questions reach
+-- their DAK elements through map__who_dak_anc_questions, and a deployment's own forms mapped to
+-- DAK element ids through the who_dak_anc_local_surveys var. Both land in one (submission,
+-- element) shape, so nothing after element_answers knows which route an answer came by.
 --
--- Sources only from bases/ (D10).
+-- Sources only from bases/ and maps/ (D10).
 
 -- the DAK elements this model reads, by Annex A id
 {%- set elements = {
@@ -51,12 +51,12 @@
     'death_date': 'date',
 } -%}
 
-{%- set local_surveys = var('who_dak_anc_local_surveys', {}) or {} -%}
+{%- set local_surveys = var('who_dak_anc_local_surveys', {}) or {} %}
 
--- BL-002: ANC.A7.DE4 -> whodakanc-a7-de4
-{%- set element_codes = {} -%}
-{%- for column, element_id in elements.items() -%}
-    {%- do element_codes.update({column: 'whodakanc-' ~ (element_id[4:] | lower | replace('.', '-'))}) -%}
+-- a mapped element id is matched whatever its case
+{%- set canonical_ids = {} %}
+{%- for element_id in elements.values() %}
+    {%- do canonical_ids.update({element_id | lower: element_id}) %}
 {%- endfor %}
 
 with responses as (
@@ -71,14 +71,26 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
--- BL-003: (local survey, local data element code) -> DAK question code, from the var
+-- BL-002: (native survey, question code) -> DAK element. A question collecting several elements
+-- as its options is not one this model reads
+question_map as (
+    select
+        survey_id,
+        question_code,
+        element_id,
+        role
+    from {{ ref('map__who_dak_anc_questions') }}
+    where option is null
+),
+
+-- BL-003: (local survey, local data element code) -> DAK element, from the var
 local_map as (
     {%- for survey_id, survey in local_surveys.items() %}
         {%- for element_id, local_code in (survey.get('data_elements') or {}).items() %}
     select
         '{{ survey_id }}'::text as survey_id,
         '{{ local_code }}'::text as local_code,
-        '{{ "whodakanc-" ~ (element_id[4:] | lower | replace(".", "-")) }}'::text as element_code
+        '{{ canonical_ids.get(element_id | lower, element_id) }}'::text as element_id
     union all
         {%- endfor %}
     {%- endfor %}
@@ -86,15 +98,18 @@ local_map as (
     select
         null::text as survey_id,
         null::text as local_code,
-        null::text as element_code
+        null::text as element_id
     where false
 ),
 
--- BL-004: the native Registration form and every mapped survey flagged is_contact
+-- BL-004: every native survey the question map gives the contact role, and every mapped survey
+-- flagged is_contact
 contact_surveys as (
-    select 'program-whodakanc-registration'::text as survey_id
+    select distinct qm.survey_id
+    from {{ ref('map__who_dak_anc_questions') }} qm
+    where qm.role = 'contact'
     {%- for survey_id, survey in local_surveys.items() if survey.get('is_contact') %}
-    union all
+    union
     select '{{ survey_id }}'::text
     {%- endfor %}
 ),
@@ -134,16 +149,18 @@ anc_answers as (
 
 -- one row per (submission, DAK element), whichever route it came by
 element_answers as (
-    -- BL-002: native forms, whose question code is the DAK element's
+    -- BL-002: native forms, through the question map
     select
         aa.response_id,
-        aa.question_code as element_code,
+        qm.element_id,
         aa.body
     from anc_answers aa
-    where aa.survey_id like 'program-whodakanc-%'
-        and aa.question_code in (
-            {%- for code in element_codes.values() %}
-                '{{ code }}'{{ "," if not loop.last }}
+    join question_map qm
+        on qm.survey_id = aa.survey_id
+        and qm.question_code = aa.question_code
+    where qm.element_id in (
+            {%- for element_id in elements.values() %}
+                '{{ element_id }}'{{ "," if not loop.last }}
             {%- endfor %}
         )
 
@@ -152,7 +169,7 @@ element_answers as (
     -- BL-003: a mapped answer is read exactly as the native answer to its DAK element
     select
         aa.response_id,
-        m.element_code,
+        m.element_id,
         aa.body
     from anc_answers aa
     join local_map m
@@ -164,8 +181,8 @@ element_answers as (
 pivoted as (
     select
         response_id,
-    {%- for column, code in element_codes.items() %}
-        max(case when element_code = '{{ code }}' then body end) as {{ column }}_raw
+    {%- for column, element_id in elements.items() %}
+        max(case when element_id = '{{ element_id }}' then body end) as {{ column }}_raw
         {{- "," if not loop.last }}
     {%- endfor %}
     from element_answers
