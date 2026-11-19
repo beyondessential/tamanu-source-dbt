@@ -1,3 +1,7 @@
+{{ incremental_from_table(
+    key='patient_id',
+    table='patient_additional_data'
+) }}
 select
     patient_id,
     title,
@@ -35,7 +39,11 @@ select
     father_id,
     registered_by_id,
     updated_at_by_field as updated_by_field,
-    (created_at at time zone '{{ var("timezone") }}')::date as registration_date
+    (created_at at time zone '{{ var("timezone") }}')::date as registration_date,
+    updated_at_sync_tick
 from {{ source('tamanu', 'patient_additional_data') }}
 where deleted_at is null
     and id != '{{ var("test_patient") }}'
+    {%- if is_incremental() %}
+    and updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

@@ -7,6 +7,9 @@ unit_tests:
       Verifies that previous_status (LAG) and change_sequence (ROW_NUMBER) are
       computed correctly across two change events for the same invoice, and that
       invoices belonging to the test patient are excluded.
+    overrides:
+      macros:
+        is_incremental: false
     given:
       - input: source('logs__tamanu', 'changes')
         format: csv

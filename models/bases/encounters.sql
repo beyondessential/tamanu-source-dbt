@@ -1,3 +1,7 @@
+{{ incremental_from_table(
+    key='id',
+    table='encounters'
+) }}
 select
     id,
     start_date::timestamp as start_datetime,
@@ -26,7 +30,11 @@ select
     referral_source_id,
     planned_location_id,
     planned_location_start_time::timestamp as planned_location_start_datetime,
-    discharge_draft
+    discharge_draft,
+    updated_at_sync_tick
 from {{ source('tamanu', 'encounters') }}
 where deleted_at is null
     and patient_id != '{{ var("test_patient") }}'
+    {%- if is_incremental() %}
+    and updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}
