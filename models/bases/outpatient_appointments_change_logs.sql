@@ -12,5 +12,5 @@
     table='appointments'
 ) }}
 {{ outpatient_appointments_change_log_events(
-    record_id_filter=('c.appointment_id in (' ~ changed_since_last_run('appointments') ~ ')') if is_incremental() else none
+    record_id_filter=('c.record_id in (' ~ changed_since_last_run('appointments') ~ ')') if is_incremental() else none
 ) }}
