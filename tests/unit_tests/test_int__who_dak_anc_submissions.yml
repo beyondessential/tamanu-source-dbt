@@ -2,8 +2,8 @@ unit_tests:
   - name: test_int__who_dak_anc_submissions_native
     model: int__who_dak_anc_submissions
     description: >
-      AC-006, AC-008 (specs/dbt-model/metric__who_dak_anc_indicators.md). Native forms are read by
-      their question codes. A Registration form is a contact form dated by its contact date; a
+      AC-006, AC-008 (specs/dbt-model/metric__who_dak_anc_indicators.md). Native forms are read through
+      the question map. A Registration form is a contact form dated by its contact date; a
       malformed or missing contact date falls back to the day it was started. A Profile form is not
       a contact form and carries gestational age; a question the model does not read is ignored. An
       end-of-pregnancy form carries its closure reason and delivery date. A submission whose
@@ -23,6 +23,22 @@ unit_tests:
           select 'pde-end1', 'whodakanc-end-1'
           union all
           select 'pde-end12', 'whodakanc-end-12'
+      - input: ref('map__who_dak_anc_questions')
+        format: sql
+        rows: |
+          select
+            'program-whodakanc-registration'::text as survey_id, 'whodakanc-a7-de4'::text as question_code,
+            null::text as option, 'ANC.A7.DE4'::text as element_id, 'contact'::text as role
+          union all
+          select 'program-whodakanc-registration', 'whodakanc-a7-de12', null, 'ANC.A7.DE12', 'contact'
+          union all
+          select 'program-whodakanc-profile', 'whodakanc-b6-de17', null, 'ANC.B6.DE17', null
+          union all
+          select 'program-whodakanc-profile', 'whodakanc-b6-de99', null, 'ANC.B6.DE99', null
+          union all
+          select 'program-whodakanc-episodeend', 'whodakanc-end-1', null, 'ANC.End.1', null
+          union all
+          select 'program-whodakanc-episodeend', 'whodakanc-end-12', null, 'ANC.End.12', null
       - input: ref('locations')
         format: sql
         rows: |
@@ -93,7 +109,7 @@ unit_tests:
     description: >
       AC-009, AC-011 (specs/dbt-model/metric__who_dak_anc_indicators.md). A local chart mapped as a
       contact form is dated by its mapped contact date and carries mapped parity, stored as 2.0 and
-      read as 2. A mapped booking form without is_contact is not a contact form. A native question
+      read as 2, whose element id is mapped in lower case. A mapped booking form without is_contact is not a contact form. A native question
       code on a mapped survey is not read, and an unmapped survey carrying a mapped code is not read
       at all.
     overrides:
@@ -103,7 +119,7 @@ unit_tests:
             is_contact: true
             data_elements:
               ANC.A7.DE4: LocalChartDate
-              ANC.B6.DE32: LocalParity
+              anc.b6.de32: LocalParity
           program-local-booking:
             data_elements:
               ANC.B6.DE17: LocalGestation
@@ -118,6 +134,14 @@ unit_tests:
           select 'pde-LocalGestation', 'LocalGestation'
           union all
           select 'pde-de17', 'whodakanc-b6-de17'
+      - input: ref('map__who_dak_anc_questions')
+        format: sql
+        rows: |
+          select
+            'program-whodakanc-registration'::text as survey_id, 'whodakanc-a7-de4'::text as question_code,
+            null::text as option, 'ANC.A7.DE4'::text as element_id, 'contact'::text as role
+          union all
+          select 'program-whodakanc-profile', 'whodakanc-b6-de17', null, 'ANC.B6.DE17', null
       - input: ref('locations')
         format: sql
         rows: |
