@@ -94,6 +94,7 @@ metrics:
   - admission_clinician_name
   - is_auto_discharge
   - department
+  - location_group_name
   variant_of: null
   owner: bes-maui
   status: approved
