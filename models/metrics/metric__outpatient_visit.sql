@@ -23,6 +23,11 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
+-- BL-015: the intake location's group -- the clinic or area.
+location_groups as (
+    select * from {{ ref('location_groups') }}
+),
+
 discharges as (
     select * from {{ ref('discharges') }}
 ),
@@ -140,6 +145,8 @@ outpatient_visits as (
         coalesce(dis.note like 'Automatically discharged%', false) as is_auto_discharge,
         -- BL-013
         coalesce(dept.name, 'Not recorded') as department,
+        -- BL-015
+        coalesce(lg.name, 'Not recorded') as location_group_name,
         -- BL-011: intake to the departure resolved above, falling back to the encounter
         -- end. NULL while the encounter is open and nothing has ended the episode.
         case
@@ -161,6 +168,9 @@ outpatient_visits as (
     -- NULL facility (BL-006)
     join locations loc
         on loc.id = i.care_site_id
+    -- BL-015: left join -- a location in no group, or a since-deleted group, still counts
+    left join location_groups lg
+        on lg.id = loc.location_group_id
     -- left: a visit that never left outpatient care has no exit segment
     left join opd_exits x
         on x.visit_occurrence_id = i.visit_occurrence_id
@@ -228,5 +238,7 @@ select
     -- choices the consumer makes.
     round(opd_time__seconds / 60.0, 2) as opd_time__minutes,
     -- BL-013
-    department
+    department,
+    -- BL-015
+    location_group_name
 from outpatient_visits
