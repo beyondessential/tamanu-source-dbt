@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: map__who_dak_hiv_questions
+    description: >
+      The WHO DAK HIV question map: which DAK data element each question on the who-dak-hiv
+      forms collects. One row per question, or per option where a question collects several
+      elements as its options. Generated from csv/who_dak/map__who_dak_hiv_questions.csv, a
+      copy of the map tupaia-data-product generates (specs/dbt-model/map__who_dak.md). Models
+      join on it by survey id and question code.
+    config:
+      meta:
+        owner: bes-maui
+        domain: reference
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - question_code
+              - option
+    columns:
+      - name: survey_id
+        data_type: text
+        description: The survey the question is on, as Tamanu ids it.
+        data_tests:
+          - not_null
+      - name: question_code
+        data_type: text
+        description: The question's program data element code.
+        data_tests:
+          - not_null
+      - name: option
+        data_type: text
+        description: The option that collects the element, or NULL where the answer itself does.
+      - name: element_id
+        data_type: text
+        description: The Annex A data element id the question collects.
+        data_tests:
+          - not_null
+          # BL-005: every mapped element is in the dictionary (see specs/dbt-model/map__who_dak.md)
+          - relationships:
+              arguments:
+                to: ref('map__who_dak_hiv_elements')
+                field: element_id
+      - name: role
+        data_type: text
+        description: A role the domain's models read from the survey, such as contact, or NULL.
