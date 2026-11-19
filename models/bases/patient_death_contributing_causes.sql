@@ -13,6 +13,6 @@ join {{ source('tamanu', 'patient_death_data') }} pdd on pdd.id = cdc.patient_de
 where cdc.deleted_at is null
     and pdd.deleted_at is null
     and pdd.patient_id != '{{ var("test_patient") }}'
-    {%- if is_incremental() %}
+{%- if is_incremental() %}
     and cdc.updated_at_sync_tick >= {{ last_sync_tick() }}
     {%- endif %}

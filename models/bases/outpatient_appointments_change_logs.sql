@@ -27,6 +27,6 @@ where c.table_name = 'appointments'
     and c.record_deleted_at is null
     and (c.record_data ->> 'appointment_type_id') is not null
     and (c.record_data ->> 'patient_id') != '{{ var("test_patient") }}'
-    {%- if is_incremental() %}
+{%- if is_incremental() %}
     and c.record_id in ({{ changed_since_last_run('appointments') }})
     {%- endif %}

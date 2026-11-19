@@ -19,6 +19,6 @@ select
 from {{ source("logs__tamanu", "accesses") }}
 where deleted_at is null
     and record_type = 'Patient'
-    {%- if is_incremental() %}
+{%- if is_incremental() %}
     and updated_at_sync_tick >= {{ last_sync_tick() }}
     {%- endif %}

@@ -3,6 +3,7 @@
     table='patient_program_registration_conditions'
 ) }}
 with filtered_changes as (
+    -- noqa: disable=LT01,LT02
     {{ base_history_from_log('patient_program_registration_conditions') }}
         and (
             version = 'unknown'
@@ -11,6 +12,7 @@ with filtered_changes as (
         {%- if is_incremental() %}
         and record_id in ({{ changed_since_last_run('patient_program_registration_conditions') }})
         {%- endif %}
+    -- noqa: enable=LT01,LT02
 )
 
 select

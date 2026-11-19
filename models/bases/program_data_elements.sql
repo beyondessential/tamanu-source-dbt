@@ -14,6 +14,6 @@ select
     updated_at_sync_tick
 from {{ source('tamanu', 'program_data_elements') }}
 where deleted_at is null
-    {%- if is_incremental() %}
+{%- if is_incremental() %}
     and updated_at_sync_tick >= {{ last_sync_tick() }}
     {%- endif %}

@@ -17,6 +17,6 @@ where ed.deleted_at is null
     and ed.certainty not in ('disproven', 'error')
     and e.deleted_at is null
     and e.patient_id != '{{ var("test_patient") }}'
-    {%- if is_incremental() %}
+{%- if is_incremental() %}
     and ed.updated_at_sync_tick >= {{ last_sync_tick() }}
     {%- endif %}

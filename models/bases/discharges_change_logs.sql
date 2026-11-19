@@ -30,6 +30,6 @@ join {{ source('tamanu', 'encounters') }} e
 where
     c.table_name = 'discharges'
     and c.record_deleted_at is null
-    {%- if is_incremental() %}
+{%- if is_incremental() %}
     and c.record_id in ({{ changed_since_last_run('discharges') }})
     {%- endif %}

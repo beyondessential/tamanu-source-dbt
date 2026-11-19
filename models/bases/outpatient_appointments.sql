@@ -32,6 +32,6 @@ left join {{ source('tamanu', 'appointment_schedules') }} s on s.id = a.schedule
 where a.deleted_at is null
     and a.patient_id != '{{ var("test_patient") }}'
     and a.appointment_type_id notnull
-    {%- if is_incremental() %}
+{%- if is_incremental() %}
     and a.updated_at_sync_tick >= {{ last_sync_tick() }}
     {%- endif %}

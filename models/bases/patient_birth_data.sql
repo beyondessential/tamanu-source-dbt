@@ -22,6 +22,6 @@ select
 from {{ source('tamanu', 'patient_birth_data') }}
 where deleted_at is null
     and id != '{{ var("test_patient") }}'
-    {%- if is_incremental() %}
+{%- if is_incremental() %}
     and updated_at_sync_tick >= {{ last_sync_tick() }}
     {%- endif %}

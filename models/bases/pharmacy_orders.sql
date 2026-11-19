@@ -15,6 +15,6 @@ join {{ source('tamanu', 'encounters') }} e on e.id = po.encounter_id
 where po.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != '{{ var("test_patient") }}'
-    {%- if is_incremental() %}
+{%- if is_incremental() %}
     and po.updated_at_sync_tick >= {{ last_sync_tick() }}
     {%- endif %}

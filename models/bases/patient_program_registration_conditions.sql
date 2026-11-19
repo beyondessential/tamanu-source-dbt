@@ -18,6 +18,6 @@ join {{ source('tamanu', 'patient_program_registrations') }} ppr
     on ppr.id = pprc.patient_program_registration_id
 where pprc.deleted_at is null
     and ppr.patient_id != '{{ var("test_patient") }}'
-    {%- if is_incremental() %}
+{%- if is_incremental() %}
     and pprc.updated_at_sync_tick >= {{ last_sync_tick() }}
     {%- endif %}

@@ -21,6 +21,6 @@ from {{ source('tamanu', 'patients') }}
 where deleted_at is null
     and id != '{{ var("test_patient") }}'
     and visibility_status != 'merged'
-    {%- if is_incremental() %}
+{%- if is_incremental() %}
     and updated_at_sync_tick >= {{ last_sync_tick() }}
     {%- endif %}

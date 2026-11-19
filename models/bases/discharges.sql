@@ -32,7 +32,7 @@ where d.deleted_at is null
             and d2.deleted_at is null
             and (d2.created_at, d2.id) < (d.created_at, d.id)
     )
-    {%- if is_incremental() %}
+{%- if is_incremental() %}
     and d.encounter_id in (
         select d3.encounter_id
         from {{ source('tamanu', 'discharges') }} d3

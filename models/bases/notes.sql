@@ -23,6 +23,6 @@ from {{ source('tamanu', 'notes') }} n
 join {{ source('tamanu', 'reference_data') }} rd
     on rd.id = n.note_type_id
 where n.deleted_at is null
-    {%- if is_incremental() %}
+{%- if is_incremental() %}
     and n.updated_at_sync_tick >= {{ last_sync_tick() }}
     {%- endif %}

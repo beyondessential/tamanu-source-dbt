@@ -56,6 +56,6 @@ where p.deleted_at is null
                 and pop.patient_id != '{{ var("test_patient") }}'
         )
     )
-    {%- if is_incremental() %}
+{%- if is_incremental() %}
     and p.updated_at_sync_tick >= {{ last_sync_tick() }}
     {%- endif %}

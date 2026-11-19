@@ -3,11 +3,13 @@
     table='patient_additional_data'
 ) }}
 with filtered_changes as (
+    -- noqa: disable=LT01,LT02
     {{ base_history_from_log('patient_additional_data') }}
         and record_id != '{{ var("test_patient") }}' -- noqa: ST10
         {%- if is_incremental() %}
         and record_id in ({{ changed_since_last_run('patient_additional_data') }})
         {%- endif %}
+    -- noqa: enable=LT01,LT02
 )
 
 select
