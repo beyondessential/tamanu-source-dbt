@@ -170,3 +170,10 @@ models:
         data_tests:
           - not_null:
               name: ac_016_metric__opd_visit_department_department_not_null
+      - name: location_group_name
+        data_type: text
+        description: "{{ doc('metric__opd_visit_department__location_group_name') }}"
+        data_tests:
+          # BL-006: same reasoning as department.
+          - not_null:
+              name: ac_019_metric__opd_visit_department_location_group_name_not_null
