@@ -241,3 +241,12 @@ The designations of the admitting clinician (`admission_clinician_id`), as
 `clinician_designation` reads them for the attending clinician. 'Not recorded' for a visit that
 was never admitted, as well as for an admitting clinician with none.
 {% enddocs %}
+
+{% docs metric__outpatient_visit__location_group_name %}
+The location group of the intake segment's location -- the clinic or area the visit was seen
+in -- resolved to its name via `location_groups` (BL-015).
+The same location `facility_id` and `location_id` come from.
+
+'Not recorded' where the location belongs to no group. Never NULL, for the same array-filter
+reason as department.
+{% enddocs %}
