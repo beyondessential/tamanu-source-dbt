@@ -1,8 +1,10 @@
+import io
 import os
 import sys
 import time
 import urllib.error
 import urllib.request
+import zipfile
 from pathlib import Path
 
 import yaml
@@ -10,6 +12,7 @@ import yaml
 from utils import (
     cprint,
     execute_command,
+    generate_project_reports,
     generate_reporting_schema_script,
     get_dbt_project_config,
     get_dbt_target_arg,
@@ -34,6 +37,7 @@ PROFILES_PATH = Path("config") / "profiles.yml"
 TARGET = os.environ.get("TAMANU_DBT_TARGET", "").strip() or "replica"
 
 CALLBACK_URL = os.environ.get("SCHEMA_CALLBACK_URL", "").strip()
+REPORTS_CALLBACK_URL = os.environ.get("REPORTS_CALLBACK_URL", "").strip()
 CALLBACK_ATTEMPTS = 5
 CALLBACK_BACKOFF_SECONDS = 2
 CALLBACK_TIMEOUT_SECONDS = 60
@@ -112,26 +116,74 @@ def build():
     return os.path.join(VERSION_DIR, f"reporting-schema-v{VERSION}-{DEPLOYMENT}.sql")
 
 
-def deliver(sql):
-    """POST the built schema to the callback, retrying while it answers 503.
+def build_reports():
+    """Compile the project's reports in each language it supports, as one zip.
+
+    The files keep the names the release build gives them, so the language is
+    the suffix of each name.
+
+    Returns:
+        bytes: The archive.
+
+    Raises:
+        RuntimeError: Where the project compiled no reports.
+    """
+    languages = get_dbt_project_config().get("vars", {}).get("supported_languages", ["default"])
+
+    written = []
+    for language in languages:
+        execute_command(
+            f'dbt compile --profiles-dir config{get_dbt_target_arg()} --vars "{{language: {language}}}"'
+        )
+        written += generate_project_reports(language)
+
+    if not written:
+        raise RuntimeError("the project compiled no reports")
+
+    archive = io.BytesIO()
+    with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zipped:
+        for path in written:
+            zipped.write(path, os.path.basename(path))
+    return archive.getvalue()
+
+
+def deliver_reports():
+    """Build the reports and hand them back, never failing the build.
+
+    The schema is already delivered by now, and a schema with no reports is
+    worth more than neither.
+    """
+    try:
+        reports = build_reports()
+        cprint(f"Delivering {len(reports)} bytes of reports", "info")
+        deliver(reports, REPORTS_CALLBACK_URL, "application/zip")
+    # execute_command and compile_report exit rather than raise.
+    except (Exception, SystemExit) as err:
+        cprint(f"Delivered no reports: {err}", "warning")
+
+
+def deliver(body, url, content_type):
+    """POST a build's output to its callback, retrying while it answers 503.
 
     Args:
-        sql (bytes): The schema's SQL.
+        body (bytes): What was built.
+        url (str): The callback.
+        content_type (str): What the body is.
 
     Raises:
         RuntimeError: Where the callback refused it, or never took it.
     """
     for attempt in range(1, CALLBACK_ATTEMPTS + 1):
         request = urllib.request.Request(
-            CALLBACK_URL,
-            data=sql,
+            url,
+            data=body,
             method="POST",
-            headers={"Content-Type": "application/sql"},
+            headers={"Content-Type": content_type},
         )
 
         try:
             with urllib.request.urlopen(request, timeout=CALLBACK_TIMEOUT_SECONDS) as response:
-                cprint(f"Delivered the schema ({response.status})", "success")
+                cprint(f"Delivered {content_type} ({response.status})", "success")
                 return
         except urllib.error.HTTPError as err:
             if err.code != 503:
@@ -173,7 +225,10 @@ def main():
         raise RuntimeError("the build produced an empty schema")
 
     cprint(f"Delivering {len(sql)} bytes", "info")
-    deliver(sql)
+    deliver(sql, CALLBACK_URL, "application/sql")
+
+    if REPORTS_CALLBACK_URL:
+        deliver_reports()
 
     cprint(f"\n✓ Build complete for version {VERSION}", "success")
 
