@@ -121,3 +121,12 @@ re-enters the same department produces one row per segment, not one row per dist
 department. See BL-001: deduplicating that down to "did this visit ever touch department X" is
 a consumer-layer concern.
 {% enddocs %}
+
+{% docs metric__opd_visit_department__location_group_name %}
+The location group of the visit's intake location -- the clinic or area the visit was seen in --
+resolved to its name via `location_groups` (BL-006). The same location `facility_id` and
+`location_id` come from, and the same value on every segment row of a visit.
+
+'Not recorded' where the location belongs to no group. Never NULL, for the same array-filter
+reason as department.
+{% enddocs %}
