@@ -11,15 +11,16 @@
 | **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
+| **Linear issue** | [MAUI-7199](https://linear.app/bes/issue/MAUI-7199) |
 | **Created** | 2026-08-24 |
-| **Last updated** | 2026-08-24 |
+| **Last updated** | 2026-11-19 |
 
 ## Purpose
 
 Report WHO SMART guidelines HIV indicators from the DAK's own forms. The `who-dak-hiv` program
-forms are generated from Web Annex A, so a question code *is* a DAK data element id — which
-makes Web Annex C's indicator definitions, written in terms of those elements, computable
-without a local interpretation layer.
+forms are generated from Web Annex A with a question map naming the DAK data element each
+question collects, which makes Web Annex C's indicator definitions, written in terms of those
+elements, computable without a local interpretation layer.
 
 Sixteen counts are implemented, covering nine Annex C indicators: those whose numerator and
 denominator can both be read from the data elements those forms collect. Each count is registered
@@ -71,9 +72,9 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
   `documentations/metrics/who_dak_hiv.yml`; the registry row carries the definition and this
   model is its implementation.
 - **BL-002:** The DAK data elements are read from `who-dak-hiv` form submissions, identified by
-  the survey id prefix `program-whodakhiv-`. A question code is the DAK data element id, so
-  `HIV.D.DE38` is `pde-whodakhiv-d-de38`. The code mapping lives in
-  `int__who_dak_hiv_form_answers` and nowhere else.
+  the survey id prefix `program-whodakhiv-`, and an answer reaches its element through
+  `map__who_dak_hiv_questions` by its program data element's code and its survey. The elements
+  are named in `int__who_dak_hiv_form_answers` and nowhere else.
 - **BL-003:** A form asks each question at most once, so one answer per element per submission.
 - **BL-004:** Answers are text whatever the question type, so each is cast to the type Annex A
   declares: a date to `date`, a quantity to `numeric`, a Binary's `Yes`/`No` to boolean. An
@@ -203,8 +204,9 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
 | AC-021 | Every numerator's rows are a subset of its denominator's, per period and subject | BL-028 | singular test over each registered pair |
 | AC-022 | A positive result with no results-returned date is in neither HTS numerator nor its denominator | BL-028 | unit test `..._hts_grain` |
 | AC-023 | A DSD.3 numerator row exists only where the same client has a denominator row in the same month | BL-014 | unit test `..._dsd_coverage` |
+| AC-024 | An answer fills its element's column through the question map, and a question answered on a survey the map does not list it under is not read | BL-002 | unit test `test_int__who_dak_hiv_form_answers_question_map` |
 
-The eight unit tests carry the definitional weight. No deployment has captured these forms yet,
+The nine unit tests carry the definitional weight. No deployment has captured these forms yet,
 so the data tests assert shape on an empty relation — a fixture is the only way to prove a
 definition holds before there is data, and each of AC-012 to AC-014 pins a boundary a reader
 would otherwise have to take on trust.
@@ -212,7 +214,8 @@ would otherwise have to take on trust.
 ## Dependencies
 
 `int__who_dak_hiv_form_answers` (over `survey_responses`, `survey_response_answers`, `surveys`,
-`encounters`, `locations`, `clinical__person`), `int__who_dak_hiv_client_month_state`,
+`encounters`, `locations`, `program_data_elements`, `map__who_dak_hiv_questions`,
+`clinical__person`), `int__who_dak_hiv_client_month_state`,
 `int__who_dak_hiv_key_populations`, `metric_definitions`.
 
 ## Consumers
@@ -238,4 +241,5 @@ the Global Fund or PEPFAR reads the same counts via Annex C's crosswalk.
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-11-19 | Maui team | Answers reach their DAK elements through the generated question map `map__who_dak_hiv_questions` (MAUI-7199). |
 | 2026-08-24 | Maui team | Initial spec. Sixteen counts over nine Annex C indicators from the generated DAK forms, as counts with the rate left to the consumer. `int__who_dak_hiv_client_month_state` carries each client's last known state to a month end, which is what `ART.1` and `DSD.4` need; key population is a bridge feeding a separate metric of client-population pairs, because a column would make a count of people wrong. |
