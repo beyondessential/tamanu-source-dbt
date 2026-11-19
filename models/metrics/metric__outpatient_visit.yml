@@ -120,6 +120,13 @@ models:
         data_tests:
           - not_null:
               name: ac_010_metric__outpatient_visit_location_id_not_null
+      - name: patient_location_id
+        data_type: character varying(255)
+        description: >-
+          The patient's own home village (a Tamanu reference-data id) -- where the patient
+          lives, not where the visit happened. NULL when the patient's record carries no
+          village.
+        # BL-018: deliberately no not_null test -- a patient with no village is a real state.
       - name: sex
         data_type: character varying(255)
         description: "{{ doc('patients__sex') }}"
@@ -203,3 +210,30 @@ models:
         data_tests:
           - not_null:
               name: ac_017_metric__outpatient_visit_department_not_null
+      - name: location_group_name
+        data_type: text
+        description: "{{ doc('metric__outpatient_visit__location_group_name') }}"
+        data_tests:
+          # BL-015: same reasoning as department.
+          - not_null:
+              name: ac_017_metric__outpatient_visit_location_group_name_not_null
+      - name: referral_source
+        data_type: text
+        description: "{{ doc('metric__outpatient_visit__referral_source') }}"
+        data_tests:
+          # BL-016: same reasoning as department.
+          - not_null:
+              name: ac_018_metric__outpatient_visit_referral_source_not_null
+      - name: visit_start__hour
+        data_type: integer
+        description: "{{ doc('metric__outpatient_visit__visit_start__hour') }}"
+        data_tests:
+          # BL-017: visit_detail_start_datetime is never NULL on an intake segment, so neither
+          # is its hour.
+          - not_null:
+              name: ac_019_metric__outpatient_visit_visit_start__hour_not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              name: ac_019_metric__outpatient_visit_visit_start__hour_range
+              arguments:
+                min_value: 0
+                max_value: 23

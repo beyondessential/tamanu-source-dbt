@@ -23,6 +23,11 @@ locations as (
     select * from {{ ref('locations') }}
 ),
 
+-- BL-026: the admission location's group -- the ward or area.
+location_groups as (
+    select * from {{ ref('location_groups') }}
+),
+
 encounters as (
     select * from {{ ref('encounters') }}
 ),
@@ -88,6 +93,20 @@ admission_segments as (
     where visit_detail_concept_id = 9201 -- OMOP 'Inpatient Visit'
 ),
 
+-- BL-027: the segment the patient was in when discharged -- the encounter's latest segment,
+-- whatever its visit concept, so a patient moved out of the admitting ward is discharged from
+-- the ward they left, not the one they were admitted to.
+discharge_segments as (
+    select
+        visit_occurrence_id,
+        care_site_id,
+        row_number() over (
+            partition by visit_occurrence_id
+            order by visit_detail_start_datetime desc, visit_detail_id desc
+        ) as discharge_rank
+    from visit_detail
+),
+
 -- BL-003: one row per admission, attributed to that admission segment. An encounter with no
 -- segment at concept 9201 at all -- a pure ED or outpatient encounter -- has no row here.
 admissions as (
@@ -109,6 +128,23 @@ admissions as (
         -- facility_id (BL-009). Nullable: an admission segment recorded with no department
         -- stays NULL rather than being excluded.
         adm.department_id as admission_ward_id,
+        -- BL-026: the group of the same location facility_id is taken from, resolved to its
+        -- name. 'Not recorded' where the location is in no group.
+        coalesce(lg.name, 'Not recorded') as admission_location_group_name,
+        -- BL-028: the same group as the raw Tamanu id, for a consumer keyed on id rather than
+        -- a name that can be renamed. NULL (not coalesced) where the location is in no group.
+        loc.location_group_id as admission_location_group_id,
+        -- BL-027: the discharge segment's location group, resolved to its name. NULL while
+        -- the encounter is open -- there is no discharge yet -- and 'Not recorded' for a
+        -- closed one whose location is in no group.
+        case
+            when vo.visit_end_datetime is not null then coalesce(dis_lg.name, 'Not recorded')
+        end as discharge_location_group_name,
+        -- BL-029: the discharge segment's location group as the raw id. NULL while the
+        -- encounter is open and for a location in no group (not coalesced).
+        case
+            when vo.visit_end_datetime is not null then dis_loc.location_group_id
+        end as discharge_location_group_id,
         pr.gender_source_value as sex,
         -- BL-005: visit-level concept 262 ('Emergency Room and Inpatient Visit') marks an
         -- admission that had a prior ED/triage/observation phase; it exists only at visit
@@ -147,6 +183,18 @@ admissions as (
     -- location does not resolve is excluded rather than attributed to a NULL facility.
     join locations loc
         on loc.id = adm.care_site_id
+    -- BL-026: left join -- an admission whose location is in no group still counts.
+    left join location_groups lg
+        on lg.id = loc.location_group_id
+    -- BL-027: left joins -- every encounter has at least one segment, but an unresolved
+    -- location or a location in no group must not drop the admission.
+    left join discharge_segments dis_seg
+        on dis_seg.visit_occurrence_id = adm.visit_occurrence_id
+        and dis_seg.discharge_rank = 1
+    left join locations dis_loc
+        on dis_loc.id = dis_seg.care_site_id
+    left join location_groups dis_lg
+        on dis_lg.id = dis_loc.location_group_id
     -- BL-012: the referral source lives on the encounter, not on clinical__visit_occurrence.
     join encounters enc
         on enc.id = adm.visit_occurrence_id
@@ -192,6 +240,10 @@ select
     visit_end__datetime,
     facility_id,
     admission_ward_id,
+    admission_location_group_name,
+    admission_location_group_id,
+    discharge_location_group_name,
+    discharge_location_group_id,
     sex,
     age_years,
     clinician,
@@ -219,5 +271,11 @@ select
         admission_start__datetime >= previous_discharge__datetime
         and admission_start__datetime - previous_discharge__datetime <= interval '30 days',
         false
-    ) as is_readmission_within_30_days
+    ) as is_readmission_within_30_days,
+    -- BL-025: the same rule as BL-016 over a 14-day window.
+    coalesce(
+        admission_start__datetime >= previous_discharge__datetime
+        and admission_start__datetime - previous_discharge__datetime <= interval '14 days',
+        false
+    ) as is_readmission_within_14_days
 from admissions_with_readmission

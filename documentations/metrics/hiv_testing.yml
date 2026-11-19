@@ -36,7 +36,7 @@ metrics:
   - is_repeat_test
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__hiv_testing.md
 - metric_id: hiv_screening_test_event
   kind: metric
@@ -65,7 +65,7 @@ metrics:
   - is_repeat_test
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__hiv_testing.md
 - metric_id: hiv_screening_test_key_population
   kind: metric
@@ -95,7 +95,7 @@ metrics:
   - key_population
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__hiv_testing.md
 - metric_id: hiv_confirmatory_test
   kind: metric
@@ -121,7 +121,7 @@ metrics:
   - is_positive
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__hiv_testing.md
 - metric_id: hiv_confirmatory_test_event
   kind: metric
@@ -146,7 +146,7 @@ metrics:
   - is_positive
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__hiv_testing.md
 - metric_id: hiv_confirmatory_test_key_population
   kind: metric
@@ -175,5 +175,5 @@ metrics:
   - key_population
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__hiv_testing.md

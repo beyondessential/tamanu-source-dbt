@@ -46,7 +46,8 @@ doses as (
         va.age_days,
         va.age_years,
         va.facility_source,
-        va.is_given_elsewhere
+        va.is_given_elsewhere,
+        va.department
     from drug_exposure de
     join vaccine_attributes va
         on va.administered_vaccine_id = de.drug_exposure_id
@@ -88,7 +89,7 @@ select
     -- BL-008: the patient's home village, not the event's facility. NULL when the patient's
     -- own record carries no village -- deliberately not coalesced to a placeholder text
     -- value, since this is an id column, not a label, and a consumer joining it to
-    -- ref__location needs a real id or a real NULL, not a sentinel string.
+    -- reference data needs a real id or a real NULL, not a sentinel string.
     patient_location_id,
     -- BL-009: the patient the dose was given to, so a consumer can count people (a distinct
     -- count over this column) rather than doses. Never NULL -- the shared attributes model
@@ -110,5 +111,7 @@ select
     -- BL-014: where facility_id came from, and whether the dose was recorded as given
     -- elsewhere, so a card can exclude or label those doses.
     facility_source,
-    is_given_elsewhere
+    is_given_elsewhere,
+    -- BL-015: the encounter's department, 'Not recorded' like the other labels
+    coalesce(department, 'Not recorded') as department
 from doses

@@ -162,6 +162,20 @@ models:
       - name: is_primary
         data_type: boolean
         description: "{{ doc('metric__encounter_diagnosis__is_primary') }}"
+      # BL-006: never NULL -- 'Not recorded' with no code, 'Unclassified' for a code that is
+      # not ICD-10.
+      - name: diagnosis__icd10_chapter
+        data_type: text
+        description: "{{ doc('metric__encounter_diagnosis__diagnosis__icd10_chapter') }}"
+        data_tests:
+          - not_null:
+              name: ac_012_metric__encounter_diagnosis_diagnosis__icd10_chapter_not_null
+      - name: diagnosis__icd10_block
+        data_type: text
+        description: "{{ doc('metric__encounter_diagnosis__diagnosis__icd10_block') }}"
+        data_tests:
+          - not_null:
+              name: ac_012a_metric__encounter_diagnosis_diagnosis__icd10_block_not_null
       - name: age_years
         data_type: integer
         description: "{{ doc('metric__encounter_diagnosis__age_years') }}"

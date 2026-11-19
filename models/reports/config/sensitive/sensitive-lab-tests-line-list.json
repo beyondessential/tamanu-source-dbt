@@ -12,7 +12,7 @@
     ],
     "parameters": [
       {
-        "parameterField": "ParameterSelectField",
+        "parameterField": "ParameterMultiselectField",
         "label": "Status",
         "name": "statusId",
         "options": [

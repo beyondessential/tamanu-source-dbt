@@ -41,15 +41,15 @@ where
     and case when {{ parameter('departmentId') }} is null then true
         else {{ parameter('departmentId') }} = any(department_ids::text [])
     end
-    and case when {{ parameter('patientBillingTypeId') }} is null then true
-        else billing_type_id like {{ parameter('patientBillingTypeId') }}
-    end
+    -- BL-001 (see specs/reports/admissions-line-list.md): multi-select. Nothing selected means every billing type.
+    -- BL-003: the selection goes through multi_select_filter(), which stays valid when empty.
+    and {{ multi_select_filter('billing_type_id::text', 'patientBillingTypeId') }}
     and case when {{ parameter('clinicianId') }} is null then true
         else admitting_clinician_id = {{ parameter('clinicianId') }}
     end
-    and case when coalesce({{ parameter('admissionStatus') }}) is null then true
-        else admission_status in ({{ parameter('admissionStatus') }})
-    end
+    -- BL-002 (see specs/reports/admissions-line-list.md): multi-select. Nothing selected means every status.
+    -- BL-003: the selection goes through multi_select_filter(), which stays valid when empty.
+    and {{ multi_select_filter('admission_status::text', 'admissionStatus') }}
 order by admission_datetime desc
 
 {% endmacro %}

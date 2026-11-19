@@ -2,7 +2,7 @@
   "query": "replace this",
   "name": "Medication dispensed summary",
   "status": "published",
-  "notes": "This report shows quantity of medication dispensed for a given drug within a specified date range, based on dispense records.",
+  "notes": "This report shows quantity of medication dispensed for each of the selected drugs (all drugs when none are selected) within a specified date range, based on dispense records.",
   "dbSchema": "reporting",
   "queryOptions": {
     "defaultDateRange": "30days",
@@ -18,10 +18,11 @@
         "filterBySelectedFacility": true
       },
       {
-        "parameterField": "ParameterAutocompleteField",
+        "parameterField": "ParameterSuggesterSelectField",
         "label": "Drug",
         "name": "medicationId",
-        "suggesterEndpoint": "drug"
+        "suggesterEndpoint": "drug",
+        "isMulti": true
       }
     ]
   }

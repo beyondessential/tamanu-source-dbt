@@ -20,7 +20,7 @@ only) are alternative definitions of length of stay -- a consumer picks one. Ave
 stay is sum(patient_days) / sum(value_numeric) over inpatient_separation rows at the consumer's
 grain.
 
-See specs/dbt-model/metric__inpatient_admission.md for BL-001..BL-024.
+See specs/dbt-model/metric__inpatient_admission.md for BL-001..BL-027.
 {% enddocs %}
 
 {% docs metric__inpatient_admission__variant_id %}
@@ -194,6 +194,16 @@ NULL rows, so the model coalesces to false where there is no previous admission,
 one is still open, or the two overlap (a data-entry anomaly, not a readmission).
 {% enddocs %}
 
+{% docs metric__inpatient_admission__is_readmission_within_14_days %}
+True where the immediately preceding admission for the same patient discharged no more than 14
+days before this one started.
+
+The same rule as is_readmission_within_30_days over a shorter window, for a consumer whose
+readmission measure is 14 days. A flag rather than the gap itself, for the same reason: the gap
+in time, read against period_start, would point at the patient's previous admission. Never
+NULL, and false in the same cases.
+{% enddocs %}
+
 {% docs metric__inpatient_admission__clinician %}
 The admission segment's own clinician, resolved to a name (BL-017), for an "admissions by
 clinician" card. Never NULL -- falls back to 'Not recorded'.
@@ -228,4 +238,45 @@ Populated on every inpatient_separation row; NULL on inpatient_admission. A disa
 a consumer excludes same-day stays to form AIHW's overnight-only average length of stay --
 sum(patient_days) / sum(value_numeric) over inpatient_separation rows where is_same_day is
 false (BL-023).
+{% enddocs %}
+
+{% docs metric__inpatient_admission__admission_location_group_name %}
+The location group (ward or area) of the admission segment's location -- the same location
+facility_id is taken from -- resolved to its name (BL-026), on both inpatient_admission and
+inpatient_separation rows. A readable label, unlike admission_ward_id, which is the department
+id.
+
+'Not recorded' where the location is in no group. Never NULL, for the same array-filter reason
+as admission_source.
+{% enddocs %}
+
+{% docs metric__inpatient_admission__discharge_location_group_name %}
+The location group (ward or area) the patient was discharged from: the group of the location
+of the encounter's latest segment, whatever its visit type, resolved to its name (BL-027). A
+patient moved out of the admitting ward is discharged from the ward they left, so a discharge
+count by this column counts against that ward rather than the admitting one, which
+admission_location_group_name names.
+
+Populated on inpatient_separation rows only, and never NULL there -- 'Not recorded' where the
+location is in no group. NULL on every inpatient_admission row, since an admission row is not
+a discharge.
+{% enddocs %}
+
+{% docs metric__inpatient_admission__admission_location_group_id %}
+The Tamanu id of the location group (ward or area) of the admission segment's location (BL-028),
+the raw id behind admission_location_group_name, on both inpatient_admission and
+inpatient_separation rows. Use it, rather than the name, to key a ward on a stable identifier
+that survives a rename.
+
+NULL where the location is in no group -- the id is not coalesced, unlike the name, which reads
+'Not recorded' there.
+{% enddocs %}
+
+{% docs metric__inpatient_admission__discharge_location_group_id %}
+The Tamanu id of the location group (ward or area) the patient was discharged from (BL-029),
+the raw id behind discharge_location_group_name.
+
+Populated on inpatient_separation rows only. NULL on every inpatient_admission row, and on a
+separation row whose discharge location is in no group -- the id is not coalesced, unlike the
+name, which reads 'Not recorded' there.
 {% enddocs %}

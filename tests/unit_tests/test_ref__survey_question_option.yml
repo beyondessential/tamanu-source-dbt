@@ -1,0 +1,147 @@
+unit_tests:
+  - name: test_ref__survey_question_option_array_default_options
+    model: ref__survey_question_option
+    description: >-
+      A data element's JSON array of options yields one row per element in array order,
+      sourced from the data element, and the question text falls back to the data
+      element's default text when the question's own text is empty (AC-003, AC-007).
+    given:
+      - input: ref('surveys')
+        format: sql
+        rows: |
+          select 's1'::text as id, 'ncd'::text as code, 'NCD screening'::text as name, 'programs'::text as survey_type, 'p1'::text as program_id, 'current'::text as visibility_status
+      - input: ref('survey_screen_components')
+        format: sql
+        rows: |
+          select 's1-bp'::text as id, 's1'::text as survey_id, 'pde-bp'::text as data_element_id, ''::text as text, ''::text as options, 'current'::text as visibility_status
+      - input: ref('program_data_elements')
+        format: sql
+        rows: |
+          select 'pde-bp'::text as id, 'bp'::text as code, 'BP status'::text as name, 'Radio'::text as type, 'Blood pressure status'::text as default_text, '["Normal", "Pre-hypertension", "Hypertension"]'::text as default_options
+    expect:
+      format: sql
+      rows: |
+        select * from (values
+          ('s1', 'ncd', 'NCD screening', 'programs', 'p1', 'current', 's1-bp', 'current', 'pde-bp', 'bp', 'BP status', 'Blood pressure status', 'Radio', 'data_element', 1, 'Normal'),
+          ('s1', 'ncd', 'NCD screening', 'programs', 'p1', 'current', 's1-bp', 'current', 'pde-bp', 'bp', 'BP status', 'Blood pressure status', 'Radio', 'data_element', 2, 'Pre-hypertension'),
+          ('s1', 'ncd', 'NCD screening', 'programs', 'p1', 'current', 's1-bp', 'current', 'pde-bp', 'bp', 'BP status', 'Blood pressure status', 'Radio', 'data_element', 3, 'Hypertension')
+        ) as e (survey_id, survey_code, survey_name, survey_type, program_id, survey_visibility_status, survey_screen_component_id, question_visibility_status, data_element_id, data_element_code, data_element_name, question_text, question_type, options_source, option_index, option_label)
+
+  - name: test_ref__survey_question_option_question_options_override
+    model: ref__survey_question_option
+    description: >-
+      A question's own non-empty options override its data element's, while a question
+      with null options on another survey falls back to the data element's. Historical
+      surveys and questions are kept with their visibility statuses (AC-004, AC-008).
+    given:
+      - input: ref('surveys')
+        format: sql
+        rows: |
+          select 's1'::text as id, 'ncd'::text as code, 'NCD screening'::text as name, 'programs'::text as survey_type, 'p1'::text as program_id, 'current'::text as visibility_status
+          union all
+          select 's2', 'ncd_old', 'NCD screening (old)', 'programs', 'p1', 'historical'
+      - input: ref('survey_screen_components')
+        format: sql
+        rows: |
+          select 's1-dm'::text as id, 's1'::text as survey_id, 'pde-dm'::text as data_element_id, 'Diabetic?'::text as text, '["Yes", "No", "Unknown"]'::text as options, 'current'::text as visibility_status
+          union all
+          select 's2-dm', 's2', 'pde-dm', 'Diabetic?', null, 'historical'
+      - input: ref('program_data_elements')
+        format: sql
+        rows: |
+          select 'pde-dm'::text as id, 'dm'::text as code, 'Diabetic status'::text as name, 'Select'::text as type, 'Diabetes status'::text as default_text, '["Yes","No"]'::text as default_options
+    expect:
+      format: sql
+      rows: |
+        select * from (values
+          ('s1', 'ncd', 'NCD screening', 'programs', 'p1', 'current', 's1-dm', 'current', 'pde-dm', 'dm', 'Diabetic status', 'Diabetic?', 'Select', 'question', 1, 'Yes'),
+          ('s1', 'ncd', 'NCD screening', 'programs', 'p1', 'current', 's1-dm', 'current', 'pde-dm', 'dm', 'Diabetic status', 'Diabetic?', 'Select', 'question', 2, 'No'),
+          ('s1', 'ncd', 'NCD screening', 'programs', 'p1', 'current', 's1-dm', 'current', 'pde-dm', 'dm', 'Diabetic status', 'Diabetic?', 'Select', 'question', 3, 'Unknown'),
+          ('s2', 'ncd_old', 'NCD screening (old)', 'programs', 'p1', 'historical', 's2-dm', 'historical', 'pde-dm', 'dm', 'Diabetic status', 'Diabetic?', 'Select', 'data_element', 1, 'Yes'),
+          ('s2', 'ncd_old', 'NCD screening (old)', 'programs', 'p1', 'historical', 's2-dm', 'historical', 'pde-dm', 'dm', 'Diabetic status', 'Diabetic?', 'Select', 'data_element', 2, 'No')
+        ) as e (survey_id, survey_code, survey_name, survey_type, program_id, survey_visibility_status, survey_screen_component_id, question_visibility_status, data_element_id, data_element_code, data_element_name, question_text, question_type, options_source, option_index, option_label)
+
+  - name: test_ref__survey_question_option_object_options
+    model: ref__survey_question_option
+    description: >-
+      A JSON object yields its values, never its keys, ordered as JavaScript's
+      Object.values orders them. Array-index keys come first in numeric order, then
+      every other key as written. A key above 2^32 - 2 or with a leading zero is not
+      an array index (AC-005).
+    given:
+      - input: ref('surveys')
+        format: sql
+        rows: |
+          select 's1'::text as id, 'ncd'::text as code, 'NCD screening'::text as name, 'programs'::text as survey_type, 'p1'::text as program_id, 'current'::text as visibility_status
+      - input: ref('survey_screen_components')
+        format: sql
+        rows: |
+          select 's1-obj'::text as id, 's1'::text as survey_id, 'pde-obj'::text as data_element_id, ''::text as text, ''::text as options, 'current'::text as visibility_status
+      - input: ref('program_data_elements')
+        format: sql
+        rows: |
+          select 'pde-obj'::text as id, 'obj'::text as code, 'Object options'::text as name, 'Select'::text as type, 'Pick one'::text as default_text, '{"b": "Bravo", "10": "Ten", "4294967295": "Big", "a": "Alpha", "2": "Two", "01": "Oh-one"}'::text as default_options
+    expect:
+      format: sql
+      rows: |
+        select * from (values
+          ('s1', 'ncd', 'NCD screening', 'programs', 'p1', 'current', 's1-obj', 'current', 'pde-obj', 'obj', 'Object options', 'Pick one', 'Select', 'data_element', 1, 'Two'),
+          ('s1', 'ncd', 'NCD screening', 'programs', 'p1', 'current', 's1-obj', 'current', 'pde-obj', 'obj', 'Object options', 'Pick one', 'Select', 'data_element', 2, 'Ten'),
+          ('s1', 'ncd', 'NCD screening', 'programs', 'p1', 'current', 's1-obj', 'current', 'pde-obj', 'obj', 'Object options', 'Pick one', 'Select', 'data_element', 3, 'Bravo'),
+          ('s1', 'ncd', 'NCD screening', 'programs', 'p1', 'current', 's1-obj', 'current', 'pde-obj', 'obj', 'Object options', 'Pick one', 'Select', 'data_element', 4, 'Big'),
+          ('s1', 'ncd', 'NCD screening', 'programs', 'p1', 'current', 's1-obj', 'current', 'pde-obj', 'obj', 'Object options', 'Pick one', 'Select', 'data_element', 5, 'Alpha'),
+          ('s1', 'ncd', 'NCD screening', 'programs', 'p1', 'current', 's1-obj', 'current', 'pde-obj', 'obj', 'Object options', 'Pick one', 'Select', 'data_element', 6, 'Oh-one')
+        ) as e (survey_id, survey_code, survey_name, survey_type, program_id, survey_visibility_status, survey_screen_component_id, question_visibility_status, data_element_id, data_element_code, data_element_name, question_text, question_type, options_source, option_index, option_label)
+
+  - name: test_ref__survey_question_option_unparseable_options
+    model: ref__survey_question_option
+    description: >-
+      Comma-separated text, a JSON scalar, an empty value, a null value and an object
+      whose only value is null yield no rows. A JSON null array element is skipped
+      without taking a position, and leading whitespace before an array does not stop
+      it parsing (AC-006).
+    given:
+      - input: ref('surveys')
+        format: sql
+        rows: |
+          select 's1'::text as id, 'ncd'::text as code, 'NCD screening'::text as name, 'programs'::text as survey_type, 'p1'::text as program_id, 'current'::text as visibility_status
+      - input: ref('survey_screen_components')
+        format: sql
+        rows: |
+          select 's1-comma'::text as id, 's1'::text as survey_id, 'pde-comma'::text as data_element_id, ''::text as text, ''::text as options, 'current'::text as visibility_status
+          union all
+          select 's1-scalar', 's1', 'pde-scalar', '', '', 'current'
+          union all
+          select 's1-empty', 's1', 'pde-empty', '', '', 'current'
+          union all
+          select 's1-null', 's1', 'pde-null', '', null, 'current'
+          union all
+          select 's1-nullval', 's1', 'pde-nullval', '', '', 'current'
+          union all
+          select 's1-nullel', 's1', 'pde-nullel', '', '', 'current'
+          union all
+          select 's1-space', 's1', 'pde-space', '', '', 'current'
+      - input: ref('program_data_elements')
+        format: sql
+        rows: |
+          select 'pde-comma'::text as id, 'comma'::text as code, 'Comma'::text as name, 'Select'::text as type, null::text as default_text, 'Yes, No'::text as default_options
+          union all
+          select 'pde-scalar', 'scalar', 'Scalar', 'Select', null, '"Yes"'
+          union all
+          select 'pde-empty', 'empty', 'Empty', 'Select', null, ''
+          union all
+          select 'pde-null', 'nulled', 'Null', 'FreeText', null, null
+          union all
+          select 'pde-nullval', 'nullval', 'Null value', 'Select', null, '{"a": null}'
+          union all
+          select 'pde-nullel', 'nullel', 'Null element', 'Select', null, '["Yes", null, "No"]'
+          union all
+          select 'pde-space', 'space', 'Leading space', 'Select', null, '  ["Only"]'
+    expect:
+      format: sql
+      rows: |
+        select * from (values
+          ('s1', 'ncd', 'NCD screening', 'programs', 'p1', 'current', 's1-nullel', 'current', 'pde-nullel', 'nullel', 'Null element', null, 'Select', 'data_element', 1, 'Yes'),
+          ('s1', 'ncd', 'NCD screening', 'programs', 'p1', 'current', 's1-nullel', 'current', 'pde-nullel', 'nullel', 'Null element', null, 'Select', 'data_element', 2, 'No'),
+          ('s1', 'ncd', 'NCD screening', 'programs', 'p1', 'current', 's1-space', 'current', 'pde-space', 'space', 'Leading space', null, 'Select', 'data_element', 1, 'Only')
+        ) as e (survey_id, survey_code, survey_name, survey_type, program_id, survey_visibility_status, survey_screen_component_id, question_visibility_status, data_element_id, data_element_code, data_element_name, question_text, question_type, options_source, option_index, option_label)

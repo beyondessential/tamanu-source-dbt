@@ -4,14 +4,14 @@
 -- Per-death (subject) grain: one row per deceased patient, value_numeric 1, so a consumer
 -- aggregates at whatever grain it needs.
 --
--- The population, the death record chosen for each patient and the encounter the patient died
--- in are those of ds__deaths, the dataset behind the deceased patients line list, so a dashboard
--- count and that report agree. The facility is the death record's, falling back to the facility
--- of the encounter the patient died in, unless the record says the death was outside a health
--- facility.
+-- The population, the death record chosen for each patient, the encounter the patient died in
+-- and the facility are those of ds__deaths, the dataset behind the deceased patients line list,
+-- so a dashboard count and that report agree. The facility is the death record's, falling back
+-- to the facility of the encounter the patient died in, unless the record says the death was
+-- outside a health facility.
 --
 -- The registry carries the definition and this model is its implementation.
--- See specs/dbt-model/metric__death.md for BL-001..BL-007.
+-- See specs/dbt-model/metric__death.md for BL-001..BL-009.
 
 with patients as (
     select * from {{ ref('patients') }}
@@ -98,7 +98,20 @@ select
     end as place_of_death,
     coalesce(pdd.manner, 'Not recorded') as manner_of_death,
     -- BL-006
-    coalesce(dept.name, 'Not recorded') as department
+    coalesce(dept.name, 'Not recorded') as department,
+    -- BL-008: whole days from birth to the date of death, NULL where the birth date is not
+    -- recorded -- the derivation metric__immunisation_dose's age_days uses
+    (p.date_of_death::date - p.date_of_birth) as age_days,
+    -- BL-009: the death record's yes/no answers as booleans. NULL for 'unknown', for no
+    -- answer and for no death record.
+    case lower(pdd.was_pregnant)
+        when 'yes' then true
+        when 'no' then false
+    end as was_pregnant,
+    case lower(pdd.pregnancy_contributed)
+        when 'yes' then true
+        when 'no' then false
+    end as pregnancy_contributed
 from patients p
 join person pr
     on pr.person_id = p.id

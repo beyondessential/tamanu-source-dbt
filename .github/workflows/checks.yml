@@ -2,7 +2,7 @@ name: Checks
 
 # Runs on every PR and every push to main: unit tests for the helper scripts,
 # plus a guard that the committed generated macros (translation +
-# metric-definition) are still in sync with their source CSVs. Both are
+# metric-definition) and WHO DAK map models are still in sync with their sources. All are
 # generated but committed, so they can silently drift if someone edits a CSV
 # and forgets to regenerate.
 #
@@ -10,11 +10,18 @@ name: Checks
 # to main automatically by release-reporting-assets.yml's list-reports job on every
 # release cut from main, so it can't drift for long.
 #
-# dbt-unit-tests first runs a full `dbt parse`, which fails on any dbt deprecation,
-# then runs the dbt unit tests against an ephemeral Postgres. They mock
-# every input, so they need a database connection but no Tamanu data -- no secrets,
-# no live database, no access to a deployment. Data tests are deliberately not run
-# here: they assert over real rows and need a live database with credentials (#427).
+# dbt-unit-tests runs against an ephemeral Postgres on the lowest supported version, so a
+# model using newer syntax fails `dbt parse` here. It first runs a full `dbt parse`, which
+# fails on any dbt deprecation, then lints the SQL, validates the report configs and
+# translation labels, and runs the dbt unit tests. sqlfluff's dbt templater needs a
+# reachable database but queries no tables, and the unit tests mock every input, so none
+# of it needs Tamanu data -- no secrets, no live database, no access to a deployment. Data
+# tests are deliberately not run here: they assert over real rows and need a live database
+# with credentials (#427). The same job then creates every model as a view against an empty
+# copy of the Tamanu schema, which catches syntax a unit test does not reach.
+#
+# These steps mirror `make check` (the .maui submodule is private, so CI cannot run it).
+# Keep the two in step.
 #
 # Why it exists: nothing was executing dbt's own unit tests, and a fixture whose
 # UNION arms had mismatched column counts reached a release through seven green PRs
@@ -58,18 +65,23 @@ jobs:
         run: |
           python scripts/generate_translation_macro.py
           python scripts/generate_metric_definitions_macro.py
+          python scripts/generate_who_dak_maps.py
 
-      - name: Fail if generated macros drift from their CSVs
+      - name: Fail if generated files drift from their CSVs
+        # git status also catches a generated model that was never committed.
+        # BL-004: the WHO DAK map models match their copies (see specs/dbt-model/map__who_dak.md)
         run: |
-          if ! git diff --quiet -- macros/default_translations.sql macros/metric_definitions.sql; then
-            echo "::error::Generated macros are out of sync with their source CSVs."
+          if [ -n "$(git status --porcelain -- macros/default_translations.sql macros/metric_definitions.sql models/maps/who_dak)" ]; then
+            echo "::error::Generated macros or WHO DAK map models are out of sync with their source CSVs."
             echo "Run the generators and commit the result:"
             echo "  python scripts/generate_translation_macro.py"
             echo "  python scripts/generate_metric_definitions_macro.py"
-            git diff -- macros/default_translations.sql macros/metric_definitions.sql
+            echo "  python scripts/generate_who_dak_maps.py"
+            git status --short -- models/maps/who_dak
+            git diff -- macros/default_translations.sql macros/metric_definitions.sql models/maps/who_dak
             exit 1
           fi
-          echo "Generated macros are in sync."
+          echo "Generated macros and WHO DAK map models are in sync."
 
   dbt-unit-tests:
     name: dbt unit tests
@@ -77,7 +89,8 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        # The lowest Postgres version these models support (see AGENT.md).
+        image: postgres:12
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -138,5 +151,32 @@ jobs:
         # during a full parse.
         run: dbt parse --no-partial-parse --show-all-deprecations --profiles-dir config --target reporting_release
 
+      - name: Lint SQL
+        # sqlfluff's dbt templater reads the profile from DBT_PROFILES_DIR, not a flag.
+        env:
+          DBT_PROFILES_DIR: config
+        run: sqlfluff lint .
+
+      - name: Validate report configs
+        run: python scripts/validate_report_configs.py
+
+      - name: Check report translations
+        run: python scripts/check_translations.py
+
       - name: Run dbt unit tests
         run: dbt test --select "unit_test:*" --profiles-dir config --target reporting_release
+
+      # BL-003: create every model as a view on the lowest supported Postgres, against an empty
+      # copy of the Tamanu schema (specs/testing/model-postgres-compatibility.md). A model using
+      # a function or syntax newer than Postgres 12 fails here even when it has no unit test.
+      - name: Create an empty copy of the Tamanu schema
+        env:
+          PGPASSWORD: postgres
+        run: |
+          python scripts/generate_source_schema.py > source_schema.sql
+          psql -h localhost -U postgres -d tamanu_source_dbt_ci -v ON_ERROR_STOP=1 -q -f source_schema.sql
+
+      - name: Seed and create every model
+        run: |
+          dbt seed --profiles-dir config --target reporting_release
+          dbt run --profiles-dir config --target reporting_release

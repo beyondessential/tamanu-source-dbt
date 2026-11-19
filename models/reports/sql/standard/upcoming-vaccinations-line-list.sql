@@ -42,9 +42,8 @@ where
         else vaccine_name = {{ parameter('vaccine') }}
     end
     and
-    case
-        when {{ parameter('villageId') }} is null then true
-        else village_id = {{ parameter('villageId') }}
-    end
+    -- BL-001 (see specs/reports/upcoming-vaccinations-line-list.md): multi-select. Nothing selected means every village.
+    -- BL-002: the selection goes through multi_select_filter(), which stays valid when empty.
+    {{ multi_select_filter('village_id::text', 'villageId') }}
 -- BL-007: order by due date, then patient name and vaccine
 order by due_date, last_name, first_name, vaccine_name

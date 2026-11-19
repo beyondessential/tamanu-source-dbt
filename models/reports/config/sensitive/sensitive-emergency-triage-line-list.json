@@ -18,7 +18,7 @@
         "filterBySelectedFacility": true
       },
       {
-        "parameterField": "ParameterSelectField",
+        "parameterField": "ParameterMultiselectField",
         "label": "Triage category",
         "name": "triageScore",
         "options": [

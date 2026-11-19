@@ -32,6 +32,8 @@ where trim(t.d) not in (
         'triage_score',
         -- ed_visit's arrival hour
         'ed_start__hour',
+        -- opd_visit's visit start hour, the same 0-23 convention as ed_start__hour
+        'visit_start__hour',
         -- ed_stay's encounter discharge disposition
         'discharge_disposition',
         -- inpatient_admission's ward (department) the patient was admitted to
@@ -42,10 +44,18 @@ where trim(t.d) not in (
         'is_admitted_via_emergency',
         -- inpatient_admission's principal diagnosis, grouped to its ICD-10 chapter
         'principal_diagnosis__icd10_chapter',
+        -- death's maternal flags from the death record: pregnant, and pregnancy contributed
+        'was_pregnant',
+        'pregnancy_contributed',
+        -- encounter_diagnosis's diagnosis, grouped to its ICD-10 chapter and block
+        'diagnosis__icd10_chapter',
+        'diagnosis__icd10_block',
         -- inpatient_admission's 30-day readmission flag: true where the same patient's
         -- immediately preceding admission discharged no more than 30 days before this one
         -- started
         'is_readmission_within_30_days',
+        -- the same flag over a 14-day window
+        'is_readmission_within_14_days',
         -- program_registry_enrolment's registry: which programme the enrolment is in. One
         -- metric serves every registry a deployment configures, so the registry is a
         -- disaggregation rather than a metric_id per programme.
@@ -123,9 +133,12 @@ where trim(t.d) not in (
         -- applied downstream rather than registered here.
         'lab_order',
         'lab_order_code',
-        -- lab_order's request lifecycle status and, for a cancelled request, its reason, as recorded
+        -- lab_order's and imaging_request's request lifecycle status and, for a cancelled
+        -- request, its reason, as recorded
         'request_status',
         'cancellation_reason',
+        -- imaging_request's priority (e.g. routine, urgent), as recorded (MAUI-7122)
+        'priority',
         -- prescription_discontinuation's recorded reason, as recorded and ungrouped
         'discontinuing_reason',
         -- lab_test's request-level category (e.g. Haematology), as recorded
@@ -172,15 +185,40 @@ where trim(t.d) not in (
         -- (MAUI-6907): the encounter's, admission segment's or ED intake segment's own
         -- clinician, resolved to a name for a "by clinician" card.
         'clinician',
+        -- procedure's clinician and anaesthetist, resolved to names through ref__provider, and
+        -- its anaesthetic, resolved to its reference-data name (MAUI-7122)
+        'procedure_clinician',
+        'procedure_anaesthetist',
+        'anaesthetic',
         -- ed_visit's triage chief complaint, resolved to its reference-data name (MAUI-6858)
         'chief_complaint',
         -- the clinician's designations (e.g. Dentist), comma-separated, on encounter and
         -- opd_visit, and the admitting clinician's on opd_visit (MAUI-6906)
         'clinician_designation',
         'admission_clinician_designation',
-        -- encounter's location group (area), id and name (MAUI-6906)
+        -- encounter's location group (area), id and name (MAUI-6906); the name also on
+        -- opd_visit, opd_diagnosis and outpatient_appointment (MAUI-7131), procedure's own
+        -- location's group and imaging_request (MAUI-7122)
         'location_group_id',
         'location_group_name',
+        -- inpatient_admission's / _separation's admission location group (ward/area), by name
+        -- (MAUI-7131)
+        'admission_location_group_name',
+        -- and the same groups by raw Tamanu id, for consumers keyed on id (MAUI-7177)
+        'admission_location_group_id',
+        'discharge_location_group_id',
+        -- inpatient_separation's discharge location group: the ward/area the patient was
+        -- discharged from, by name (MAUI-7122)
+        'discharge_location_group_name',
+        -- opd_visit's referral source, carried as recorded, as admission_source is (MAUI-7131)
+        'referral_source',
+        -- outpatient_appointment's Tamanu status as recorded (e.g. No-show) and its appointment
+        -- type, resolved to a name (MAUI-7131)
+        'appointment_status',
+        'appointment_type',
+        -- birth's flag that the newborn's linked mother has a recorded diabetes condition
+        -- (ICD-10 E10-E14, O24) (MAUI-7132)
+        'is_mother_diabetic',
         -- death's primary cause from the death record, as recorded, with its reference-data
         -- code alongside so a consumer can scope to one cause by code (MAUI-6906).
         'primary_cause',
@@ -211,5 +249,17 @@ where trim(t.d) not in (
         'tested',
         -- inpatient_separation's same-day flag: admitted and discharged on the same day, so
         -- an overnight-only average length of stay can exclude those stays.
-        'is_same_day'
+        'is_same_day',
+        -- Interplast's surgical activity metrics (MAUI-7117): the patient's recorded country,
+        -- the reporting category of the screening's diagnosis, whether the screening selected
+        -- the patient for surgery, and which surgical procedure form (1st, 2nd or 3rd) a
+        -- procedure was recorded on, and whether a First Surgical Procedure followed the
+        -- screening (a surgical patient), and the screening's Type of consult (Surgical or
+        -- Allied Health).
+        'country_id',
+        'reporting_category',
+        'is_selected_for_surgery',
+        'procedure_sequence',
+        'has_first_surgical_procedure',
+        'consult_type'
     )

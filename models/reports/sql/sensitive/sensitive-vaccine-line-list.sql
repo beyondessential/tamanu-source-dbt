@@ -34,10 +34,9 @@ where
     {{ to_user_selected_timezone('vaccination_date') }}
     <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}
     and
-    case
-        when {{ parameter('villageId') }} is null then true
-        else village_id = {{ parameter('villageId') }}
-    end
+    -- BL-001 (see specs/reports/vaccine-line-list.md): multi-select. Nothing selected means every village.
+    -- BL-002: the selection goes through multi_select_filter(), which stays valid when empty.
+    {{ multi_select_filter('village_id::text', 'villageId') }}
     and
     case
         when {{ parameter('facilityId') }} is null then true

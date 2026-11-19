@@ -1,0 +1,50 @@
+# NCD registry cohorts.
+#
+# Part of the canonical registry of `metric__` indicators and `der__` derived elements:
+# every documentations/metrics/*.yml file is merged by metric_id.
+#
+# Compiled into macros/metric_definitions.sql by
+#   python scripts/generate_metric_definitions_macro.py
+# Run that after editing, and commit the regenerated macro -- CI fails on drift.
+
+metrics:
+- metric_id: cohort_ncd_diabetes
+  kind: cohort
+  name: Diabetes registry cohort
+  description: >-
+    Patients on the diabetes and hypertension registry with type 1 or type 2 diabetes. A cohort
+    entry runs from registration, or from the condition record when that is later, to the day
+    before the patient was deactivated or the condition was disproven, recorded in error or deleted.
+  numerator_description: null
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: Registry membership by condition, so indicators asked at different dates share one definition
+  unit: null
+  subject_grain: patient
+  disaggregations: null
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/derived__cohort_ncd.md
+- metric_id: cohort_ncd_hypertension
+  kind: cohort
+  name: Hypertension registry cohort
+  description: >-
+    Patients on the diabetes and hypertension registry with hypertension. A cohort entry runs from
+    registration, or from the condition record when that is later, to the day before the patient
+    was deactivated or the condition was disproven, recorded in error or deleted.
+  numerator_description: null
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: Registry membership by condition, so indicators asked at different dates share one definition
+  unit: null
+  subject_grain: patient
+  disaggregations: null
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/derived__cohort_ncd.md

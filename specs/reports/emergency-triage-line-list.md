@@ -73,7 +73,7 @@ Durations are stored as `bigint` seconds and rendered as `hh:mm:ss` by the repor
 - **BL-011:** The facility is a report parameter. There is deliberately no department filter: a triage record is itself the evidence that the encounter came through emergency, so the register covers every such encounter regardless of the department it moved to afterwards.
 - **BL-012:** The date range filters on the date of triage in the viewer's timezone and is inclusive of both bounds, defaulting to the past 30 days.
 - **BL-013:** An active care or encounter end time recorded before the time of triage is unusable, so the duration it would produce is left empty rather than shown as zero.
-- **BL-014:** The report exposes the triage category as a parameter.
+- **BL-014:** The triage category filter is a multi-select that returns a presentation when its category is any of the selected categories, and every category when none is selected. The selection reaches SQL as a list that is empty when nothing is selected, so the filter goes through an array constructor, which stays valid when empty.
 - **BL-015:** The sensitive variant is identical except that it reads the sensitive emergency dataset, so it covers presentations at sensitive facilities.
 
 ## Acceptance criteria
@@ -88,6 +88,7 @@ Durations are stored as `bigint` seconds and rendered as `hh:mm:ss` by the repor
 | AC-006 | An `Admitted` outcome always agrees with the encounter's OMOP visit concept, and a presentation with neither an admission nor an encounter end has no outcome | BL-009 | dbt singular test |
 | AC-007 | A zero-minute category target is met by a same-second start of active care and missed by any measurable wait | BL-008 | dbt unit test (`test_ds__emergency_triage_target_time_met`) |
 | AC-008 | Every presentation resolves an OMOP visit concept, so a blank outcome only ever means an open encounter | BL-009 | dbt singular test |
+| AC-009 | With no category or an empty selection every category is returned, and with one or two selected only those categories, in both variants | BL-014 | dbt unit tests (`test_emergency_triage_line_list_status_none`, `_status_empty_list`, `_status_one`, `_status_two_selected`, `_status_sensitive_one`, `_status_sensitive_two`) |
 
 AC-002 to AC-006 and AC-008 run against the standard dataset only. The sensitive variant is
 generated from the same macro, so its logic is identical by construction; it carries the
@@ -115,3 +116,4 @@ discharges                 ──┘
 | Date | Author | Change |
 |---|---|---|
 | 2026-08-11 | Maui team | Initial spec + implementation (MAUI-6778) |
+| 2026-11-10 | Maui team | MAUI-7088: the triage category filter is a multi-select (BL-014, AC-009). |

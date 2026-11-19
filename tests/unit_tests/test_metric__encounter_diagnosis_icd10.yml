@@ -1,0 +1,49 @@
+unit_tests:
+  - name: ac_012_metric__encounter_diagnosis_icd10
+    model: metric__encounter_diagnosis
+    description: >
+      BL-006: diagnosis__icd10_chapter and diagnosis__icd10_block group diagnosis_code by the
+      diagnosis__icd10_chapter and diagnosis__icd10_block macros. dx_1 (J18.9) reads its chapter
+      and block; dx_2's lower-case code (o80) matches the same as upper case; dx_3's local code
+      reads 'Unclassified' in both; dx_4, with no code, reads 'Not recorded' in both, as
+      diagnosis_code does. BL-003: the program-registry row (reg_1) is excluded.
+
+    given:
+      - input: ref('clinical__condition_occurrence')
+        format: sql
+        rows: |
+          select 'dx_1' as condition_occurrence_id, '2024-06-01'::date as condition_start_date, true as is_primary, 'J18.9' as condition_source_value, 'Pneumonia, unspecified' as condition_source_name, 'confirmed' as condition_status_source_value, 'enc_1' as visit_occurrence_id, 'per_1' as person_id, 'encounter diagnosis' as condition_type_source_value
+          union all
+          select 'dx_2', '2024-06-02'::date, false, 'o80', 'Single spontaneous delivery', 'confirmed', 'enc_1', 'per_1', 'encounter diagnosis'
+          union all
+          select 'dx_3', '2024-06-03'::date, null::boolean, 'LOC-FEVER', 'Fever', 'suspected', 'enc_1', 'per_1', 'encounter diagnosis'
+          union all
+          select 'dx_4', '2024-06-04'::date, null::boolean, null::text, null::text, 'confirmed', 'enc_1', 'per_1', 'encounter diagnosis'
+          union all
+          select 'reg_1', '2024-06-05'::date, null::boolean, 'E11', 'Type 2 diabetes mellitus', 'confirmed', null::text, 'per_1', 'program registry condition'
+
+      - input: ref('clinical__visit_occurrence')
+        format: sql
+        rows: |
+          select 'enc_1' as visit_occurrence_id, 'clinic' as visit_source_value, 9202 as visit_concept_id, 'Outpatient Visit' as visit_concept_name, 'loc_1' as care_site_id
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'per_1' as person_id, 'female' as gender_source_value, 1990 as year_of_birth, 1 as month_of_birth, 15 as day_of_birth
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_1' as id, 'fac_1' as facility_id
+
+    expect:
+      format: sql
+      rows: |
+        select 'encounter_diagnosis' as metric_id, null::text as variant_id, 'dx_1'::varchar as subject_id, '2024-06-01'::date as period_start, null::date as period_end, 'day'::text as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_1' as facility_id, 'clinic' as encounter_type, 9202 as visit_concept_id, 'Outpatient Visit' as visit_concept_name, 'female' as sex, 'J18.9' as diagnosis_code, 'Pneumonia, unspecified' as diagnosis, 'confirmed' as diagnosis_certainty, true as is_primary, 'X Diseases of the respiratory system' as diagnosis__icd10_chapter, 'J09-J18 Influenza and pneumonia' as diagnosis__icd10_block, 34 as age_years
+        union all
+        select 'encounter_diagnosis', null::text, 'dx_2'::varchar, '2024-06-02'::date, null::date, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'clinic', 9202, 'Outpatient Visit', 'female', 'o80', 'Single spontaneous delivery', 'confirmed', false, 'XV Pregnancy, childbirth and the puerperium', 'O80-O84 Delivery', 34
+        union all
+        select 'encounter_diagnosis', null::text, 'dx_3'::varchar, '2024-06-03'::date, null::date, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'clinic', 9202, 'Outpatient Visit', 'female', 'LOC-FEVER', 'Fever', 'suspected', null::boolean, 'Unclassified', 'Unclassified', 34
+        union all
+        select 'encounter_diagnosis', null::text, 'dx_4'::varchar, '2024-06-04'::date, null::date, 'day'::text, 1::numeric, null::boolean, 'fac_1', 'clinic', 9202, 'Outpatient Visit', 'female', 'Not recorded', 'Not recorded', 'confirmed', null::boolean, 'Not recorded', 'Not recorded', 34

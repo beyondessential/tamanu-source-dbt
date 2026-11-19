@@ -39,7 +39,9 @@ metrics:
   - place_of_death
   - manner_of_death
   - department
+  - was_pregnant
+  - pregnancy_contributed
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__death.md

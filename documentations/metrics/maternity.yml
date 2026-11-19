@@ -40,6 +40,7 @@ metrics:
   - registered_birth_place
   - birth_type
   - patient_location_id
+  - is_mother_diabetic
   variant_of: null
   owner: bes-maui
   status: approved
@@ -73,6 +74,7 @@ metrics:
   - registered_birth_place
   - birth_type
   - patient_location_id
+  - is_mother_diabetic
   variant_of: null
   owner: bes-maui
   status: approved
@@ -105,6 +107,7 @@ metrics:
   - registered_birth_place
   - birth_type
   - patient_location_id
+  - is_mother_diabetic
   variant_of: null
   owner: bes-maui
   status: approved
@@ -137,6 +140,7 @@ metrics:
   - registered_birth_place
   - birth_type
   - patient_location_id
+  - is_mother_diabetic
   variant_of: null
   owner: bes-maui
   status: approved

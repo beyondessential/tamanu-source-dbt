@@ -98,6 +98,8 @@ Column descriptions are defined once in `models/sources/<table>.md` and reused t
 
 Generic doc blocks (e.g. `generic__id`, `generic__visibility_status`) are in `models/sources/generic.md`.
 
+`models/sources/` and `models/logs/` are copied from Tamanu's `database/model/` and cleared by `scripts/refresh_tamanu_source.py` on every upgrade, so never add a doc block there. A block for a column a base model derives goes in `models/bases/<model>.md`, or `models/bases/generic.md` when several bases share it.
+
 Never write inline descriptions in `.yml` files when a `{{ doc() }}` reference exists — always prefer the reusable doc block.
 
 ## Reports
@@ -153,6 +155,21 @@ bundle rather than a seed table:
   `tamanu-dbt-<deployment>/csv/metric_definitions_<deployment>.csv` and are
   merged in by the generation script (keyed on `metric_id`)
 
+## WHO DAK element dictionaries and question maps
+
+`tupaia-data-product` generates each WHO DAK domain's element dictionary and question map and
+owns them (maui-team D12). This repo carries copies for the domains whose models a branch has:
+
+- Source: `csv/who_dak/map__who_dak_<domain>_{elements,questions}.csv`, byte-identical copies of
+  the files of the same name in `tupaia-data-product` `tamanu/who-dak/<domain>/`. Never edit them
+  here; copy them across again
+- Models: `models/maps/who_dak/map__who_dak_<domain>_*.sql`, views over a values list generated
+  by `python scripts/generate_who_dak_maps.py`, so they reach a deployment without `dbt seed`.
+  Never edit them directly; CI fails on drift
+- A `who_dak` model reads an answer's DAK element by joining `map__who_dak_<domain>_questions` on
+  survey id and question code, and never derives a question code from an element id
+- A change to a copy goes onto every supported branch carrying that domain's models
+
 ## Running commands
 
 Run project commands through the secrets runner, `uv run python .maui/scripts/with_secrets.py
@@ -167,6 +184,10 @@ the same way. See README § Local development.
 ## Pre-commit checklist
 
 ```bash
+# with no .env present, needs Docker (make db-up) and uses the committed .env.local, so no
+# credentials. A real .env takes precedence and runs every dbt test unscoped. Runs pytest
+# scripts/tests, sqlfluff lint, the dbt tests and the validators.
+make check
 uv run python .maui/scripts/with_secrets.py -- sqlfluff fix .
 uv run python .maui/scripts/with_secrets.py -- dbt test
 uv run python .maui/scripts/with_secrets.py -- python scripts/validate_report_configs.py

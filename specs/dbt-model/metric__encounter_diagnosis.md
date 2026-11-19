@@ -10,7 +10,7 @@
 | **Materialisation** | env-aware -- `table` on `analytics*`, `view` everywhere else (BL-009) |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
-| **Linear issue** | [MAUI-6836](https://linear.app/bes/issue/MAUI-6836/tupaia-morbidity-dashboard-metric-diagnosis-top-diagnoses-condition) |
+| **Linear issue** | [MAUI-6836](https://linear.app/bes/issue/MAUI-6836/tupaia-morbidity-dashboard-metric-diagnosis-top-diagnoses-condition), [MAUI-7122](https://linear.app/bes/issue/MAUI-7122) (ICD-10 chapter and block) |
 | **Repo** | `tamanu-source-dbt` |
 
 Canonical definition for `encounter_diagnosis`: one row per recorded encounter diagnosis, at day
@@ -61,7 +61,7 @@ diagnosis`, so `count(distinct subject_id)` and `sum(value_numeric)` agree.
 
 ## Output schema
 
-D5 wide format, plus seven disaggregation columns and one measure attribute.
+D5 wide format, plus eleven disaggregation columns and one measure attribute.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -82,6 +82,8 @@ D5 wide format, plus seven disaggregation columns and one measure attribute.
 | `diagnosis` | varchar(255) | Readable name as recorded, never NULL (BL-007, AC-010) |
 | `diagnosis_certainty` | varchar(255) | Certainty as recorded, never NULL (BL-007, AC-010) |
 | `is_primary` | boolean | Principal-diagnosis flag. Nullable -- not every encounter ranks its diagnoses |
+| `diagnosis__icd10_chapter` | text | ICD-10 chapter of `diagnosis_code` (BL-006). Never NULL (AC-012) |
+| `diagnosis__icd10_block` | text | ICD-10 block of `diagnosis_code` (BL-006). Never NULL (AC-012) |
 | `age_years` | integer | Age in whole years at the diagnosis, unbanded (BL-008). A measure, not a dimension |
 
 ## Data tables
@@ -92,9 +94,8 @@ vocabulary, not dbt's. `validate_data_tables.py` there checks each file against 
 project's dbt manifest, so a column renamed here fails there at generate time rather than
 emptying a dashboard.
 
-The Tamanu-to-Tupaia facility crosswalk and any age banding are both left to that layer, and
-so is any grouping of the diagnosis itself (BL-006). This model therefore carries no
-`data_table_*` meta.
+The Tamanu-to-Tupaia facility crosswalk, any age banding and any national grouping of the
+diagnosis are left to that layer. This model therefore carries no `data_table_*` meta.
 
 ## Business logic
 
@@ -144,15 +145,14 @@ so is any grouping of the diagnosis itself (BL-006). This model therefore carrie
   `admission`. A card filtering `encounter_type` therefore reads "diagnoses on encounters that
   ended as X", not "diagnoses recorded while the patient was in X". Segment-grain attribution
   off `clinical__visit_detail` would answer the latter (OQ-003).
-- **BL-006 (grouping is the consumer's to apply):** `diagnosis_code` and `diagnosis`
-  are emitted raw and ungrouped.
+- **BL-006 (ICD-10 chapter and block):** `diagnosis_code` and `diagnosis` are emitted as
+  recorded, and `diagnosis__icd10_chapter` and `diagnosis__icd10_block` are `diagnosis_code`
+  grouped by `diagnosis__icd10_chapter()` and `diagnosis__icd10_block()`.
 
-  Classifying either into an ICD-10 chapter, a block or a national grouping is a presentation
-  choice a deployment may set differently -- and deployments differ in whether the code is
-  ICD-10 at all, so a grouping applied here would be meaningless for the ones it is not. A
-  deployment wanting a grouping applies `macros/diagnosis__icd10_chapter.sql` (or its own)
-  over `diagnosis_code` in its own model, the same division as `metric__emergency_visit`
-  BL-013.
+  Both read `'Not recorded'` where `diagnosis_code` does (no code), and `'Unclassified'` where
+  the code does not resolve -- which is every code in a deployment that records diagnoses
+  against a local list rather than ICD-10. A national grouping is applied downstream over
+  `diagnosis_code`.
 - **BL-007 (the recorded-diagnosis columns are never NULL):** `diagnosis_code`,
   `diagnosis` and `diagnosis_certainty` coalesce to `'Not recorded'`;
   `diagnosis` falls back to the code before that label.
@@ -196,12 +196,14 @@ so is any grouping of the diagnosis itself (BL-006). This model therefore carrie
 | AC-009 | `period_end` is always NULL | BL-002 | `dbt_expectations.expect_column_values_to_be_null` |
 | AC-010 | `diagnosis_code`, `diagnosis` and `diagnosis_certainty` are `not_null` | BL-007 | `not_null` |
 | AC-011 | `encounter_type` is `not_null` | BL-005 | `not_null` |
+| AC-012 | `diagnosis__icd10_chapter` and `diagnosis__icd10_block` are `not_null`, group an ICD-10 code to its chapter and block, and read `'Not recorded'` with no code and `'Unclassified'` for a code outside ICD-10 | BL-006 | `not_null` + unit test `ac_012_metric__encounter_diagnosis_icd10` |
 
 ## Registry entry
 
 One active row -- `encounter_diagnosis`, `kind: metric`, `subject_grain: diagnosis`, `status: approved`,
-`spec_path` pointing here, with disaggregations `facility_id`, `encounter_type`, `sex`,
-`diagnosis_code`, `diagnosis`, `diagnosis_certainty`, `is_primary`.
+`spec_path` pointing here, with disaggregations `facility_id`, `encounter_type`,
+`visit_concept_id`, `visit_concept_name`, `sex`, `diagnosis_code`, `diagnosis`,
+`diagnosis_certainty`, `is_primary`, `diagnosis__icd10_chapter`, `diagnosis__icd10_block`.
 
 Every disaggregation is in the allowlist in `assert__metric_definitions__disaggregations`,
 which keeps the registry and the model from drifting.
@@ -231,9 +233,9 @@ which keeps the registry and the model from drifting.
 3. **Band `age_years` itself.** No band set is emitted here.
 4. **Translate `facility_id`.** It is the Tamanu id, not a consumer-specific one -- for
    Tupaia, the crosswalk to a Tupaia entity code is joined at the data table.
-5. **Group the diagnosis itself, if it wants a grouping.** The code and name are as recorded.
-   Check what the deployment actually codes diagnoses with before applying an ICD-10 grouping
-   -- more than one deployment uses a local code list.
+5. **Check the coding before charting the ICD-10 grouping.** More than one deployment codes
+   diagnoses against a local list, where the chapter and block read `'Unclassified'`. A
+   national grouping is the consumer's to apply over `diagnosis_code`.
 6. **Decide whether to filter `is_primary`.** Unfiltered, an encounter with several diagnoses
    contributes several rows; filtered to primary, each encounter counts once.
 
@@ -242,7 +244,8 @@ which keeps the registry and the model from drifting.
 | Artefact | Relationship |
 |---|---|
 | `clinical__condition_occurrence` | The upstream this metric aggregates; also holds the program-registry conditions BL-003 excludes |
-| `metric__emergency_visit` | Carries the ED principal diagnosis for casemix on one department; this metric is the general morbidity view. Shares BL-013's "grouping is the deployment's" rule |
+| `metric__emergency_visit` | Carries the ED principal diagnosis for casemix on one department; this metric is the general morbidity view |
+| `diagnosis__icd10_chapter`, `diagnosis__icd10_block` | The macros BL-006 groups the code with |
 | `metric__outpatient_visit` | Same registry pattern and conventions -- the reference this model was built from |
 | `metric_definitions` | The canonical registry every `metric__` view is registered against |
 
@@ -259,3 +262,4 @@ which keeps the registry and the model from drifting.
 | Date | Author | Change |
 |---|---|---|
 | 2026-08-25 | Maui team | Initial spec and implementation |
+| 2026-11-13 | Maui team | BL-006 (MAUI-7122): `diagnosis__icd10_chapter` and `diagnosis__icd10_block` emitted, for Naoero's morbidity cards. The general `diagnosis__icd10_block` macro added. AC-012 added |

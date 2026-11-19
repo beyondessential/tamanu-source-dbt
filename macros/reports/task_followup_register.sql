@@ -61,16 +61,11 @@ where
         when {{ parameter('patientId') }} is null then true
         else patient_id = {{ parameter('patientId') }}
     end
-    and case
-        when coalesce({{ parameter('taskStatus') }}) is null then true
-        else task_outcome in ({{ parameter('taskStatus') }})
-    end
+    -- BL-017 (see specs/reports/task-followup-register.md): multi-select. Nothing selected means every status.
+    and {{ multi_select_filter('task_outcome::text', 'taskStatus') }}
     -- BL-015: Tamanu allows a task on any encounter type, so leaving this unset returns them
     -- all rather than silently hiding a missed task raised outside an admission
-    and case
-        when coalesce({{ parameter('encounterType') }}) is null then true
-        else encounter_type in ({{ parameter('encounterType') }})
-    end
+    and {{ multi_select_filter('encounter_type::text', 'encounterType') }}
 order by task_due_datetime desc, display_id asc
 
 {% endmacro %}

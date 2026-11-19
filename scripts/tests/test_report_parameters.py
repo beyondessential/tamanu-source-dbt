@@ -20,6 +20,8 @@ MACRO_DIR = ROOT / "macros"
 ALWAYS_BOUND = {"fromDate", "toDate", "timezone", "currentFacilityId"}
 
 PARAMETER_CALL = re.compile(r"""(?:parameter|date_param_bound)\(\s*['"](\w+)['"]""")
+# multi_select_filter(text_expression, parameter_name) reads its second argument.
+MULTI_SELECT_CALL = re.compile(r"""multi_select_filter\(\s*'[^']*'\s*,\s*['"](\w+)['"]""")
 MACRO_CALL = re.compile(r"\{\{-?\s*(\w+)\s*\(")
 MACRO_DEF = re.compile(r"\{%-?\s*macro\s+(\w+)\s*\(.*?%\}(.*?)\{%-?\s*endmacro", re.S)
 
@@ -41,6 +43,7 @@ def _parameters_read(sql: str) -> set:
     while pending:
         text = pending.pop()
         read |= set(PARAMETER_CALL.findall(text))
+        read |= set(MULTI_SELECT_CALL.findall(text))
         for name in MACRO_CALL.findall(text):
             if name in MACROS and name not in seen:
                 seen.add(name)

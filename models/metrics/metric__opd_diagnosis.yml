@@ -158,3 +158,12 @@ models:
         data_tests:
           - not_null:
               name: ac_014_metric__opd_diagnosis_department_not_null
+      - name: location_group_name
+        data_type: text
+        description: >-
+          The location group (clinic or area) of the same
+          qualifying segment's location that facility_id is resolved from, resolved to its name
+          (BL-009). Never NULL -- falls back to 'Not recorded' where the location is in no group.
+        data_tests:
+          - not_null:
+              name: ac_015_metric__opd_diagnosis_location_group_name_not_null

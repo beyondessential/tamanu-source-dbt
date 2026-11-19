@@ -35,15 +35,7 @@ where
         else clinician_id = {{ parameter('clinicianId') }}
     end
     and
-    case when
-            coalesce({{ parameter('diagnosisId') }}, {{ parameter('diagnosis2Id') }}, {{ parameter('diagnosis3Id') }}, {{ parameter('diagnosis4Id') }}, {{ parameter('diagnosis5Id') }}) is null
-            then true
-        else diagnosis_id in (
-                {{ parameter('diagnosisId') }},
-                {{ parameter('diagnosis2Id') }},
-                {{ parameter('diagnosis3Id') }},
-                {{ parameter('diagnosis4Id') }},
-                {{ parameter('diagnosis5Id') }}
-            )
-    end
+    -- BL-003 (see specs/reports/recent-diagnoses-line-list.md): multi-select over all diagnoses. Nothing selected means every one.
+    -- BL-004: the selection goes through multi_select_filter(), which stays valid when empty.
+    {{ multi_select_filter('diagnosis_id', 'diagnosisId') }}
 order by diagnosis_datetime desc

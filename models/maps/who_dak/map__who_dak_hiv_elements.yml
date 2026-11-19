@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: map__who_dak_hiv_elements
+    description: >
+      The WHO DAK HIV element dictionary: one row per data element id in the kit's Web Annex A,
+      with its label, Annex A type and tab. Generated from csv/who_dak/map__who_dak_hiv_elements.csv,
+      a copy of the dictionary tupaia-data-product generates (specs/dbt-model/map__who_dak.md).
+    config:
+      meta:
+        owner: bes-maui
+        domain: reference
+    columns:
+      - name: element_id
+        data_type: text
+        description: The Annex A data element id, such as HIV.D.DE38.
+        data_tests:
+          - not_null
+          - unique
+      - name: label
+        data_type: text
+        description: The element's label in Annex A.
+      - name: data_type
+        data_type: text
+        description: The element's type in Annex A.
+      - name: tab
+        data_type: text
+        description: The Annex A tab of the element's first listing.

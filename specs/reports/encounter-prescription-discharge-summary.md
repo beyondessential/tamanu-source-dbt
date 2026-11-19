@@ -49,7 +49,7 @@ day. Matches the grain of `medication-dispensed-summary`, not the per-day grain 
 | `fromDate` | timestamp | 2024-01-01 | Lower bound on `datetime` (viewer-timezone aware) |
 | `toDate` | timestamp | 2024-01-31 | Upper bound on `datetime` (viewer-timezone aware) |
 | `facilityId` | uuid | null | Optional restriction to a single facility |
-| `medicationId` | uuid | null | Optional restriction to a single drug |
+| `medicationId` | text[] | empty | Optional multi-select of drugs; empty means every drug |
 
 ### Upstream models
 
@@ -89,6 +89,8 @@ day. Matches the grain of `medication-dispensed-summary`, not the per-day grain 
 - **BL-009:** Facility scope is the sensitive-facility partition already built into
   `ds__sensitive_encounter_prescriptions` (facilities with a `sensitive_network_id`), not a parameter on
   this report.
+- **BL-010:** `medicationId` is a multi-select: a prescription is included when its medication is one
+  of the selected drugs, and every medication is included when none is selected.
 
 ## Acceptance criteria
 
@@ -99,6 +101,7 @@ day. Matches the grain of `medication-dispensed-summary`, not the per-day grain 
 | AC-003 | Sensitive variant only includes prescriptions at facilities with a `sensitive_network_id` | BL-009 | `test_ds_sensitive_encounter_prescriptions_partition` — fails when the partition is a constant `false` |
 | AC-004 | One row per medication, summed quantity across all matching prescriptions in the selected range | BL-005 | `test_encounter_prescription_discharge_summary` — fails when grouped per prescription |
 | AC-005 | Output columns are labelled with the shared `encounterPrescription*` keys | BL-004 | `test_encounter_prescription_discharge_summary` asserts the default labels `Medication`, `Code`, `Quantity` |
+| AC-006 | With no drug or an empty selection every medication is returned, and with one or two selected only those medications | BL-010 | `test_encounter_prescription_discharge_summary` (none selected) and `test_encounter_prescription_discharge_summary_empty_list` (empty selection), `test_encounter_prescription_discharge_summary_medication_filter` (one selected) and `test_encounter_prescription_discharge_summary_two_selected` (two selected), with the sensitive variant in `test_enc_rx_discharge_summary_sensitive_medication_filter` and `test_enc_rx_discharge_summary_sensitive_two` |
 
 ## Risks
 
@@ -123,3 +126,4 @@ _None._
 | 2026-08-25 | Maui team | Initial spec and implementation, standard + sensitive pair, for Fiji (still on encounter prescriptions, never migrated to the pharmacy dispensing module). |
 | 2026-08-25 | Maui team | Briefly changed output shape to match `msf-medication-dispensed-summary-historical` (date breakdown, distinct patient count, doses); reverted the same day once the actual requester ask was confirmed as item code, item name, and a single aggregate quantity for the period, with no date breakdown -- matching `medication-dispensed-summary`'s shape instead. Removed the now-unused `prescriptionDrug`, `prescriptionPatientCount`, `prescriptionNumberOfDoses` labels from `csv/report_translations_standard.csv`. |
 | 2026-10-15 | Maui team | MAUI-7011: every AC is now asserted by a unit test (AC-005 added for BL-004), each confirmed to fail when its clause is broken. BL-003, BL-004, BL-005 and BL-009 gained code anchors. |
+| 2026-11-10 | Maui team | MAUI-7088: the drug filter is a multi-select (BL-010, AC-006). |

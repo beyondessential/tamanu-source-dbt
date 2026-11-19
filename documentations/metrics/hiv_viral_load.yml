@@ -35,7 +35,7 @@ metrics:
   - suppression_status
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__hiv_viral_load.md
 - metric_id: hiv_viral_load_patient_month
   kind: metric
@@ -63,5 +63,5 @@ metrics:
   - suppression_status
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/metric__hiv_viral_load.md

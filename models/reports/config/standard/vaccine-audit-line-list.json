@@ -33,17 +33,17 @@
         "name": "vaccine"
       },
       {
-        "parameterField": "ParameterSelectField",
+        "parameterField": "ParameterMultiselectField",
         "label": "Status",
         "name": "status",
         "options": [
           {
             "label": "Recorded in error",
-            "value": "RECORDED_IN_ERROR"
+            "value": "Recorded in error"
           },
           {
             "label": "Historical",
-            "value": "HISTORICAL"
+            "value": "Historical"
           }
         ]
       }

@@ -9,10 +9,9 @@ where
         else md.facility_id = {{ parameter('facilityId') }}
     end
     and
-    case
-        when {{ parameter('medicationId') }} is null then true
-        else md.medication_id = {{ parameter('medicationId') }}
-    end
+    -- BL-003 (see specs/reports/medication-dispensed-summary.md): multi-select over all drugs. Nothing selected means every one.
+    -- BL-004: the selection goes through multi_select_filter(), which stays valid when empty.
+    {{ multi_select_filter('md.medication_id', 'medicationId') }}
     and
     {{ to_user_selected_timezone('md.dispensed_at') }}
     >= {{ parameter('fromDate', default_value='2024-01-01', data_type='timestamp') }}

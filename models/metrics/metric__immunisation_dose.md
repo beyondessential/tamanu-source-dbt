@@ -100,12 +100,12 @@ disease alone.
 {% enddocs %}
 
 {% docs metric__immunisation_dose__patient_location_id %}
-The patient's own home village (clinical__person.location_id, an id into ref__location) --
+The patient's own home village (a Tamanu reference-data id) --
 where the patient lives, not where the dose was given. Distinct from facility_id, which is
 the administering facility.
 
 NULL when the patient's own record carries no village. Not coalesced to a placeholder --
-this is an id column a consumer joins to ref__location, not a label, so a real NULL is more
+this is an id column a consumer joins to reference data, not a label, so a real NULL is more
 useful than a sentinel string.
 
 Exists because a future coverage percentage will be computed against a population estimate

@@ -1,0 +1,112 @@
+unit_tests:
+  - name: test_admissions_line_list_status_one_selected
+    model: admissions-line-list
+    description: >
+      One admission status selected returns only the admissions with that status.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        fromDate: '2024-01-01'
+        toDate: '2024-01-31'
+        datetime_format: 'YYYY-MM-DD HH24:MI'
+        date_format: 'YYYY-MM-DD'
+        admissionStatus: discharged
+    given:
+      - input: ref('ds__admissions')
+        format: sql
+        rows: |
+          select 'x_patient_id'::text as patient_id, 'P001'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 30::integer as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, 'x_admitting_clinician_id'::text as admitting_clinician_id, 'x_admitting_clinician'::text as admitting_clinician, '2024-01-15 10:00:00'::timestamp as admission_datetime, 'active'::text as admission_status, '2024-01-15 10:00:00'::timestamp as discharge_datetime, 'x_planned_location_id'::text as planned_location_id, 'x_planned_location'::text as planned_location, '2024-01-15 10:00:00'::timestamp as planned_location_start_datetime, 'fac_001'::text as facility_id, 'x_facility'::text as facility, ARRAY['x_department_ids']::text[] as department_ids, 'x_departments'::text as departments, '2024-01-15 10:00:00'::timestamp as department_datetimes, ARRAY['x_location_group_ids']::text[] as location_group_ids, 'x_location_groups'::text as location_groups, '2024-01-15 10:00:00'::timestamp as location_group_datetimes, ARRAY['x_location_ids']::text[] as location_ids, 'x_locations'::text as locations, '2024-01-15 10:00:00'::timestamp as location_datetimes, 'x_primary_diagnoses'::text as primary_diagnoses, 'x_primary_diagnoses_codes'::text as primary_diagnoses_codes, 'x_secondary_diagnoses'::text as secondary_diagnoses, 'x_secondary_diagnoses_codes'::text as secondary_diagnoses_codes
+          union all
+          select 'x_patient_id'::text as patient_id, 'P002'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 30::integer as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, 'x_admitting_clinician_id'::text as admitting_clinician_id, 'x_admitting_clinician'::text as admitting_clinician, '2024-01-15 10:00:00'::timestamp as admission_datetime, 'discharged'::text as admission_status, '2024-01-15 10:00:00'::timestamp as discharge_datetime, 'x_planned_location_id'::text as planned_location_id, 'x_planned_location'::text as planned_location, '2024-01-15 10:00:00'::timestamp as planned_location_start_datetime, 'fac_001'::text as facility_id, 'x_facility'::text as facility, ARRAY['x_department_ids']::text[] as department_ids, 'x_departments'::text as departments, '2024-01-15 10:00:00'::timestamp as department_datetimes, ARRAY['x_location_group_ids']::text[] as location_group_ids, 'x_location_groups'::text as location_groups, '2024-01-15 10:00:00'::timestamp as location_group_datetimes, ARRAY['x_location_ids']::text[] as location_ids, 'x_locations'::text as locations, '2024-01-15 10:00:00'::timestamp as location_datetimes, 'x_primary_diagnoses'::text as primary_diagnoses, 'x_primary_diagnoses_codes'::text as primary_diagnoses_codes, 'x_secondary_diagnoses'::text as secondary_diagnoses, 'x_secondary_diagnoses_codes'::text as secondary_diagnoses_codes
+          union all
+          select 'x_patient_id'::text as patient_id, 'P003'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 30::integer as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, 'x_admitting_clinician_id'::text as admitting_clinician_id, 'x_admitting_clinician'::text as admitting_clinician, '2024-01-15 10:00:00'::timestamp as admission_datetime, 'pending'::text as admission_status, '2024-01-15 10:00:00'::timestamp as discharge_datetime, 'x_planned_location_id'::text as planned_location_id, 'x_planned_location'::text as planned_location, '2024-01-15 10:00:00'::timestamp as planned_location_start_datetime, 'fac_001'::text as facility_id, 'x_facility'::text as facility, ARRAY['x_department_ids']::text[] as department_ids, 'x_departments'::text as departments, '2024-01-15 10:00:00'::timestamp as department_datetimes, ARRAY['x_location_group_ids']::text[] as location_group_ids, 'x_location_groups'::text as location_groups, '2024-01-15 10:00:00'::timestamp as location_group_datetimes, ARRAY['x_location_ids']::text[] as location_ids, 'x_locations'::text as locations, '2024-01-15 10:00:00'::timestamp as location_datetimes, 'x_primary_diagnoses'::text as primary_diagnoses, 'x_primary_diagnoses_codes'::text as primary_diagnoses_codes, 'x_secondary_diagnoses'::text as secondary_diagnoses, 'x_secondary_diagnoses_codes'::text as secondary_diagnoses_codes
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P002
+
+  - name: test_admissions_line_list_status_two_selected
+    model: admissions-line-list
+    description: >
+      Two admission statuses selected return the admissions with either status and no others.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        fromDate: '2024-01-01'
+        toDate: '2024-01-31'
+        datetime_format: 'YYYY-MM-DD HH24:MI'
+        date_format: 'YYYY-MM-DD'
+        admissionStatus: [active, discharged]
+    given:
+      - input: ref('ds__admissions')
+        format: sql
+        rows: |
+          select 'x_patient_id'::text as patient_id, 'P001'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 30::integer as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, 'x_admitting_clinician_id'::text as admitting_clinician_id, 'x_admitting_clinician'::text as admitting_clinician, '2024-01-15 10:00:00'::timestamp as admission_datetime, 'active'::text as admission_status, '2024-01-15 10:00:00'::timestamp as discharge_datetime, 'x_planned_location_id'::text as planned_location_id, 'x_planned_location'::text as planned_location, '2024-01-15 10:00:00'::timestamp as planned_location_start_datetime, 'fac_001'::text as facility_id, 'x_facility'::text as facility, ARRAY['x_department_ids']::text[] as department_ids, 'x_departments'::text as departments, '2024-01-15 10:00:00'::timestamp as department_datetimes, ARRAY['x_location_group_ids']::text[] as location_group_ids, 'x_location_groups'::text as location_groups, '2024-01-15 10:00:00'::timestamp as location_group_datetimes, ARRAY['x_location_ids']::text[] as location_ids, 'x_locations'::text as locations, '2024-01-15 10:00:00'::timestamp as location_datetimes, 'x_primary_diagnoses'::text as primary_diagnoses, 'x_primary_diagnoses_codes'::text as primary_diagnoses_codes, 'x_secondary_diagnoses'::text as secondary_diagnoses, 'x_secondary_diagnoses_codes'::text as secondary_diagnoses_codes
+          union all
+          select 'x_patient_id'::text as patient_id, 'P002'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 30::integer as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, 'x_admitting_clinician_id'::text as admitting_clinician_id, 'x_admitting_clinician'::text as admitting_clinician, '2024-01-15 10:00:00'::timestamp as admission_datetime, 'discharged'::text as admission_status, '2024-01-15 10:00:00'::timestamp as discharge_datetime, 'x_planned_location_id'::text as planned_location_id, 'x_planned_location'::text as planned_location, '2024-01-15 10:00:00'::timestamp as planned_location_start_datetime, 'fac_001'::text as facility_id, 'x_facility'::text as facility, ARRAY['x_department_ids']::text[] as department_ids, 'x_departments'::text as departments, '2024-01-15 10:00:00'::timestamp as department_datetimes, ARRAY['x_location_group_ids']::text[] as location_group_ids, 'x_location_groups'::text as location_groups, '2024-01-15 10:00:00'::timestamp as location_group_datetimes, ARRAY['x_location_ids']::text[] as location_ids, 'x_locations'::text as locations, '2024-01-15 10:00:00'::timestamp as location_datetimes, 'x_primary_diagnoses'::text as primary_diagnoses, 'x_primary_diagnoses_codes'::text as primary_diagnoses_codes, 'x_secondary_diagnoses'::text as secondary_diagnoses, 'x_secondary_diagnoses_codes'::text as secondary_diagnoses_codes
+          union all
+          select 'x_patient_id'::text as patient_id, 'P003'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 30::integer as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, 'x_admitting_clinician_id'::text as admitting_clinician_id, 'x_admitting_clinician'::text as admitting_clinician, '2024-01-15 10:00:00'::timestamp as admission_datetime, 'pending'::text as admission_status, '2024-01-15 10:00:00'::timestamp as discharge_datetime, 'x_planned_location_id'::text as planned_location_id, 'x_planned_location'::text as planned_location, '2024-01-15 10:00:00'::timestamp as planned_location_start_datetime, 'fac_001'::text as facility_id, 'x_facility'::text as facility, ARRAY['x_department_ids']::text[] as department_ids, 'x_departments'::text as departments, '2024-01-15 10:00:00'::timestamp as department_datetimes, ARRAY['x_location_group_ids']::text[] as location_group_ids, 'x_location_groups'::text as location_groups, '2024-01-15 10:00:00'::timestamp as location_group_datetimes, ARRAY['x_location_ids']::text[] as location_ids, 'x_locations'::text as locations, '2024-01-15 10:00:00'::timestamp as location_datetimes, 'x_primary_diagnoses'::text as primary_diagnoses, 'x_primary_diagnoses_codes'::text as primary_diagnoses_codes, 'x_secondary_diagnoses'::text as secondary_diagnoses, 'x_secondary_diagnoses_codes'::text as secondary_diagnoses_codes
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P002
+
+  - name: test_admissions_line_list_status_empty_list
+    model: admissions-line-list
+    description: >
+      An empty selection, which is what the form sends when nothing is picked, returns every admission.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        fromDate: '2024-01-01'
+        toDate: '2024-01-31'
+        datetime_format: 'YYYY-MM-DD HH24:MI'
+        date_format: 'YYYY-MM-DD'
+        admissionStatus: []
+    given:
+      - input: ref('ds__admissions')
+        format: sql
+        rows: |
+          select 'x_patient_id'::text as patient_id, 'P001'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 30::integer as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, 'x_admitting_clinician_id'::text as admitting_clinician_id, 'x_admitting_clinician'::text as admitting_clinician, '2024-01-15 10:00:00'::timestamp as admission_datetime, 'active'::text as admission_status, '2024-01-15 10:00:00'::timestamp as discharge_datetime, 'x_planned_location_id'::text as planned_location_id, 'x_planned_location'::text as planned_location, '2024-01-15 10:00:00'::timestamp as planned_location_start_datetime, 'fac_001'::text as facility_id, 'x_facility'::text as facility, ARRAY['x_department_ids']::text[] as department_ids, 'x_departments'::text as departments, '2024-01-15 10:00:00'::timestamp as department_datetimes, ARRAY['x_location_group_ids']::text[] as location_group_ids, 'x_location_groups'::text as location_groups, '2024-01-15 10:00:00'::timestamp as location_group_datetimes, ARRAY['x_location_ids']::text[] as location_ids, 'x_locations'::text as locations, '2024-01-15 10:00:00'::timestamp as location_datetimes, 'x_primary_diagnoses'::text as primary_diagnoses, 'x_primary_diagnoses_codes'::text as primary_diagnoses_codes, 'x_secondary_diagnoses'::text as secondary_diagnoses, 'x_secondary_diagnoses_codes'::text as secondary_diagnoses_codes
+          union all
+          select 'x_patient_id'::text as patient_id, 'P002'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 30::integer as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, 'x_admitting_clinician_id'::text as admitting_clinician_id, 'x_admitting_clinician'::text as admitting_clinician, '2024-01-15 10:00:00'::timestamp as admission_datetime, 'discharged'::text as admission_status, '2024-01-15 10:00:00'::timestamp as discharge_datetime, 'x_planned_location_id'::text as planned_location_id, 'x_planned_location'::text as planned_location, '2024-01-15 10:00:00'::timestamp as planned_location_start_datetime, 'fac_001'::text as facility_id, 'x_facility'::text as facility, ARRAY['x_department_ids']::text[] as department_ids, 'x_departments'::text as departments, '2024-01-15 10:00:00'::timestamp as department_datetimes, ARRAY['x_location_group_ids']::text[] as location_group_ids, 'x_location_groups'::text as location_groups, '2024-01-15 10:00:00'::timestamp as location_group_datetimes, ARRAY['x_location_ids']::text[] as location_ids, 'x_locations'::text as locations, '2024-01-15 10:00:00'::timestamp as location_datetimes, 'x_primary_diagnoses'::text as primary_diagnoses, 'x_primary_diagnoses_codes'::text as primary_diagnoses_codes, 'x_secondary_diagnoses'::text as secondary_diagnoses, 'x_secondary_diagnoses_codes'::text as secondary_diagnoses_codes
+          union all
+          select 'x_patient_id'::text as patient_id, 'P003'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 30::integer as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, 'x_admitting_clinician_id'::text as admitting_clinician_id, 'x_admitting_clinician'::text as admitting_clinician, '2024-01-15 10:00:00'::timestamp as admission_datetime, 'pending'::text as admission_status, '2024-01-15 10:00:00'::timestamp as discharge_datetime, 'x_planned_location_id'::text as planned_location_id, 'x_planned_location'::text as planned_location, '2024-01-15 10:00:00'::timestamp as planned_location_start_datetime, 'fac_001'::text as facility_id, 'x_facility'::text as facility, ARRAY['x_department_ids']::text[] as department_ids, 'x_departments'::text as departments, '2024-01-15 10:00:00'::timestamp as department_datetimes, ARRAY['x_location_group_ids']::text[] as location_group_ids, 'x_location_groups'::text as location_groups, '2024-01-15 10:00:00'::timestamp as location_group_datetimes, ARRAY['x_location_ids']::text[] as location_ids, 'x_locations'::text as locations, '2024-01-15 10:00:00'::timestamp as location_datetimes, 'x_primary_diagnoses'::text as primary_diagnoses, 'x_primary_diagnoses_codes'::text as primary_diagnoses_codes, 'x_secondary_diagnoses'::text as secondary_diagnoses, 'x_secondary_diagnoses_codes'::text as secondary_diagnoses_codes
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P002
+        P003
+
+  - name: test_admissions_line_list_sensitive_status_two
+    model: sensitive-admissions-line-list
+    description: >
+      The sensitive variant returns the admissions with either selected status.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        fromDate: '2024-01-01'
+        toDate: '2024-01-31'
+        datetime_format: 'YYYY-MM-DD HH24:MI'
+        date_format: 'YYYY-MM-DD'
+        admissionStatus: [active, discharged]
+    given:
+      - input: ref('ds__sensitive_admissions')
+        format: sql
+        rows: |
+          select 'x_patient_id'::text as patient_id, 'P001'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 30::integer as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, 'x_admitting_clinician_id'::text as admitting_clinician_id, 'x_admitting_clinician'::text as admitting_clinician, '2024-01-15 10:00:00'::timestamp as admission_datetime, 'active'::text as admission_status, '2024-01-15 10:00:00'::timestamp as discharge_datetime, 'x_planned_location_id'::text as planned_location_id, 'x_planned_location'::text as planned_location, '2024-01-15 10:00:00'::timestamp as planned_location_start_datetime, 'fac_001'::text as facility_id, 'x_facility'::text as facility, ARRAY['x_department_ids']::text[] as department_ids, 'x_departments'::text as departments, '2024-01-15 10:00:00'::timestamp as department_datetimes, ARRAY['x_location_group_ids']::text[] as location_group_ids, 'x_location_groups'::text as location_groups, '2024-01-15 10:00:00'::timestamp as location_group_datetimes, ARRAY['x_location_ids']::text[] as location_ids, 'x_locations'::text as locations, '2024-01-15 10:00:00'::timestamp as location_datetimes, 'x_primary_diagnoses'::text as primary_diagnoses, 'x_primary_diagnoses_codes'::text as primary_diagnoses_codes, 'x_secondary_diagnoses'::text as secondary_diagnoses, 'x_secondary_diagnoses_codes'::text as secondary_diagnoses_codes
+          union all
+          select 'x_patient_id'::text as patient_id, 'P002'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 30::integer as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, 'x_admitting_clinician_id'::text as admitting_clinician_id, 'x_admitting_clinician'::text as admitting_clinician, '2024-01-15 10:00:00'::timestamp as admission_datetime, 'discharged'::text as admission_status, '2024-01-15 10:00:00'::timestamp as discharge_datetime, 'x_planned_location_id'::text as planned_location_id, 'x_planned_location'::text as planned_location, '2024-01-15 10:00:00'::timestamp as planned_location_start_datetime, 'fac_001'::text as facility_id, 'x_facility'::text as facility, ARRAY['x_department_ids']::text[] as department_ids, 'x_departments'::text as departments, '2024-01-15 10:00:00'::timestamp as department_datetimes, ARRAY['x_location_group_ids']::text[] as location_group_ids, 'x_location_groups'::text as location_groups, '2024-01-15 10:00:00'::timestamp as location_group_datetimes, ARRAY['x_location_ids']::text[] as location_ids, 'x_locations'::text as locations, '2024-01-15 10:00:00'::timestamp as location_datetimes, 'x_primary_diagnoses'::text as primary_diagnoses, 'x_primary_diagnoses_codes'::text as primary_diagnoses_codes, 'x_secondary_diagnoses'::text as secondary_diagnoses, 'x_secondary_diagnoses_codes'::text as secondary_diagnoses_codes
+          union all
+          select 'x_patient_id'::text as patient_id, 'P003'::text as display_id, 'x_first_name'::text as first_name, 'x_last_name'::text as last_name, '1990-01-01'::date as date_of_birth, 30::integer as age, 'x_sex'::text as sex, 'x_village_id'::text as village_id, 'x_village'::text as village, 'x_billing_type_id'::text as billing_type_id, 'x_billing_type'::text as billing_type, 'x_admitting_clinician_id'::text as admitting_clinician_id, 'x_admitting_clinician'::text as admitting_clinician, '2024-01-15 10:00:00'::timestamp as admission_datetime, 'pending'::text as admission_status, '2024-01-15 10:00:00'::timestamp as discharge_datetime, 'x_planned_location_id'::text as planned_location_id, 'x_planned_location'::text as planned_location, '2024-01-15 10:00:00'::timestamp as planned_location_start_datetime, 'fac_001'::text as facility_id, 'x_facility'::text as facility, ARRAY['x_department_ids']::text[] as department_ids, 'x_departments'::text as departments, '2024-01-15 10:00:00'::timestamp as department_datetimes, ARRAY['x_location_group_ids']::text[] as location_group_ids, 'x_location_groups'::text as location_groups, '2024-01-15 10:00:00'::timestamp as location_group_datetimes, ARRAY['x_location_ids']::text[] as location_ids, 'x_locations'::text as locations, '2024-01-15 10:00:00'::timestamp as location_datetimes, 'x_primary_diagnoses'::text as primary_diagnoses, 'x_primary_diagnoses_codes'::text as primary_diagnoses_codes, 'x_secondary_diagnoses'::text as secondary_diagnoses, 'x_secondary_diagnoses_codes'::text as secondary_diagnoses_codes
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P002

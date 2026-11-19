@@ -55,7 +55,7 @@ Patient ID, First name, Last name, Date of birth, Sex, Medication, Prescribed da
 - **BL-003:** The medication filter is a multi-select over all drugs (`isMulti`) and is optional; when empty, every medication is returned. The selection reaches SQL as a list that is empty when nothing is selected, so the filter goes through an array constructor, which stays valid when empty.
 - **BL-004:** Facility, department and location filters are optional.
 - **BL-005:** Prescribed by is blank when no prescriber was recorded.
-- **BL-006:** Dose is the prescription's dose amount and dosing unit, or `Variable` for a variable-dose prescription.
+- **BL-006:** Dose is the prescription's dose amount without trailing zeros after the decimal point, then its dosing unit, or `Variable` for a variable-dose prescription.
 - **BL-007:** Administration status comes from the MAR record, and Administered date and time and Administered by from the dose given (its given time and who gave it), blank where there is no MAR record or no dose. MAR records marked as entered in error are excluded by the dataset.
 - **BL-008:** Notes joins the prescription note and the administration status-change note with ` | `, omitting blanks.
 - **BL-009:** Ordered by prescription date descending, then prescription, scheduled time and dose number, so the order is stable.
@@ -70,6 +70,7 @@ Patient ID, First name, Last name, Date of birth, Sex, Medication, Prescribed da
 | AC-002 | A prescription with no MAR record appears once with blank administration columns; a MAR record with two doses gives two rows | BL-007 | Dataset unit test `test_ds__prescription_administrations_grain` |
 | AC-003 | Standard and sensitive variants return disjoint rows | dataset BL-007 | Manual check |
 | AC-004 | Configs validate and every label resolves | all | `validate_report_configs.py`, `check_translations.py` |
+| AC-005 | Doses 100, 100.00, 10.0, 2.50, 0.5 and 0.00005 read `100`, `100`, `10`, `2.5`, `0.5` and `0.00005` with the unit, and a variable dose reads `Variable` | BL-006 | Unit test `ac_005_mar_line_list_dose_trailing_zeros` |
 
 ## Risks
 
@@ -81,3 +82,4 @@ Patient ID, First name, Last name, Date of birth, Sex, Medication, Prescribed da
 | Date | Author | Change |
 |---|---|---|
 | 2026-11-03 | Maui team | Initial draft |
+| 2026-11-11 | Maui team | BL-006 states the trailing-zero rule and AC-005 tests it |

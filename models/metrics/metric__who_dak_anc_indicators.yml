@@ -112,3 +112,33 @@ models:
       - name: gestational_age_weeks
         data_type: numeric
         description: "{{ doc('metric__who_dak_anc_indicators__gestational_age_weeks') }}"
+      - name: lmp_date
+        data_type: date
+        description: "{{ doc('metric__who_dak_anc_indicators__lmp_date') }}"
+      - name: edd_date
+        data_type: date
+        description: "{{ doc('metric__who_dak_anc_indicators__edd_date') }}"
+      - name: gravida
+        data_type: integer
+        description: "{{ doc('metric__who_dak_anc_indicators__gravida') }}"
+      - name: miscarriages_abortions
+        data_type: integer
+        description: "{{ doc('metric__who_dak_anc_indicators__miscarriages_abortions') }}"
+      - name: parity
+        data_type: integer
+        description: "{{ doc('metric__who_dak_anc_indicators__parity') }}"
+      - name: tt_dose_1_date
+        data_type: date
+        description: "{{ doc('metric__who_dak_anc_indicators__tt_dose_date') }}"
+      - name: tt_dose_2_date
+        data_type: date
+        description: "{{ doc('metric__who_dak_anc_indicators__tt_dose_date') }}"
+      - name: tt_dose_3_date
+        data_type: date
+        description: "{{ doc('metric__who_dak_anc_indicators__tt_dose_date') }}"
+      - name: tt_dose_4_date
+        data_type: date
+        description: "{{ doc('metric__who_dak_anc_indicators__tt_dose_date') }}"
+      - name: tt_dose_5_date
+        data_type: date
+        description: "{{ doc('metric__who_dak_anc_indicators__tt_dose_date') }}"

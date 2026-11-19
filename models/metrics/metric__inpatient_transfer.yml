@@ -1,0 +1,165 @@
+version: 2
+
+# See specs/dbt-model/metric__inpatient_transfer.md for the BL clauses this file implements.
+
+models:
+  - name: metric__inpatient_transfer
+    description: >-
+      D5 metric view for the inpatient transfer indicator registered in
+      documentations/metrics/*.yml: inpatient_transfer. One row per location change between two
+      inpatient segments of an encounter, dated when the patient moved, with the locations,
+      location groups and departments moved from and to. The move into the admission itself is
+      metric__inpatient_admission, not a transfer.
+    config:
+      tags:
+        - clinical
+      # No data_table_* meta. The Tupaia data tables over this model are configured in
+      # tupaia-data-product at tamanu/data_tables/, one file per data table.
+      meta:
+        owner: bes-maui
+        domain: clinical
+        # BL-010: the encounter and segment ids are a row's only identifiers -- no patient id,
+        # name or birth date -- so this stays unrestricted, like metric__inpatient_admission.
+        pii: false
+        classification: internal
+    data_tests:
+      # One row per transfer. A duplicate would double-count a transfer in any consumer that sums
+      # value_numeric -- error even though the repo default is warn.
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_metric__inpatient_transfer_grain
+          arguments:
+            combination_of_columns:
+              - metric_id
+              - subject_id
+          config:
+            severity: error
+    columns:
+      - name: metric_id
+        data_type: text
+        description: The registered indicator identifier. Always 'inpatient_transfer'.
+        data_tests:
+          - not_null:
+              name: ac_002_metric__inpatient_transfer_metric_id_not_null
+          - accepted_values:
+              name: ac_002_metric__inpatient_transfer_metric_id_values
+              arguments:
+                values:
+                  - inpatient_transfer
+          - relationships:
+              name: ac_003_metric__inpatient_transfer_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+              config:
+                severity: error
+      - name: variant_id
+        data_type: text
+        description: NULL -- this is the standard definition, with no deployment-specific variant.
+      - name: subject_id
+        data_type: character varying(255)
+        description: >-
+          The clinical__visit_detail id (an encounter_history id) of the segment the patient
+          moved into.
+        data_tests:
+          - not_null:
+              name: ac_008_metric__inpatient_transfer_subject_id_not_null
+      - name: period_start
+        data_type: timestamp
+        description: When the patient moved -- the start of the segment moved into.
+        data_tests:
+          - not_null:
+              name: ac_004_metric__inpatient_transfer_period_start_not_null
+      - name: period_end
+        data_type: timestamp
+        description: Equal to period_start -- a move is a point event.
+      - name: period_granularity
+        data_type: text
+        description: Constant 'minute'.
+        data_tests:
+          - not_null:
+              name: ac_005_metric__inpatient_transfer_period_granularity_not_null
+          - accepted_values:
+              name: ac_005_metric__inpatient_transfer_period_granularity_is_minute
+              arguments:
+                values: ['minute']
+      - name: value_numeric
+        data_type: numeric
+        description: Always 1 -- one transfer per row.
+        data_tests:
+          - not_null:
+              name: ac_006_metric__inpatient_transfer_value_numeric_not_null
+          - accepted_values:
+              name: ac_006_metric__inpatient_transfer_value_numeric_is_one
+              arguments:
+                values: [1]
+                quote: false
+      - name: value_boolean
+        data_type: boolean
+        description: NULL -- unused by this metric.
+      - name: facility_id
+        data_type: character varying(255)
+        description: "{{ doc('generic__facility_id') }} of the location moved to."
+        data_tests:
+          - not_null:
+              name: ac_007_metric__inpatient_transfer_facility_id_not_null
+      - name: sex
+        data_type: character varying(255)
+        description: "{{ doc('patients__sex') }}"
+      - name: age_years
+        data_type: integer
+        description: >-
+          The patient's age at the move in whole completed years. NULL with no date of birth. A
+          measure -- banding is the consumer's.
+      - name: visit_occurrence_id
+        data_type: character varying(255)
+        description: >-
+          The encounter the move belongs to -- metric__inpatient_admission's subject_id, so
+          transfers can be counted per admission.
+      - name: from_location_id
+        data_type: character varying(255)
+        description: The location the patient moved from.
+      - name: to_location_id
+        data_type: character varying(255)
+        description: The location the patient moved to.
+      - name: from_location_name
+        data_type: character varying(255)
+        description: Name of the location the patient moved from.
+      - name: to_location_name
+        data_type: character varying(255)
+        description: Name of the location the patient moved to.
+      - name: from_location_group_name
+        data_type: text
+        description: >-
+          Name of the location group (ward or area) moved from, 'Not recorded' for a location in
+          no group.
+        data_tests:
+          - not_null:
+              name: ac_010_metric__inpatient_transfer_from_location_group_name_not_null
+      - name: to_location_group_name
+        data_type: text
+        description: >-
+          Name of the location group (ward or area) moved to, 'Not recorded' for a location in no
+          group.
+        data_tests:
+          - not_null:
+              name: ac_010_metric__inpatient_transfer_to_location_group_name_not_null
+      - name: from_department_id
+        data_type: character varying(255)
+        description: Department of the segment moved from. NULL where none is recorded.
+      - name: to_department_id
+        data_type: character varying(255)
+        description: Department of the segment moved to. NULL where none is recorded.
+      - name: is_location_group_change
+        data_type: boolean
+        description: >-
+          True where the two locations are in different location groups -- a ward-to-ward
+          transfer rather than a bed move within a ward.
+        data_tests:
+          - not_null:
+              name: ac_011_metric__inpatient_transfer_is_location_group_change_not_null
+      - name: is_department_change
+        data_type: boolean
+        description: True where the two segments' departments differ.
+        data_tests:
+          - not_null:
+              name: ac_011_metric__inpatient_transfer_is_department_change_not_null

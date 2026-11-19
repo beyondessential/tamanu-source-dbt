@@ -32,5 +32,5 @@ metrics:
   disaggregations: []
   variant_of: null
   owner: bes-maui
-  status: draft
+  status: approved
   spec_path: specs/dbt-model/derived__cohort_hiv.md

@@ -15,12 +15,31 @@ visit_occurrence as (
     select * from {{ ref('clinical__visit_occurrence') }}
 ),
 
+-- the patient's village is read from their patient record
 person as (
-    select * from {{ ref('clinical__person') }}
+    select
+        per.*,
+        pat.village_id
+    from {{ ref('clinical__person') }} per
+    left join {{ ref('patients') }} pat on pat.id = per.person_id
 ),
 
 locations as (
     select * from {{ ref('locations') }}
+),
+
+-- BL-015: the intake location's group -- the clinic or area.
+location_groups as (
+    select * from {{ ref('location_groups') }}
+),
+
+-- BL-016: the referral source lives on the encounter, not on clinical__visit_occurrence.
+encounters as (
+    select * from {{ ref('encounters') }}
+),
+
+reference_data as (
+    select * from {{ ref('reference_data') }}
 ),
 
 discharges as (
@@ -114,6 +133,8 @@ outpatient_visits as (
         -- join to bases/location_groups (or similar) for area/clinic detail later, without
         -- this model resolving that join itself
         loc.id as location_id,
+        -- BL-018: the patient's home village, not where the visit happened
+        pr.village_id as patient_location_id,
         pr.gender_source_value as sex,
         -- age in whole years at the visit; the NULL rule lives in the macro
         {{ age_years('i.visit_detail_start_date', 'pr') }} as age_years,
@@ -140,6 +161,13 @@ outpatient_visits as (
         coalesce(dis.note like 'Automatically discharged%', false) as is_auto_discharge,
         -- BL-013
         coalesce(dept.name, 'Not recorded') as department,
+        -- BL-015
+        coalesce(lg.name, 'Not recorded') as location_group_name,
+        -- BL-016
+        coalesce(referral.name, 'Not recorded') as referral_source,
+        -- BL-017: the local hour the intake segment started, 0-23 -- the same timestamp
+        -- period_start is the date of, so the time of day the date grain drops is kept
+        extract(hour from i.visit_detail_start_datetime)::int as visit_start__hour,
         -- BL-011: intake to the departure resolved above, falling back to the encounter
         -- end. NULL while the encounter is open and nothing has ended the episode.
         case
@@ -182,6 +210,15 @@ outpatient_visits as (
     -- left: a visit with no department set still counts
     left join departments dept
         on dept.id = i.department_id
+    -- BL-015: left join -- a location in no group, or a since-deleted group, still counts
+    left join location_groups lg
+        on lg.id = loc.location_group_id
+    -- BL-016: left joins -- one encounter row per visit, and a visit with no referral source
+    -- still counts
+    left join encounters enc
+        on enc.id = i.visit_occurrence_id
+    left join reference_data referral
+        on referral.id = enc.referral_source_id
 )
 
 -- D5 wide format: value_boolean is unused. period_granularity is 'day' -- period_start and
@@ -204,6 +241,8 @@ select
     null::boolean as value_boolean,
     facility_id,
     location_id,
+    -- BL-018: an id, so NULL where the patient's record carries no village
+    patient_location_id,
     sex,
     -- BL-004: age in whole years at the visit. Unbanded -- an age classification is a
     -- presentation choice a deployment may set differently, so the consumer's data table
@@ -228,5 +267,11 @@ select
     -- choices the consumer makes.
     round(opd_time__seconds / 60.0, 2) as opd_time__minutes,
     -- BL-013
-    department
+    department,
+    -- BL-015
+    location_group_name,
+    -- BL-016
+    referral_source,
+    -- BL-017
+    visit_start__hour
 from outpatient_visits

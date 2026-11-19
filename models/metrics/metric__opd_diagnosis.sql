@@ -2,7 +2,7 @@
 -- documentations/metrics/*.yml: opd_diagnosis.
 --
 -- BL-001: the registry carries the definition; this model is its implementation.
--- See specs/dbt-model/metric__opd_diagnosis.md for BL-001..BL-007.
+-- See specs/dbt-model/metric__opd_diagnosis.md for BL-001..BL-009.
 
 with condition_occurrence as (
     select * from {{ ref('clinical__condition_occurrence') }}
@@ -22,6 +22,11 @@ person as (
 
 locations as (
     select * from {{ ref('locations') }}
+),
+
+-- BL-009: the qualifying segment's location group -- the clinic or area.
+location_groups as (
+    select * from {{ ref('location_groups') }}
 ),
 
 -- BL-008: the qualifying segment's own department, resolved to a name for metric_filters
@@ -86,7 +91,9 @@ diagnoses as (
         coalesce(cco.condition_status_source_value, 'Not recorded') as diagnosis_certainty,
         {{ age_years('cco.condition_start_date', 'pr') }} as age_years,
         -- BL-008
-        coalesce(dept.name, 'Not recorded') as department
+        coalesce(dept.name, 'Not recorded') as department,
+        -- BL-009
+        coalesce(lg.name, 'Not recorded') as location_group_name
     from condition_occurrence cco
     join diagnosis_opd_segment dos
         on dos.condition_occurrence_id = cco.condition_occurrence_id
@@ -96,6 +103,9 @@ diagnoses as (
         on loc.id = dos.care_site_id
     left join departments dept
         on dept.id = dos.department_id
+    -- BL-009: left join -- a location in no group still counts
+    left join location_groups lg
+        on lg.id = loc.location_group_id
 )
 
 select
@@ -115,5 +125,6 @@ select
     diagnosis_certainty,
     is_primary,
     age_years,
-    department
+    department,
+    location_group_name
 from diagnoses

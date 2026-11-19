@@ -34,5 +34,17 @@ was recorded.
 {% enddocs %}
 
 {% docs clinical__person__location_id %}
-Reference to the patient's geographic location (their village) in ref__location.
+Reference to the location the patient is grouped under in ref__location. By default, their village.
+{% enddocs %}
+
+{% docs clinical__person__ethnicity_concept_id %}
+OMOP standard concept for the patient's ethnicity. Always 0 (no matching concept): Tamanu
+ethnicity lists are set up by each deployment and have no standard OMOP equivalent. The
+ethnicity's own concept is in ethnicity_source_concept_id.
+{% enddocs %}
+
+{% docs clinical__person__ethnicity_source_concept_id %}
+The deployment's own OMOP concept for the patient's ethnicity, from map__omop_ethnicity, where
+the ethnicity's name can also be found. 0 when no ethnicity is recorded, or when the deployment
+has not yet coded the recorded ethnicity.
 {% enddocs %}
