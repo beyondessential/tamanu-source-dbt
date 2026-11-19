@@ -83,6 +83,7 @@ D5 wide format, plus seven disaggregation columns and two measure attributes.
 | `is_auto_discharge` | boolean | Discharge was system-generated, not clinician-recorded (BL-012). `not_null` (AC-012) |
 | `opd_time__minutes` | numeric | Time in the outpatient department, minutes to 2 dp (BL-011). A measure, not a dimension. NULL while open |
 | `department` | text | Intake segment's own department, resolved to a name (BL-013). Never NULL |
+| `location_group_name` | text | Location group (clinic/area) of the intake segment's location, resolved to a name (BL-015). Never NULL (AC-017) |
 
 ## Data tables
 
@@ -299,6 +300,15 @@ This model therefore carries no `data_table_*` meta.
   admitted. Kept apart from the names so a filter by name is unaffected; a consumer combines the
   two for display (MAUI-6906).
 
+- **BL-015 (location group):** `location_group_name` is the name of the location group of the
+  intake segment's location -- the same `bases/locations` row BL-006 takes `facility_id` and
+  `location_id` from, through `locations.location_group_id` to `bases/location_groups`. A
+  location group is how a Tamanu deployment names its clinics, so this is the "visits by
+  clinic" split. Left
+  joined and coalesced to `'Not recorded'`, never NULL (AC-017): a location in no group, or
+  whose group has been deleted, keeps the visit, for the array-filter reason BL-013 gives. The
+  same column name and resolution as `metric__encounter`'s `location_group_name`, so the two
+  read against one clinic list.
 ## Acceptance criteria
 
 | ID | Criterion | Implements | Test type |
@@ -319,12 +329,13 @@ This model therefore carries no `data_table_*` meta.
 | AC-014 | The MAUI-6908 derivations behave as specified: intake-only inclusion, the attending and admitting clinicians, the admission outcome, a handover that does not end the episode, an intake and admission tied on the same timestamp, the open-encounter NULL duration, and the system-discharge predicate | BL-003, BL-008..BL-012 | `unit_test` (`tests/unit_tests/test_metric__outpatient_visit_derivations.yml`) |
 | AC-015 | `department` is `not_null` | BL-013 | `not_null` (`ac_017_metric__outpatient_visit_department_not_null`) |
 | AC-016 | `clinician_designation` and `admission_clinician_designation` are `not_null`; a clinician with two designations reads both, alphabetical and comma-separated, on one row; none, no clinician and no admission read `'Not recorded'` | BL-014 | `not_null` (`ac_018_…`) + unit test `ac_014_metric__outpatient_visit_derivations` |
+| AC-017 | `location_group_name` is `not_null`; it is the intake location's group, and `'Not recorded'` for a location in no group | BL-015 | `not_null` (`ac_017_metric__outpatient_visit_location_group_name_not_null`) + unit test `ac_014_metric__outpatient_visit_derivations` |
 
 ## Registry entry
 
 One active row -- `opd_visit`, `kind: metric`, `subject_grain: visit`, `status: approved`,
 `spec_path` pointing here, with `disaggregations:
-facility_id,location_id,sex,clinician_id,clinician_name,clinician_designation,is_admitted,admission_clinician_id,admission_clinician_name,admission_clinician_designation,is_auto_discharge,department`.
+facility_id,location_id,sex,clinician_id,clinician_name,clinician_designation,is_admitted,admission_clinician_id,admission_clinician_name,admission_clinician_designation,is_auto_discharge,department,location_group_name`.
 
 `age_years` and `opd_time__minutes` are absent: they are measures, not dimensions
 (BL-004, BL-011).
@@ -343,6 +354,7 @@ which keeps the registry and the model from drifting.
 | `ref__provider` | `ref/` | Attending and admitting clinician display names (BL-008, BL-010) |
 | `discharges` | `bases/` | Discharge note, for the system-discharge flag (BL-012) |
 | `departments` | `bases/` | Department name of the intake segment's own department (BL-013) |
+| `location_groups` | `bases/` | Name of the intake location's group (BL-015) |
 | `user_designations`, `reference_data` | `bases/` | The attending and admitting clinicians' designations, via `user_designation_names()` (BL-014) |
 | `metric_definitions` | root | Registry; `metric_id` FK target (AC-003) |
 
