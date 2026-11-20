@@ -6,11 +6,11 @@ models:
     config:
       tags:
         - clinical
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: false
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: false
+        classification: restricted
     columns:
       - name: total_patients
         data_type: integer

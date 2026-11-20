@@ -14,11 +14,11 @@ models:
         - dataset
         - clinical
         - restricted
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: true
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
     columns:
       - name: task_id
         data_type: uuid

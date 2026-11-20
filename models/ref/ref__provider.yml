@@ -6,9 +6,9 @@ models:
     config:
       tags:
         - reference
-    meta:
-      owner: bes-maui
-      domain: reference
+      meta:
+        owner: bes-maui
+        domain: reference
     columns:
       - name: provider_id
         data_type: character varying(255)

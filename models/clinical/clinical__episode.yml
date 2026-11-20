@@ -6,11 +6,11 @@ models:
     config:
       tags:
         - clinical
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: true
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
     data_tests:
       # AC-004: an episode must not end before it starts (BL-004). or_equal permits an
       # enrolment closed the day it opened, which a same-day transfer produces.
