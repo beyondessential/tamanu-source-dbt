@@ -1,4 +1,4 @@
-# dbt Model Spec: `derived__episode_pregnancy_samoa` (Samoa Ministry of Health definition)
+# Definition Spec: `episode_pregnancy_samoa` (Samoa Ministry of Health definition)
 
 ## Purpose
 
@@ -19,12 +19,11 @@ BL-006, BL-010) are Samoa's.
 | Field | Value |
 |---|---|
 | **Name** | `derived__episode_pregnancy_samoa` + `derived__episode_pregnancy_samoa_contacts` |
-| **Type** | dbt model (Samoa Ministry of Health definition) |
+| **Type** | Canonical definition (Samoa Ministry of Health) |
 | **Layer** | `derived` (OMOP-lite episode) |
-| **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
-| **Repo** | `tamanu-source-dbt` |
+| **Repo** | `tamanu-source-dbt` (definition), implemented in `tamanu-dbt-samoa` |
 | **Linear issue** | [MAUI-7179](https://linear.app/bes/issue/MAUI-7179) |
 | **Registry** | `episode_pregnancy_samoa` (`kind: episode`) in `documentations/metrics/who_dak_anc.yml` |
 | **Definition source** | Samoa Ministry of Health (`SAMOA_MOH`) |
@@ -36,15 +35,6 @@ BL-006, BL-010) are Samoa's.
   and the day of her first contact.
 - `derived__episode_pregnancy_samoa_contacts`: **one row per contact**, as in `int__who_dak_anc_contacts`,
   with its pregnancy.
-
-## Inputs
-
-| Reference | Why |
-|---|---|
-| `int__who_dak_anc_contacts` | The antenatal care contacts and the DAK elements recorded on each ([spec](metric__who_dak_anc_indicators.md)) |
-| `int__who_dak_anc_submissions` | End-of-pregnancy elements, on any day |
-| `patient_additional_data` | A child's mother |
-| `patients` | A child's date of birth, the woman's date of death |
 
 ## Output schema
 
@@ -109,6 +99,8 @@ BL-006, BL-010) are Samoa's.
 
 ## Acceptance criteria
 
+The tests for these criteria live with the implementation in `tamanu-dbt-samoa`.
+
 | ID | Criterion | Implements | Test |
 |---|---|---|---|
 | AC-001 | `episode_id` is unique and not null | Grain | `unique`, `not_null` |
@@ -138,4 +130,5 @@ BL-006, BL-010) are Samoa's.
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-11-20 | Maui team | The implementation, its tests and its inputs moved to `tamanu-dbt-samoa`, as the definition is Samoa Ministry of Health's. |
 | 2026-11-16 | Maui team | Initial spec: pregnancies assembled from DAK ANC contacts and closed by their outcome (MAUI-7179). |
