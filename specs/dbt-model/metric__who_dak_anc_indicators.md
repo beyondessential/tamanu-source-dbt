@@ -55,7 +55,7 @@ the contact day. `subject_grain: visit` in the registry.
 ### Upstream models
 
 The metric reads `int__who_dak_anc_contacts` and `clinical__person`. The contacts and their
-elements are built in two intermediate models it shares with `derived__episode_pregnancy_samoa`:
+elements are built in two intermediate models it shares with a deployment's pregnancy episode:
 `int__who_dak_anc_submissions` reads the forms (BL-002–BL-004, BL-006, BL-009), and
 `int__who_dak_anc_contacts` assembles the contacts (BL-005, BL-007, BL-008, BL-010, BL-014–BL-018).
 Between them they read:
@@ -197,14 +197,14 @@ out.
 
 | ID | Question | Owner | Due |
 |---|---|---|---|
-| OQ-001 | Implementing `ANC.IND.1`, `ANC.IND.4` and `ANC.IND.5`, which count pregnancies rather than contacts, over `derived__episode_pregnancy_samoa` | @maui-team | unscheduled |
+| OQ-001 | Implementing `ANC.IND.1`, `ANC.IND.4` and `ANC.IND.5`, which count pregnancies rather than contacts, over a deployment's pregnancy episode, such as `episode_pregnancy_samoa` | @maui-team | unscheduled |
 
 ## Related
 
 | Artefact | Relationship |
 |---|---|
 | `documentations/metrics/who_dak_anc.yml` | The registered definitions |
-| `derived__episode_pregnancy_samoa` | The pregnancies assembled from these contacts |
+| `episode_pregnancy_samoa` | The pregnancies assembled from these contacts, implemented in `tamanu-dbt-samoa` |
 | `metric__who_dak_hiv_indicators` | The same pattern over the HIV DAK |
 | `metric__birth` | Same dashboard group |
 | `tupaia-data-product` `tamanu/who-dak/anc/` | The forms, and `dak-conformance.md` for what they carry |
@@ -213,6 +213,7 @@ out.
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-11-20 | Maui team | The pregnancy episode that reads these intermediates is implemented in `tamanu-dbt-samoa`. |
 | 2026-11-19 | Maui team | Native answers reach their DAK elements, and native contact forms are found, through the generated question map `map__who_dak_anc_questions` (MAUI-7199). |
 | 2026-11-17 | Maui team | Reads the profile elements LMP, EDD, gravida, miscarriages/abortions and parity, and the tetanus toxoid dose dates. A deployment can count encounters at named antenatal clinic location groups as contacts, and work out gestational age and gravida where not recorded. The forms and contacts are built in `int__who_dak_anc_submissions` and `int__who_dak_anc_contacts`, shared with `derived__episode_pregnancy_samoa` (MAUI-7179). |
 | 2026-10-21 | Maui team | Initial spec, approved. The antenatal contact count, read from the WHO DAK ANC forms or from a deployment's own forms mapped to DAK element ids. Replaces the `antenatal_contact` and `antenatal_booking` definitions — a booking is a pregnancy's first contact, not a separate metric_id (MAUI-6838). |
