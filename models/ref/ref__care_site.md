@@ -7,7 +7,8 @@ which, on a facility row, is itself.
 
 Locations are the care site on both clinical__visit_occurrence and clinical__visit_detail.
 Facilities are the care site on clinical__episode: an enrolment is registered at a facility
-and never at a room, so its care site is the coarser grain.
+and never at a room, so its care site is the coarser grain. ref__care_site_location holds the
+location rows alone, for a consumer that needs only those.
 {% enddocs %}
 
 {% docs ref__care_site__care_site_id %}
