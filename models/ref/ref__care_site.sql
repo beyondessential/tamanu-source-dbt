@@ -5,19 +5,12 @@
 -- clinical__visit_occurrence.care_site_id and clinical__visit_detail.care_site_id;
 -- facilities feed clinical__episode.care_site_id, an enrolment being registered at a
 -- facility and never at a room. Each care site is denormalised with its parent facility.
--- Native UUID PK (D1). Sources only from bases/ (D10); OMOP column naming applied (D2).
--- See specs/dbt-model/ref__care_site.md for BL-001..BL-008.
+-- Native UUID PK (D1). Sources only from bases/ (D10), with the location grain built in
+-- ref__care_site_location (BL-009); OMOP column naming applied (D2).
+-- See specs/dbt-model/ref__care_site.md for BL-001..BL-009.
 
 with departments as (
     select * from {{ ref('departments') }}
-),
-
-locations as (
-    select * from {{ ref('locations') }}
-),
-
-location_groups as (
-    select * from {{ ref('location_groups') }}
 ),
 
 facilities as (
@@ -27,64 +20,45 @@ facilities as (
 -- organizational care unit (BL-001, BL-005)
 department_sites as (
     select
-        'department' as care_site_type,
+        -- identity (BL-001) -- native UUID PK, no remap to OMOP integer IDs (D1)
         d.id::varchar as care_site_id,
+        'department' as care_site_type,
         d.name as care_site_name,
         d.code as care_site_source_value,
-        d.facility_id
+        -- place of service: source value only. No place_of_service_concept_id — OMOP's Place
+        -- of Service vocabulary has no standard concepts, so there is nothing domain-correct to
+        -- populate; the source value is retained for deployments that map it downstream (BL-002)
+        f.type as place_of_service_source_value,
+        -- parent facility, denormalised onto the care site (BL-003)
+        d.facility_id,
+        f.name as facility_name
     from departments d
+    -- left join so a department whose facility is missing/soft-deleted is still emitted (BL-003)
+    left join facilities f on f.id = d.facility_id
 ),
 
--- physical care unit: individual location (room/bed) (BL-001, BL-006)
+-- physical care unit: individual location (room/bed), with its facility (BL-006, BL-008, BL-009)
 location_sites as (
-    select
-        'location' as care_site_type,
-        loc.id::varchar as care_site_id,
-        loc.name as care_site_name,
-        loc.code as care_site_source_value,
-        -- BL-008: the location's own facility, else its location group's facility
-        coalesce(loc.facility_id, lg.facility_id) as facility_id
-    from locations loc
-    left join location_groups lg on lg.id = loc.location_group_id
+    select * from {{ ref('ref__care_site_location') }}
 ),
 
--- BL-007: the site as a whole. Its parent facility is itself, so the join below denormalises
--- the facility's own name and type onto it, and facility-level aggregation over facility_id
--- works uniformly across all three grains (BL-001)
+-- BL-007: the site as a whole. Its parent facility is itself, so it carries its own name and type
+-- as the facility's, and facility-level aggregation over facility_id works uniformly across all
+-- three grains (BL-001)
 facility_sites as (
     select
-        'facility' as care_site_type,
         f.id::varchar as care_site_id,
+        'facility' as care_site_type,
         f.name as care_site_name,
         f.code as care_site_source_value,
-        f.id as facility_id
+        f.type as place_of_service_source_value,
+        f.id as facility_id,
+        f.name as facility_name
     from facilities f
-),
-
-care_sites as (
-    select * from department_sites
-    union all
-    select * from location_sites
-    union all
-    select * from facility_sites
 )
 
-select
-    -- identity (BL-001) -- native UUID PK, no remap to OMOP integer IDs (D1)
-    cs.care_site_id,
-    cs.care_site_type,
-    cs.care_site_name,
-    cs.care_site_source_value,
-
-    -- place of service: source value only. No place_of_service_concept_id — OMOP's Place
-    -- of Service vocabulary has no standard concepts, so there is nothing domain-correct to
-    -- populate; the source value is retained for deployments that map it downstream (BL-002)
-    f.type as place_of_service_source_value,
-
-    -- parent facility, denormalised onto the care site (BL-003)
-    cs.facility_id,
-    f.name as facility_name
-
-from care_sites cs
--- left join so a care site whose facility is missing/soft-deleted is still emitted (BL-003)
-left join facilities f on f.id = cs.facility_id
+select * from department_sites
+union all
+select * from location_sites
+union all
+select * from facility_sites

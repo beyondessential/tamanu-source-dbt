@@ -13,7 +13,7 @@
 | **Linear issue** | [MAUI-7184](https://linear.app/bes/issue/MAUI-7184) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-28 |
-| **Last updated** | 2026-11-18 |
+| **Last updated** | 2026-11-20 |
 
 The OMOP-lite `PERSON` domain — the canonical patient-demographics surface every
 other `clinical__`, `derived__`, `metric__`, and `dataset__` model joins to. First
@@ -101,6 +101,8 @@ violation of that invariant.
   map row matches. `ethnicity_concept_id` is `0` on every row.
 - **BL-009:** `medical_area_source_value` carries the `medical_area_id` recorded on the
   patient's additional data, as a reference-data id.
+- **BL-010:** `map__omop_ethnicity` is joined as one concept per `local_code`, the lowest where
+  the map lists more than one, so the join never adds a row to a patient.
 
 ## Acceptance criteria
 
@@ -119,6 +121,7 @@ violation of that invariant.
 | AC-011 | Every non-zero `ethnicity_source_concept_id` exists in `map__omop_ethnicity.concept_id` | BL-008 | dbt `relationships` |
 | AC-012 | A mapped ethnicity carries its custom concept, and an unmapped or unrecorded ethnicity carries `0` | BL-005, BL-008 | dbt unit test |
 | AC-013 | A patient's recorded medical area id is carried as-is and their `location_id` is the one `int__patient_address` gives them, and both are NULL for a patient with no additional-data record and no location | BL-005, BL-007, BL-009 | dbt unit test |
+| AC-014 | A map listing two concepts for one ethnicity code gives the patient one row, carrying the lower concept | BL-010 | dbt unit test (`ac_014_clinical__person_ethnicity_one_concept_per_code`) |
 
 ## Registry entry
 
@@ -151,3 +154,4 @@ row (D5, dbt-conventions § Documentation).
 |---|---|---|
 | 2026-11-14 | @julianam-w | Add `ethnicity_concept_id` and `ethnicity_source_concept_id` from the deployment's `map__omop_ethnicity` (MAUI-7184) |
 | 2026-11-18 | @julianam-w | Add `medical_area_source_value`, and read `location_id` from `int__patient_address`, which a deployment may replace (MAUI-7190) |
+| 2026-11-20 | @julianam-w | Join the ethnicity map as one concept per code, so the planner joins registration details in one pass rather than per patient (MAUI-7203) |
