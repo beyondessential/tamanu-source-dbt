@@ -33,8 +33,8 @@ BL-006, BL-010) are Samoa's.
 
 - `derived__episode_pregnancy_samoa`: **one row per pregnancy**, `episode_id` identifying it as the woman
   and the day of her first contact.
-- `derived__episode_pregnancy_samoa_contacts`: **one row per contact**, as in `int__who_dak_anc_contacts`,
-  with its pregnancy.
+- `derived__episode_pregnancy_samoa_contacts`: **one row per antenatal contact**, a contact in
+  `int__who_dak_anc_contacts` other than a postnatal one (BL-010), with its pregnancy.
 
 ## Output schema
 
@@ -84,18 +84,20 @@ BL-006, BL-010) are Samoa's.
   answered) dated by its delivery, miscarriage or abortion, or death date, else by its own day; a
   child whose record names the woman as mother, dated by the child's birth; or the woman's death.
 - **BL-006:** A pregnancy ends at its highest-ranked outcome event — end form, then child's birth,
-  then death, the earliest winning a tie — dated from its first contact to 140 days after its last
-  and before the next pregnancy starts, else at its last contact as lost to follow-up once more than
-  140 days have passed without another contact.
-- **BL-007:** A pregnancy with no outcome event whose last contact was 140 days ago or less is open,
-  with no end date.
+  then death, the earliest winning a tie and one that records a closure reason winning a further tie —
+  dated from its first contact to 140 days after its last and before the next pregnancy starts, else
+  at its last contact as lost to follow-up once more than 140 days have passed, by the deployment's
+  local date, without another contact.
+- **BL-007:** A pregnancy with no outcome event whose last contact was 140 days ago or less, by the
+  deployment's local date, is open, with no end date.
 - **BL-008:** A contact's number in its pregnancy is its position by day, counting from 1.
 - **BL-009:** A contact's gestational age is the one recorded or worked out that day, else the whole
   weeks from the pregnancy's LMP, or from 280 days before its EDD, kept only between 0 and 45 weeks.
 - **BL-010:** A contact in the 42 days after an end-of-pregnancy form's outcome or a child's birth
   is postnatal, and neither starts nor joins a pregnancy.
-- **BL-011:** The pregnancy is assembled from every contact in `int__who_dak_anc_contacts`, and its
-  rows carry a NULL `variant_id`, as a definition of its own rather than a variant of another.
+- **BL-011:** The pregnancy is assembled from the contacts in `int__who_dak_anc_contacts` other than
+  postnatal ones (BL-010), and its rows carry a NULL `variant_id`, as a definition of its own rather than a variant of another.
+- **BL-012:** Outcome events are read only for women with an antenatal care contact.
 
 ## Acceptance criteria
 
@@ -107,8 +109,8 @@ The tests for these criteria live with the implementation in `tamanu-dbt-samoa`.
 | AC-002 | `metric_id` is always `episode_pregnancy_samoa` and in `metric_definitions`, and `variant_id` is always NULL | BL-001, BL-011 | `accepted_values`, `relationships`, `dbt_utils.expression_is_true` |
 | AC-003 | `(subject_id, contact_day)` is unique in the contacts model | BL-003 | `dbt_utils.unique_combination_of_columns` |
 | AC-004 | A 140-day gap continues a pregnancy and a 141-day gap starts one; an outcome event between contacts starts one; elements carry from the latest contact recording them; contacts are numbered within their pregnancy; gestational age comes from the pregnancy's LMP or EDD on a contact with none of its own | BL-002–BL-004, BL-008, BL-009 | unit tests `test_derived__episode_pregnancy_samoa_assembly`, `test_derived__episode_pregnancy_samoa_contacts` |
-| AC-005 | An end form outranks a child's birth, which outranks death; an event before the first contact, more than 140 days after the last, or in the next pregnancy does not close it; with no event a pregnancy is lost to follow-up after a 140-day gap or once more than 140 days have passed, and open otherwise | BL-005–BL-007 | unit test `test_derived__episode_pregnancy_samoa_closure` |
-| AC-006 | A contact 19 days after a child's birth belongs to no pregnancy, and the next contact, 92 days after the birth, starts one | BL-010 | unit test `test_derived__episode_pregnancy_samoa_closure` |
+| AC-005 | An end form outranks a child's birth, which outranks death; an event before the first contact, more than 140 days after the last, or in the next pregnancy does not close it; of two events on the same day, the one with a closure reason closes it; with no event a pregnancy is lost to follow-up after a 140-day gap or once more than 140 days have passed, and open otherwise | BL-005–BL-007 | unit test `test_derived__episode_pregnancy_samoa_closure` |
+| AC-006 | A contact 19 days after a child's birth belongs to no pregnancy, and the next contact, 92 days after the birth, starts one, and the contacts model has no row for the postnatal contact | BL-010 | unit tests `test_derived__episode_pregnancy_samoa_closure`, `test_derived__episode_pregnancy_samoa_contacts` |
 
 ## Consumers
 
@@ -130,5 +132,5 @@ The tests for these criteria live with the implementation in `tamanu-dbt-samoa`.
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-11-20 | Maui team | The implementation, its tests and its inputs moved to `tamanu-dbt-samoa`, as the definition is Samoa Ministry of Health's. |
+| 2026-11-20 | Maui team | The implementation, its tests and its inputs moved to `tamanu-dbt-samoa`, as the definition is Samoa Ministry of Health's. A same-day tie between outcome events goes to the one with a closure reason, the 140-day cut-offs count from the deployment's local date, and the contacts grain excludes postnatal contacts (MAUI-7179). |
 | 2026-11-16 | Maui team | Initial spec: pregnancies assembled from DAK ANC contacts and closed by their outcome (MAUI-7179). |
