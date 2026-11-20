@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-01 |
-| **Last updated** | 2026-09-29 |
+| **Last updated** | 2026-11-20 |
 
 OMOP `CARE_SITE` wrapper over Tamanu's care units. **Heterogeneous by design:** it holds
 Tamanu **departments** (the organizational care unit) and **locations** (physical
@@ -137,6 +137,9 @@ vocabulary can derive the concept downstream.
 - **BL-008:** A location-type care site's `facility_id` is the location's own facility, or its
   location group's facility when the location has none, via a `left join` on
   `bases/location_groups`.
+- **BL-009:** The location grain, with its facility columns, is the view
+  `ref__care_site_location`, one select over the base models with no `with` clause and no union,
+  which `ref__care_site` unions in and a consumer that needs only location care sites reads directly.
 
 ## Acceptance criteria
 
@@ -150,7 +153,9 @@ vocabulary can derive the concept downstream.
 | AC-006 | A location denormalises into a `care_site_type='location'` row carrying its facility | BL-002, BL-006 | dbt unit test (`test_ref__care_site_location_denormalises_facility`) |
 | AC-007 | A facility becomes a `care_site_type='facility'` row whose `facility_id` is its own id | BL-002, BL-007 | dbt unit test (`test_ref__care_site_facility_is_its_own_care_site`) |
 | AC-009 | A location with no facility takes its location group's facility | BL-008 | dbt unit test (`test_ref__care_site_location_group_facility_fallback`) |
-| AC-010 | A location's own facility is kept when its location group's differs | BL-008 | dbt unit test (`test_ref__care_site_location_facility_wins_over_location_group`) |
+| AC-010 | A location's own facility is kept when its location group's differs | BL-008 | dbt unit test (`test_ref__care_site_location_own_facility_wins`) |
+| AC-011 | `ref__care_site` carries every `ref__care_site_location` row unchanged, alongside the department and facility rows | BL-005, BL-009 | dbt unit test (`test_ref__care_site_unions_location_care_sites`) |
+| AC-012 | `ref__care_site_location.care_site_id` is `not_null` and `unique` | BL-009 | dbt `not_null`, `unique` |
 
 ## Registry entry
 
@@ -161,10 +166,9 @@ elements (only `metric__` / `derived__` get a `metric_definitions.csv` row).
 
 | Ref | Layer | Role |
 |---|---|---|
-| `departments` | `bases/` | Department care sites (id, code, name) and parent facility link |
-| `locations` | `bases/` | Location care sites (id, code, name) and parent facility link (BL-006) |
-| `location_groups` | `bases/` | Fallback facility for a location with none (BL-008) |
-| `facilities` | `bases/` | Parent facility name and type, denormalised onto each care site |
+| `ref__care_site_location` | `ref/` | The location grain, with its facility (BL-009) |
+| `departments`, `facilities` | `bases/` | Read here for the department and facility grains |
+| `locations`, `location_groups`, `facilities` | `bases/` | Read by `ref__care_site_location`: the location, its location group's facility (BL-008) and the facility's name and type |
 
 ## Consumers
 
@@ -174,3 +178,10 @@ elements (only `metric__` / `derived__` get a `metric_definitions.csv` row).
 | `clinical__visit_detail` | `care_site_id` FK → location-type rows (the segment's location) |
 | `clinical__episode` | `care_site_id` FK → facility-type rows (the registering facility, BL-007) |
 | `metric__` / `dataset__` | facility-level disaggregation |
+| Deployment models needing a visit's care site | read `ref__care_site_location` rather than filtering `ref__care_site` to locations (BL-009) |
+
+## Change log
+
+| Date | Author | Change |
+|---|---|---|
+| 2026-11-20 | @julianam-w | Build the location grain in `ref__care_site_location`, which a consumer needing only location care sites reads, so a join on `care_site_id` is estimated as one care site per row (MAUI-7203) |
