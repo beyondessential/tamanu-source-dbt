@@ -59,6 +59,14 @@ where c.table_name = 'invoices'
 
 Always filter `c.record_deleted_at is null` regardless of pattern.
 
+## `meta` and `tags` sit under `config:`
+
+On every model, seed, snapshot, source, source table and column, `meta` and `tags` go inside
+the `config:` block, never as top-level properties. dbt 2.0 reads them nowhere else, and dbt 1.x
+accepts the top-level spelling without a deprecation, so `dbt parse` cannot catch it.
+`scripts/tests/test_property_layout.py` does, in CI. The manifest is the same either way, so the
+data platform and tupaia-data-product, which read `node.meta` and `column.meta`, are unaffected.
+
 ## Base model conventions
 
 - All base model `.yml` files require a domain-specific `config.tags` — use the tag that matches the entity type: `clinical` (clinical entities), `reference` (reference/lookup data), `log` (change log models), `administration` (admin entities), `patient` (patient-specific models)

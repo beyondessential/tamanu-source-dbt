@@ -9,9 +9,9 @@ models:
     config:
       tags:
         - reference
-    meta:
-      owner: bes-maui
-      domain: reference
+      meta:
+        owner: bes-maui
+        domain: reference
     columns:
       - name: local_code
         data_type: text

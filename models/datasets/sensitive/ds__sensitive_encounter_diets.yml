@@ -7,11 +7,11 @@ models:
       tags:
         - clinical
         - restricted
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: false
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: false
+        classification: restricted
     columns:
       - name: encounter_id
         data_type: character varying(255)

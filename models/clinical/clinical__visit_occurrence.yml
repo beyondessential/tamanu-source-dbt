@@ -6,11 +6,11 @@ models:
     config:
       tags:
         - clinical
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: true
-      classification: restricted
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
     data_tests:
       # AC-007: a visit's end must not precede its start (BL-004). or_equal
       # permits zero-length visits (end == start); NULL end (open visit) is

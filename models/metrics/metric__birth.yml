@@ -8,17 +8,17 @@ models:
     config:
       tags:
         - clinical
-    # No data_table_* meta -- the Tupaia data tables over this model are configured in
-    # tupaia-data-product at tamanu/data_tables/, one file per data table.
-    meta:
-      owner: bes-maui
-      domain: clinical
-      pii: false
-      # BL-012: restricted, inherited from patient_birth_data's own restricted
-      # classification. A row carries a specific newborn's subject_id, birth date and
-      # facility -- in a low-birth-count deployment that combination can identify a
-      # specific mother and baby.
-      classification: restricted
+      # No data_table_* meta -- the Tupaia data tables over this model are configured in
+      # tupaia-data-product at tamanu/data_tables/, one file per data table.
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: false
+        # BL-012: restricted, inherited from patient_birth_data's own restricted
+        # classification. A row carries a specific newborn's subject_id, birth date and
+        # facility -- in a low-birth-count deployment that combination can identify a
+        # specific mother and baby.
+        classification: restricted
     data_tests:
       # One row per (metric_id, subject_id). A duplicate would double-count a birth in any
       # consumer that sums value_numeric -- error even though the repo default is warn.
