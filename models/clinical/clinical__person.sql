@@ -33,11 +33,15 @@ sex_map as (
     select * from {{ ref('map__omop_sex') }}
 ),
 
+-- One concept per ethnicity code. Keep the group by: it tells the planner the join matches at most
+-- one row, so it joins every patient's registration details in one pass and drops the join when a
+-- consumer reads no ethnicity column (BL-010)
 ethnicity_map as (
     select
         local_code,
-        concept_id
+        min(concept_id) as concept_id
     from {{ ref('map__omop_ethnicity') }}
+    group by local_code
 )
 
 select
