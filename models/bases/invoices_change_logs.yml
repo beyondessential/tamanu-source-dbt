@@ -48,3 +48,6 @@ models:
       - name: change_sequence
         data_type: integer
         description: Sequential number of this change for the invoice, ordered by the UTC log time. 1 = initial creation event.
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('logs__generic__updated_at_sync_tick') }} in logs.changes."

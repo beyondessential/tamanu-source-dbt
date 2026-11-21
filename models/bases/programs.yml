@@ -20,3 +20,6 @@ models:
       - name: name
         data_type: character varying(255)
         description: "{{ doc('programs__name') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"
