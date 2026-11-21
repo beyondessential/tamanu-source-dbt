@@ -185,12 +185,6 @@ models:
         config:
           tags:
             - quasi_identifier
-      - name: insurer_id
-        data_type: character varying(255)
-        description: "{{ doc('patient_additional_data__insurer_id') }}"
-        config:
-          tags:
-            - quasi_identifier
       - name: insurer_policy_number
         data_type: character varying(255)
         description: "{{ doc('patient_additional_data__insurer_policy_number') }}"

@@ -59,7 +59,7 @@ unit_tests:
         rows: |
           select '00000000-0000-0000-0000-000000000011'::text as id, '00000000-0000-0000-0000-000000000001'::text as invoice_id, 25.00::numeric as amount, null::text as original_payment_id, null::date as date
 
-      - input: ref('invoice_insurer_payments')
+      - input: ref('invoice_insurance_plan_payments')
         format: sql
         rows: |
           select null::text as id, null::text as invoice_payment_id where false

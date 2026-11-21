@@ -142,17 +142,18 @@ Provides autocomplete functionality using predefined API endpoints.
 - `allergy`, `angiogramImagingArea`, `appointmentType`, `arrivalMode`, `bookableLocationGroup`
 - `bookingType`, `carePlan`, `catchment`, `colonoscopyImagingArea`, `contactRelationship`
 - `country`, `ctScanImagingArea`, `department`, `designation`, `diagnosis`
-- `diet`, `dischargeDisposition`, `diseaseCoding`, `division`, `drug`
+- `diet`, `dischargeDepartment`, `dischargeDisposition`, `dischargeLocationGroup`, `dischargingClinician`
+- `diseaseCoding`, `division`, `drug`
 - `ecgImagingArea`, `echocardiogramImagingArea`, `encounter`, `encounterFee`, `endoscopyImagingArea`
 - `ethnicity`, `facility`, `facilityLocationGroup`, `familyRelation`, `fluroscopyImagingArea`
-- `holterMonitorImagingArea`, `imagingType`, `insurer`, `invoiceInsurancePlan`, `invoicePriceList`
+- `holterMonitorImagingArea`, `imagingType`, `invoiceInsurancePlan`, `invoicePriceList`
 - `invoiceProduct`, `labSampleSite`, `labTestCategory`, `labTestLaboratory`, `labTestMethod`
 - `labTestPanel`, `labTestPriority`, `labTestType`, `location`, `locationGroup`
 - `mammogramDiagImagingArea`, `mammogramImagingArea`, `mammogramScreenImagingArea`, `manufacturer`, `medicalArea`
 - `medicationDispenseModifyReason`, `medicationNotDispensedReason`, `medicationNotGivenReason`, `medicationPresetLabel`, `medicationSet`, `medicationTemplate`
 - `mriImagingArea`, `multiReferenceData`, `nationality`, `nonSensitiveLabTestCategory`, `noteType`
 - `nursingZone`, `occupation`, `orthopantomographyImagingArea`, `patient`, `patientBillingType`
-- `patientFieldDefinitionCategory`, `patientLabTestCategories`, `patientLabTestPanelTypes`, `paymentMethod`, `pharmacyEncounterFee`
+- `patientFieldDefinitionCategory`, `patientLabTestCategories`, `patientLabTestPanelTypes`, `patientLabTestTypes`, `paymentMethod`, `pharmacyEncounterFee`
 - `placeOfBirth`, `practitioner`, `procedureType`, `programRegistry`, `programRegistryClinicalStatus`
 - `programRegistryCondition`, `reaction`, `referenceData`, `referralSource`, `religion`
 - `reportDefinition`, `role`, `secondaryIdType`, `sensitiveLabTestCategory`, `settlement`

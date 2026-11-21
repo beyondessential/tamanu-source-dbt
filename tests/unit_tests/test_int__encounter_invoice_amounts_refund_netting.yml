@@ -61,7 +61,7 @@ unit_tests:
           union all
           select '00000000-0000-0000-0000-000000000012'::text, '00000000-0000-0000-0000-000000000001'::text, 40.00::numeric, null::text, null::date
 
-      - input: ref('invoice_insurer_payments')
+      - input: ref('invoice_insurance_plan_payments')
         format: sql
         rows: |
           select null::text as id, null::text as invoice_payment_id where false
