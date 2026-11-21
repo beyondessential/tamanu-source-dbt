@@ -7,7 +7,7 @@ select
     i.date::timestamp as datetime,
     i.status,
     i.patient_payment_status,
-    i.insurer_payment_status,
+    i.insurance_plan_payment_status,
     i.encounter_id,
     i.updated_at_sync_tick
 from {{ source('tamanu', 'invoices') }} i

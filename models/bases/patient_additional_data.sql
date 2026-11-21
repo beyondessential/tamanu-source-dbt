@@ -33,7 +33,6 @@ select
     blood_type,
     patient_billing_type_id,
     health_center_id,
-    insurer_id,
     insurer_policy_number,
     mother_id,
     father_id,
