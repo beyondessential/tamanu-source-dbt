@@ -89,18 +89,18 @@ invoice_payments_agg as (
     group by pay.invoice_id
 ),
 
-invoice_insurer_payments_agg as (
+invoice_insurance_plan_payments_agg as (
     -- BL-013: net insurer payment received. A payment counts when it carries an
-    -- invoice_insurer_payments row. Unlike patient refunds, an insurer payment
-    -- reversal does NOT get its own invoice_insurer_payments row (Tamanu has no
+    -- invoice_insurance_plan_payments row. Unlike patient refunds, an insurer payment
+    -- reversal does NOT get its own invoice_insurance_plan_payments row (Tamanu has no
     -- insurer-refund endpoint that creates one), so a negative-reversal netting
     -- could never see it. Instead -- as the app's getInvoiceSummary does -- exclude a
     -- reversed insurer payment: sum insurer payments that are neither a reversal nor
     -- themselves reversed, so a reversed pair nets to 0.
     --
     -- No status filter: invoice_payments.amount is the amount actually paid, and
-    -- invoice_insurer_payments.status is *derived from* it in the app
-    -- (getInvoiceInsurerPaymentStatus: 0 -> rejected, full -> paid, part ->
+    -- invoice_insurance_plan_payments.status is *derived from* it in the app
+    -- (getInvoiceInsurancePlanPaymentStatus: 0 -> rejected, full -> paid, part ->
     -- partial), so a rejected payment already contributes 0 and a partial one
     -- contributes its real received value.
     select
@@ -151,5 +151,5 @@ left join invoice_discount_pct idsc
     on idsc.invoice_id = i.id
 left join invoice_payments_agg ipa
     on ipa.invoice_id = i.id
-left join invoice_insurer_payments_agg iipa
+left join invoice_insurance_plan_payments_agg iipa
     on iipa.invoice_id = i.id

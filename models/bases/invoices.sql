@@ -4,7 +4,7 @@ select
     i.date::timestamp as datetime,
     i.status,
     i.patient_payment_status,
-    i.insurer_payment_status,
+    i.insurance_plan_payment_status,
     i.encounter_id
 from {{ source('tamanu', 'invoices') }} i
 join {{ source('tamanu', 'encounters') }} e on e.id = i.encounter_id

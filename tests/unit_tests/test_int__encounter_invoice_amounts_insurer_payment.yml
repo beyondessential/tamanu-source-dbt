@@ -7,7 +7,7 @@ unit_tests:
       is derived from it, so a $0 rejected contributes 0 and a partial its real value).
       Here: a $100 paid, a $30 partial, a $0 rejected, and a $100 refund of the paid one.
       The refund has original_payment_id set but -- unlike a patient refund -- carries no
-      invoice_insurer_payments row, so the model excludes the reversed $100 original and
+      invoice_insurance_plan_payments row, so the model excludes the reversed $100 original and
       the reversal itself, giving insurer_payment = 30 + 0 = 30. (The old negate-by-own-
       link approach would wrongly return 130.) A separate $25 patient payment stays on
       patient_payment, proving the two aggregates are disjoint.
@@ -71,12 +71,12 @@ unit_tests:
           union all
           select '00000000-0000-0000-0000-000000000020'::text, '00000000-0000-0000-0000-000000000001'::text, 25.00::numeric, null::text, null::date
 
-      - input: ref('invoice_insurer_payments')
+      - input: ref('invoice_insurance_plan_payments')
         format: sql
         rows: |
           -- status is unused by the model (derived from amount in the app) -- shown for clarity.
           -- The $100 refund (payment ...013) deliberately has NO row here: an insurer
-          -- reversal does not get its own invoice_insurer_payments row (Tamanu has no
+          -- reversal does not get its own invoice_insurance_plan_payments row (Tamanu has no
           -- insurer-refund endpoint), so the model must net it by excluding the reversed
           -- original (...010), not by finding the reversal's own insurer link.
           select '00000000-0000-0000-0000-000000000030'::text as id, '00000000-0000-0000-0000-000000000010'::text as invoice_payment_id, 'paid' as status
