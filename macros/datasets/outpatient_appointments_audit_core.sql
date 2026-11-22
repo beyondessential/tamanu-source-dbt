@@ -133,13 +133,11 @@ join {{ ref('location_groups') }} lg on lg.id = fc.location_group_id
 left join (
     select lg2.id, lg2.name
     from {{ ref('location_groups') }} lg2
-    join {{ ref('facilities') }} f2 on f2.id = lg2.facility_id
-    where (f2.sensitive_network_id is not null) = {{ is_sensitive }}
+    join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f2 on f2.id = lg2.facility_id
 ) prev_lg on prev_lg.id = fc.prev_location_group_id
 left join {{ ref('reference_data') }} apt on apt.id = fc.appointment_type_id
 left join {{ ref('reference_data') }} prev_apt on prev_apt.id = fc.prev_appointment_type_id
 -- BL-033: facility scope partitioned by the is_sensitive argument
-join {{ ref('facilities') }} f on f.id = lg.facility_id
-    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
+join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f on f.id = lg.facility_id
 
 {% endmacro %}

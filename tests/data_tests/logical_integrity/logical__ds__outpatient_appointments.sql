@@ -1,9 +1,19 @@
-with base as (
+with raw_facilities as (
+    -- the raw table, not the facilities base, so the partition is checked
+    -- independently of the base's own filter
+    select
+        id,
+        sensitive_network_id
+    from {{ source('tamanu', 'facilities') }}
+    where deleted_at is null
+),
+
+base as (
     select count(*) as total_appointments
     from {{ ref('outpatient_appointments') }} lb
     join {{ ref('location_groups') }} lg
         on lg.id = lb.location_group_id
-    join {{ ref('facilities') }} f
+    join raw_facilities f
         on f.id = lg.facility_id
     where f.sensitive_network_id is null
 ),

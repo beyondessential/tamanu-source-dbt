@@ -50,8 +50,7 @@ with appointments_in_scope as (
     -- is null or dangling produces no row at all, and the facility partition is applied
     -- here rather than left to the caller.
     join {{ ref('location_groups') }} lg on lg.id = a.location_group_id
-    join {{ ref('facilities') }} f on f.id = lg.facility_id
-        and (f.sensitive_network_id is not null) = {{ is_sensitive }}
+    join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f on f.id = lg.facility_id
 {#- BL-042: `where` and each paren sit on their own line. A caller's predicate text may
     legally end on a `--` comment, and a same-line `)` would then be commented out and the
     model would fail to compile. Note that encounters_core() and

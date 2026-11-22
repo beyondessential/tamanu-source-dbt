@@ -6,13 +6,10 @@
     See specs/reports/hospital-admissions-summaries.md for the BL clauses.
 
     BL-012: the facility scope is partitioned by is_sensitive, exhaustively and
-    disjointly, so each facility's episodes reach exactly one of the two variants. The
-    join to facilities exists only to resolve the facility name; the predicate is what
-    makes it a partition.
-
-    The predicate is exhaustive by construction: `sensitive_network_id is not null` is
-    never null, so a bare `= true` / `= false` pair puts every facility in exactly one
-    variant.
+    disjointly, so each facility's episodes reach exactly one of the two variants.
+    is_sensitive picks the facility base: `facilities` holds the standard facilities and
+    `sensitive_facilities` the sensitive ones, and between them they hold every facility
+    exactly once.
 -#}
 
 with admission_location_log as (
@@ -110,9 +107,8 @@ join {{ ref('locations') }} l on l.id = ll.location_id
 -- them from -by-area and -by-location entirely, deaths included.
 left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
 -- BL-012 (specs/reports/hospital-admissions-summaries.md): facility partition
-join {{ ref('facilities') }} f
+join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
     on f.id = l.facility_id
-    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
 window w as (
     partition by ll.encounter_id
     order by ll.start_datetime

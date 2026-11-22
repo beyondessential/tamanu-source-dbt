@@ -78,12 +78,10 @@ unit_tests:
           union all
           select 'lg_sensitive'::text, 'Restricted Ward'::text, 'fac_sensitive'::text
 
-      - input: ref('facilities')
+      - input: ref('sensitive_facilities')
         format: sql
         rows: |
-          select 'fac_standard'::text as id, 'Central Hospital'::text as name, null::text as sensitive_network_id
-          union all
-          select 'fac_sensitive'::text, 'Restricted Clinic'::text, 'sn_001'
+          select 'fac_sensitive'::text as id, 'Restricted Clinic'::text as name, 'sn_001' as sensitive_network_id
 
       - input: ref('reference_data')
         format: sql

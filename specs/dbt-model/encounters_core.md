@@ -59,7 +59,7 @@ both joins are on primary keys.
 
 - `ref('encounters')`
 - `ref('locations')`
-- `ref('facilities')`
+- `ref('facilities')` (`is_sensitive=false`) or `ref('sensitive_facilities')` (`is_sensitive=true`)
 
 ## Output schema
 
@@ -94,12 +94,9 @@ diff, but it is a real cost rather than none.
 
 ## Business logic
 
-- **BL-001:** Facility scope is partitioned by the `is_sensitive` argument: the join to
-  `facilities` carries `and (f.sensitive_network_id is not null) = <argument>`, so a caller
-  passing `false` sees only non-sensitive facilities and one passing `true` sees only sensitive
-  ones. A facility is sensitive exactly when it belongs to a sensitive network (Tamanu 2.66
-  dropped the separate `facilities.is_sensitive` flag); the predicate is never null, so the
-  partition is exhaustive.
+- **BL-001:** Facility scope is partitioned by the `is_sensitive` argument, which picks the
+  facility base the join reads: `false` reads `facilities` (non-sensitive facilities only) and
+  `true` reads `sensitive_facilities`.
 - **BL-002:** The test patient is excluded upstream by the `encounters` base model and
   is deliberately **not** re-applied here. Re-applying it would imply the base model's
   guarantee is untrusted, and the two would then have to be kept in step.
@@ -171,7 +168,7 @@ maui-team#104 introduced.
 
 | ID | Criterion | Clause |
 |---|---|---|
-| AC-001 | With `is_sensitive=false`, no row resolves to a facility with a `sensitive_network_id`, and vice versa. | BL-001 |
+| AC-001 | With `is_sensitive=false`, every row resolves to a facility in `facilities`, and with `is_sensitive=true`, to one in `sensitive_facilities`. | BL-001 |
 | AC-002 | No row has `patient_id = var('test_patient')`, despite the macro not filtering it. Structurally guaranteed by the `encounters` base model, and **not assertable by a unit test**: a stub replaces that model including its filter, so a fixture supplying the test patient would prove nothing about production behaviour. | BL-002 |
 | AC-003 | Adopting the macro at a call site produces a compiled-SQL diff that is shape-only plus the superset columns — no changed join keyword, predicate or column expression. | BL-003, BL-004 |
 | AC-004 | Compiling a **dataset** caller of this macro yields SQL containing no `:` bind placeholder. Requires a dataset caller to exist; `admissions_dataset` is the first. Grepping for `parameter(` is necessary but not sufficient — `to_user_selected_timezone()` reaches the same hazard through a helper, so the check is on the compiled output, not the source. | BL-005 |
@@ -184,25 +181,27 @@ AC-001, AC-003 and AC-005 are asserted at the `encounter_invoice_audit` call sit
 end-to-end. AC-003 is checked per adoption by a compiled-SQL diff; the evidence for each
 adoption belongs on its PR.
 
-`test_encounter_invoice_audit_aggregation` carries a second, sensitive facility with an
-encounter on it, and an encounter whose `location_id` resolves to nothing.
-`test_encounter_invoice_audit_cancelled_products` carries neither — it has one
-non-sensitive facility — so it contributes no partition or BL-006 evidence. Both planted
+The partition itself lives in the two facility bases, so AC-001 is asserted in two parts.
+`test_facilities_standard_only` and `test_sensitive_facilities_sensitive_only` prove each
+base holds its own half of the facilities and nothing else. The call-site tests prove the
+macro reads the base its argument names: `test_encounter_invoice_audit_aggregation` carries
+an encounter on a facility absent from its `facilities` stub, and an encounter whose
+`location_id` resolves to nothing. `test_encounter_invoice_audit_cancelled_products`
+carries neither, so it contributes no partition or BL-006 evidence. Both planted
 encounters sit inside the default date window and reuse existing patients, so either
-surfacing fails `expect`. Without them the sensitivity predicate could be deleted outright
-and the tests still pass, which is what makes them assertions rather than decoration.
+surfacing fails `expect`.
 
-Those tests run the standard variant, so they only prove the `false` direction of AC-001.
-The `true` direction is proved by `test_encounter_invoice_audit_sensitive_partition`,
-which runs `sensitive-audit-encounter-invoice` over the same two facilities and expects
-only the sensitive one's encounter. `test_encounter_summary_start_sensitive_variant` asserts
+Those tests run the standard variant. The `true` direction is proved by
+`test_encounter_invoice_audit_sensitive_partition`, which runs
+`sensitive-audit-encounter-invoice` against a `sensitive_facilities` stub and expects only
+the sensitive facility's encounter. `test_encounter_summary_start_sensitive_variant` asserts
 the same at the `encounter_summary_core` call site.
 
 | Mutation | Result |
 |---|---|
-| drop `and (f.sensitive_network_id is not null) = {{ is_sensitive }}` | fails |
-| `= {{ is_sensitive }}` → constant `= false` | fails — but only `test_encounter_invoice_audit_sensitive_partition` and `test_encounter_summary_start_sensitive_variant`; every standard-variant test passes, since `false` is what they pass anyway |
-| `locations` inner join → `left join` | passes — the inner join to `facilities` still drops the row via the null `facility_id` |
+| the ref → constant `ref('facilities')` | fails — `test_encounter_invoice_audit_sensitive_partition` and `test_encounter_summary_start_sensitive_variant` stub only `sensitive_facilities`, so the sensitive variant finds no facility |
+| drop the `sensitive_network_id is null` filter from the `facilities` base | fails — `test_facilities_standard_only` |
+| `locations` inner join → `left join` | passes — the inner join to the facility base still drops the row via the null `facility_id` |
 | both joins → `left join` | fails |
 
 The third row is the useful one: BL-006's outcome is asserted, but either inner join alone
@@ -231,3 +230,4 @@ None outstanding.
 | 2026-09-17 | Added `planned_location_id` / `planned_location_start_datetime` to the output superset (MAUI-6905), for the admissions line list report's planned-transfer columns. Passthrough only — no new business logic. |
 | 2026-10-15 | Tamanu 2.66 dropped `facilities.is_sensitive`: BL-001's partition is now `(f.sensitive_network_id is not null) = <argument>`, which is never null. Same partition, no output change (MAUI-6163). |
 | 2026-10-15 | MAUI-7011: callers table brought up to date (all four adopted, `medication_dispenses_dataset` added); AC-001 evidence corrected — only the aggregation fixture carries the sensitive facility, and the `true` direction is proved by the two sensitive-variant tests, now named; mutation table gains the constant `= false` row. |
+| 2026-11-22 | BL-001's partition moves into the facility bases: `is_sensitive` picks `facilities` (standard only) or `sensitive_facilities`. Same partition, no output change. AC-001 evidence and the mutation table follow it. |

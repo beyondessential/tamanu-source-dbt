@@ -56,9 +56,8 @@ join {{ ref('locations') }} l on l.id = e.location_id
 left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
 left join {{ ref('departments') }} d on d.id = e.department_id
 left join {{ ref('departments') }} req_dept on req_dept.id = lr.department_id
-join {{ ref('facilities') }} f
+join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
     on f.id = l.facility_id
-    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
 left join {{ ref('users') }} requester on requester.id = lr.requested_by_id
 left join {{ ref('reference_data') }} category on category.id = lr.lab_test_category_id
 join {{ ref('lab_tests') }} lt on lt.lab_request_id = lr.id

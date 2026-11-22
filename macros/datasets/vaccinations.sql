@@ -84,9 +84,8 @@ left join vaccine_administrations_metadata vam on vam.id = av.id
 join {{ ref("locations") }} l on l.id = av.location_id
 left join {{ ref("departments") }} d on d.id = av.department_id
 left join {{ ref("location_groups") }} lg on lg.id = l.location_group_id
-join {{ ref("facilities") }} f
+join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
     on f.id = l.facility_id
-    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
 left join {{ ref("vaccine_schedules") }} sv on sv.id = av.scheduled_vaccine_id
 left join {{ ref("users") }} u on u.id = av.recorded_by_id
 left join {{ ref("reference_data") }} rd_vil on rd_vil.id = p.village_id

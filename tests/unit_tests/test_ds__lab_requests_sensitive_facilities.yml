@@ -51,8 +51,6 @@ unit_tests:
         format: sql
         rows: |
           select 'fac_001' as id, 'Central Hospital' as name, null::text as sensitive_network_id
-          union all
-          select 'fac_002', 'Psychiatric Hospital', 'sn_001'
 
       - input: ref('location_groups')
         format: sql
@@ -142,12 +140,10 @@ unit_tests:
           union all
           select 'loc_002', 'Room 201', 'fac_002', null::text
 
-      - input: ref('facilities')
+      - input: ref('sensitive_facilities')
         format: sql
         rows: |
-          select 'fac_001' as id, 'Central Hospital' as name, null::text as sensitive_network_id
-          union all
-          select 'fac_002', 'Psychiatric Hospital', 'sn_001'
+          select 'fac_002' as id, 'Psychiatric Hospital' as name, 'sn_001' as sensitive_network_id
 
       - input: ref('location_groups')
         format: sql
@@ -242,8 +238,6 @@ unit_tests:
         format: sql
         rows: |
           select 'fac_001' as id, 'Central Hospital' as name, null::text as sensitive_network_id
-          union all
-          select 'fac_002', 'Psychiatric Hospital', 'sn_001'
 
       - input: ref('location_groups')
         format: sql

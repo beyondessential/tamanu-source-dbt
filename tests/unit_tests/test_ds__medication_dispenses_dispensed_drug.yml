@@ -73,7 +73,6 @@ unit_tests:
         format: sql
         rows: |
           select 'fac_std' as id, 'General Hospital' as name, null::text as sensitive_network_id
-          union all select 'fac_sen', 'Sensitive Clinic', 'sn_001'
     expect:
       format: sql
       rows: |
@@ -136,11 +135,10 @@ unit_tests:
         rows: |
           select 'drug_a' as id, 'DRUG-A' as code, 'Drug A' as name
           union all select 'drug_b', 'DRUG-B', 'Drug B'
-      - input: ref('facilities')
+      - input: ref('sensitive_facilities')
         format: sql
         rows: |
-          select 'fac_std' as id, 'General Hospital' as name, null::text as sensitive_network_id
-          union all select 'fac_sen', 'Sensitive Clinic', 'sn_001'
+          select 'fac_sen' as id, 'Sensitive Clinic' as name, 'sn_001' as sensitive_network_id
     expect:
       format: sql
       rows: |

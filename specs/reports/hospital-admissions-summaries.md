@@ -167,14 +167,11 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   has no occupancy column (BL-009), so it keeps a row only where an episode started **or**
   ended in the month, and a month an episode merely spans is suppressed as empty.
 - **BL-012:** The facility scope is partitioned by `is_sensitive`, in the intermediates
-  rather than in the reports. The predicate is
-  `(f.sensitive_network_id is not null) = <argument>`, the same predicate as
-  `encounters_core`, so the two variants are disjoint and exhaustive: each facility's episodes
-  reach exactly one of them. The predicate is never null, so no `coalesce` is needed (one was
-  required while Tamanu stored a nullable `facilities.is_sensitive` flag, dropped in 2.66). The reports carry no
+  rather than in the reports. The argument picks the facility base, `facilities` or
+  `sensitive_facilities`, the same as `encounters_core`, so the two variants are disjoint and
+  exhaustive: each facility's episodes reach exactly one of them. The reports carry no
   sensitivity logic beyond choosing which intermediate to read, and a consumer wanting
-  both figures runs both reports. The join to `facilities` exists only to resolve the
-  facility name; the predicate is what makes it a partition.
+  both figures runs both reports.
 
   The sensitive intermediates are ephemeral, so `generate_reporting_schema_script()`
   creates no `reporting` view for them. They are also tagged `restricted`
@@ -314,6 +311,7 @@ None outstanding.
 
 | Date | Change |
 |---|---|
+| 2026-11-22 | BL-012's partition is the facility base the intermediates read, `facilities` or `sensitive_facilities`, rather than a predicate on `sensitive_network_id`. Same partition. |
 | 2026-11-02 | The reports apply the `facilityId` parameter they already declared (BL-015). The reporting schema creates no view for an ephemeral model, so BL-012 rests on the intermediates being ephemeral as well as `restricted`. |
 | 2026-10-15 | Tamanu 2.66 dropped the nullable `facilities.is_sensitive`: BL-012's partition is now `(f.sensitive_network_id is not null) = <argument>`, which is never null, so the `coalesce` is gone. Same partition (MAUI-6163). |
 | 2026-09-06 | Episodes where the patient did not move are collapsed into one (BL-014), so an encounter re-typed in place no longer reads as a transfer. `transfer_in` is taken from the episode's opening row rather than aggregated over it, so a history row naming the location or department already held no longer reports a transfer nobody made; `admission` is still aggregated. BL-006's transfer identity restated as a checkable invariant. BL-014 additionally records what the collapse does to an encounter re-typed away from `admission` and back in the same place. |

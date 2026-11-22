@@ -4,8 +4,9 @@ unit_tests:
     description: >
       The inverse of test_encounter_summary_start_excludes_sensitive: the sensitive
       variant must return the sensitive facility's encounter and only that one.
-      Without this, replacing (f.sensitive_network_id is not null) = {{ is_sensitive }} with a hardcoded
-      false passes every other encounter summary test, since they all run a standard variant.
+      Without this, pointing the sensitive variant at `facilities` rather than
+      `sensitive_facilities` passes every other encounter summary test, since they all run a
+      standard variant.
 
       enc_002 is given an encounter_history row on purpose. The report inner-joins
       encounter_changes, so an encounter with no history is dropped whatever its
@@ -85,12 +86,10 @@ unit_tests:
           union all
           select 'lg_002', 'Psychiatric Wing'
 
-      - input: ref('facilities')
+      - input: ref('sensitive_facilities')
         format: sql
         rows: |
-          select 'fac_001' as id, 'Public Hospital' as name, null::text as sensitive_network_id
-          union all
-          select 'fac_002', 'Psychiatric Hospital', 'sn_001'
+          select 'fac_002' as id, 'Psychiatric Hospital' as name, 'sn_001' as sensitive_network_id
 
       - input: ref('reference_data')
         format: sql

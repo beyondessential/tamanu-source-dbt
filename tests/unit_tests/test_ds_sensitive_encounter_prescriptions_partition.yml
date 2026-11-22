@@ -36,12 +36,10 @@ unit_tests:
           select 'loc_001' as id, 'fac_001' as facility_id
           union all
           select 'loc_002', 'fac_002'
-      - input: ref('facilities')
+      - input: ref('sensitive_facilities')
         format: sql
         rows: |
-          select 'fac_001' as id, 'General Hospital' as name, null::text as sensitive_network_id
-          union all
-          select 'fac_002', 'Sensitive Clinic', 'sn_001'
+          select 'fac_002' as id, 'Sensitive Clinic' as name, 'sn_001' as sensitive_network_id
       - input: ref('patient_additional_data')
         format: sql
         rows: |

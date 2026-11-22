@@ -52,9 +52,8 @@ left join {{ ref('reference_data') }} bt
 left join {{ ref('triages') }} t on t.encounter_id = e.id
 join {{ ref('locations') }} l on l.id = e.location_id
 left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
-join {{ ref('facilities') }} f
+join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
     on f.id = l.facility_id
-    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
 left join {{ ref('departments') }} d on d.id = e.department_id
 left join {{ ref('discharges') }} ds on ds.encounter_id = e.id
 left join non_system_notes n on n.record_id = e.id

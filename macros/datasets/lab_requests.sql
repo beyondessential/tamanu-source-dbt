@@ -95,9 +95,8 @@ left join {{ ref('reference_data') }} village on village.id = p.village_id
 join {{ ref('locations') }} l on l.id = e.location_id
 left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
 left join {{ ref('departments') }} d on d.id = e.department_id
-join {{ ref('facilities') }} f
+join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
     on f.id = l.facility_id
-    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
 left join {{ ref('reference_data') }} laboratory on laboratory.id = lr.lab_test_laboratory_id
 left join {{ ref('users') }} req_clinician on req_clinician.id = lr.requested_by_id
 left join {{ ref('departments') }} req_department on req_department.id = lr.department_id

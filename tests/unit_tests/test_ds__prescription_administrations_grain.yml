@@ -58,7 +58,6 @@ unit_tests:
         format: sql
         rows: |
           select 'fac_1' as id, 'Hospital' as name, null::text as sensitive_network_id
-          union all select 'fac_2', 'Sensitive clinic', 'sn_1'
 
       - input: ref('departments')
         format: sql

@@ -66,9 +66,8 @@ join {{ ref('prescriptions') }} pr on pr.id = ep.prescription_id
 join {{ ref('reference_data') }} m on m.id = pr.medication_id
 join {{ ref('locations') }} l on l.id = e.location_id
 -- BL-007: standard vs sensitive split on the location's facility
-join {{ ref('facilities') }} f
+join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
     on f.id = l.facility_id
-    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
 -- BL-008: prescriber_id is nullable, so this must stay a left join or prescriptions
 -- recorded without a prescriber would drop out of the dataset entirely
 left join {{ ref('users') }} prescriber on prescriber.id = pr.prescriber_id

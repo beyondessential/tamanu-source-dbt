@@ -59,9 +59,8 @@ encounter_details as (
         f.name as facility_name
     from {{ ref('encounters') }} e
     join {{ ref('locations') }} loc on loc.id = e.location_id
-    join {{ ref('facilities') }} f on f.id = loc.facility_id
-        -- BL-009: the standard and sensitive variants partition on this flag
-        and (f.sensitive_network_id is not null) = {{ is_sensitive }}
+    -- BL-009: the standard and sensitive variants each read their own facility base
+    join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f on f.id = loc.facility_id
     left join {{ ref('departments') }} dept on dept.id = e.department_id
 ),
 

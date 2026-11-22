@@ -20,9 +20,8 @@ with scoped_encounters as not materialized (
         f.name as facility_name
     from {{ ref('encounters') }} e
     join {{ ref('locations') }} l on l.id = e.location_id
-    join {{ ref('facilities') }} f on f.id = l.facility_id
+    join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f on f.id = l.facility_id
     left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
-    where (f.sensitive_network_id is not null) = {{ is_sensitive }}
 ),
 
 -- BL-003: a task carries one row per designation it is assigned to, collapsed here so the

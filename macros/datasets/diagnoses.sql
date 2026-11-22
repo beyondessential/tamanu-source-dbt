@@ -35,8 +35,7 @@ left join {{ ref('reference_data') }} village on village.id = p.village_id
 left join {{ ref('users') }} clinician on clinician.id = e.clinician_id
 left join {{ ref('departments') }} d on d.id = e.department_id
 join {{ ref('locations') }} l on l.id = e.location_id
-join {{ ref('facilities') }} f
+join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
     on f.id = l.facility_id
-    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
 
 {% endmacro %}

@@ -13,3 +13,5 @@ select
     sensitive_network_id
 from {{ source('tamanu', 'facilities') }}
 where deleted_at is null
+    -- standard facilities only. Sensitive ones are in sensitive_facilities
+    and sensitive_network_id is null
