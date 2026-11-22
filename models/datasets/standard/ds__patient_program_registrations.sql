@@ -91,3 +91,5 @@ left join {{ ref('reference_data') }} subdivision on subdivision.id = pad.subdiv
 left join {{ ref('reference_data') }} division on division.id = pad.division_id
 left join related_conditions c on c.patient_program_registration_id = ep.enrolment_id
 left join {{ ref('users') }} deactivated_by on deactivated_by.id = ep.deactivated_by_id
+-- standard facilities only: drop a row whose facility is set but is not in `facilities`
+where ep.registering_facility_id is null or registering_facility.id is not null

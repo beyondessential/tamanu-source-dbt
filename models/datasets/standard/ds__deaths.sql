@@ -155,8 +155,7 @@ left join {{ ref("locations") }} location
     on location.id = ewd.location_id
 -- BL-012 (see specs/reports/deceased-patients-line-list.md): the death record's facility,
 -- falling back to the facility of the encounter the patient died in unless the record says
--- the death was outside a health facility. metric__death resolves the facility the same way,
--- so the report and the Tupaia death count agree.
+-- the death was outside a health facility. metric__death resolves the facility the same way.
 left join {{ ref("facilities") }} facility
     on facility.id = coalesce(
         pdd.facility_id,
@@ -167,3 +166,11 @@ left join {{ ref("location_groups") }} location_group
 left join {{ ref("users") }} clinician
     on clinician.id = pdd.recorded_by_id
 where p.date_of_death is not null
+    -- BL-015: standard facilities only: drop a row whose facility is set but is not in `facilities`
+    and (
+        coalesce(
+            pdd.facility_id,
+            case when pdd.was_outside_health_facility is not true then location.facility_id end
+        ) is null
+        or facility.id is not null
+    )

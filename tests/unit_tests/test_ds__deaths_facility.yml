@@ -10,7 +10,8 @@ unit_tests:
       is not matched and the facility is NULL. p7's record names no facility, and recording the
       death closed both of p7's open encounters at the time of death -- a stale clinic visit
       (e7a) and a later admission (e7b) -- so the later-started e7b is matched, giving fac9,
-      Medical and Ward 1.
+      Medical and Ward 1. BL-015, AC-007: p8's death record names facSen, a sensitive facility
+      and so absent from the `facilities` stub, and p8 has no row.
     given:
       - input: ref('patients')
         format: sql
@@ -29,7 +30,8 @@ unit_tests:
               ('p2', '2026-03-10 10:00:00'::timestamp),
               ('p3', '2026-03-12 10:00:00'::timestamp),
               ('p5', '2026-03-20 10:00:00'::timestamp),
-              ('p7', '2026-03-25 10:00:00'::timestamp)
+              ('p7', '2026-03-25 10:00:00'::timestamp),
+              ('p8', '2026-03-28 10:00:00'::timestamp)
           ) v (id, date_of_death)
 
       - input: ref('patient_death_data')
@@ -67,7 +69,8 @@ unit_tests:
               ('d1', 'p1', 'facA', false),
               ('d2', 'p2', null::text, true),
               ('d5', 'p5', null::text, false),
-              ('d7', 'p7', null::text, false)
+              ('d7', 'p7', null::text, false),
+              ('d8', 'p8', 'facSen', false)
           ) v (id, patient_id, facility_id, was_outside_health_facility)
 
       - input: ref('encounters')
