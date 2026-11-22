@@ -44,9 +44,9 @@ arithmetic definition via the `int__` layer.
 
 **One row per:** non-deleted `invoice_items` row (one billed line).
 
-`invoice_item_id` is the primary key. Facility-agnostic: the consumer applies facility or
-sensitivity scoping. All joins below are many-to-one relative to the item, so grain is
-preserved.
+`invoice_item_id` is the primary key. Items on invoices at standard (non-sensitive)
+facilities only: `invoice_item_amounts()` reads `facilities`. All joins below are
+many-to-one relative to the item, so grain is preserved.
 
 ## Inputs
 
@@ -187,3 +187,4 @@ Resolved during implementation — none outstanding.
 | 2026-08-31 | Maui team | DV-001's AC-008 evidence corrected. The retargeted `test_int__encounter_invoice_amounts_*` tests were verified on 2.57 but never reached `main`, which kept the pre-extraction `test_ds__encounter_invoices_*` copies — those name the projection as the model under test and cannot compile, so AC-008 was unverified on `main` from the extraction until the tests were carried across. |
 | 2026-10-02 | Maui team | [MAUI-6967](https://linear.app/bes/issue/MAUI-6967): added BL-009 fixed-price charging and the `is_fixed_price` column. The macro previously ignored `is_fixed_price` / `is_fixed_price_final` and charged every line `unit_price × quantity`, so fixed-price medications (Yap, Kosrae) were overstated by their dispensed quantity in the invoice audit report and the Tupaia billing metrics. |
 | 2026-11-01 | Maui team | AC-003 reconciles `sum(discounted_total)` to `invoice_total + item_adjustment`, following `invoice_total` becoming the total before item adjustments (MAUI-6911). |
+| 2026-11-22 | Maui team | Items on invoices at standard facilities only: `invoice_item_amounts()` reads the standard-only `facilities` base. |

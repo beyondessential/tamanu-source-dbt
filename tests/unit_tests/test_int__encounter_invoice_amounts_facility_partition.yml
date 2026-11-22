@@ -1,0 +1,252 @@
+unit_tests:
+  - name: test_invoice_amounts_facility_partition
+    model: int__encounter_invoice_amounts
+    description: >
+      The invoices themselves, not only their items, are scoped to the variant's facility base.
+      Three invoices: one on an encounter at a standard facility, one at a sensitive facility
+      (absent from the `facilities` stub) and one whose encounter's location does not resolve.
+      The standard model returns the standard invoice only, so no invoice survives with its
+      amounts missing. Without the invoice-level join, the other two would appear with a null
+      invoice_total.
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_std' as id, '2024-01-14 09:00:00'::timestamp as start_datetime, null::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_std' as location_id, null::text as department_id, null::text as clinician_id, null::text as patient_billing_type_id
+          union all
+          select 'enc_sen', '2024-01-14 09:00:00'::timestamp, null::timestamp, 'pat_001', 'loc_sen', null::text, null::text, null::text
+          union all
+          select 'enc_nowhere', '2024-01-14 09:00:00'::timestamp, null::timestamp, 'pat_001', 'loc_missing', null::text, null::text, null::text
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_std' as id, 'fac_std' as facility_id
+          union all
+          select 'loc_sen', 'fac_sen'
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_std' as id, 'General Hospital' as name, null::text as sensitive_network_id
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, '1990-01-01'::date as date_of_birth
+
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as patient_billing_type_id where false
+
+      - input: ref('invoices')
+        format: sql
+        rows: |
+          select 'inv_std' as id, 'enc_std' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV-STD' as display_id
+          union all
+          select 'inv_sen', 'enc_sen', 'in_progress', '2024-01-14 09:00:00'::timestamp, 'INV-SEN'
+          union all
+          select 'inv_nowhere', 'enc_nowhere', 'in_progress', '2024-01-14 09:00:00'::timestamp, 'INV-NOWHERE'
+
+      - input: ref('invoices_change_logs')
+        format: sql
+        rows: |
+          select null::text as invoice_id, null::timestamp as logged_at, null::text as status, null::text as previous_status where false
+
+      - input: ref('invoice_items')
+        format: sql
+        rows: |
+          select 'item_std'::text as id, 'inv_std' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 10.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id, false as is_fixed_price_final
+          union all
+          select 'item_sen'::text, 'inv_sen', 'Consultation', '2024-01-14'::date, 'prod_001', 20.00::numeric, null::numeric, 1::integer, null::text, null::text, false
+          union all
+          select 'item_nowhere'::text, 'inv_nowhere', 'Consultation', '2024-01-14'::date, 'prod_001', 30.00::numeric, null::numeric, 1::integer, null::text, null::text, false
+
+      - input: ref('invoice_products')
+        format: sql
+        rows: |
+          select 'prod_001' as id, 'Consultation' as category, false as insurable, null::text as name
+
+      - input: ref('invoice_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_id, null::numeric as amount, null::text as original_payment_id, null::date as date where false
+
+      - input: ref('invoice_insurer_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_payment_id where false
+
+      - input: ref('invoice_patient_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_payment_id where false
+
+      - input: ref('invoice_item_finalised_insurances')
+        format: sql
+        rows: |
+          select null::text as invoice_item_id, null::text as invoice_insurance_plan_id, null::numeric as coverage_value_final where false
+
+      - input: ref('invoices_invoice_insurance_plans')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_id, null::text as invoice_insurance_plan_id where false
+
+      - input: ref('invoice_insurance_plan_items')
+        format: sql
+        rows: |
+          select null::text as invoice_insurance_plan_id, null::text as invoice_product_id, null::numeric as coverage_value where false
+
+      - input: ref('invoice_insurance_plans')
+        format: sql
+        rows: |
+          select null::text as id, null::numeric as default_coverage where false
+
+      - input: ref('invoice_item_discounts')
+        format: sql
+        rows: |
+          select null::text as invoice_item_id, null::numeric as amount, null::text as type, null::text as id where false
+
+      - input: ref('invoice_discounts')
+        format: sql
+        rows: |
+          select null::text as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::text as id where false
+
+      - input: ref('invoice_price_lists')
+        format: sql
+        rows: |
+          select null::text as id, null::text as code, null::jsonb as rules, null::integer as evaluation_order, null::timestamp as created_at, null::text as visibility_status where false
+
+      - input: ref('invoice_price_list_items')
+        format: sql
+        rows: |
+          select null::text as invoice_price_list_id, null::text as invoice_product_id, null::numeric as price, null::boolean as is_hidden, null::boolean as is_fixed_price where false
+
+    expect:
+      rows:
+        - {invoice_id: inv_std, invoice_total: '10.00'}
+
+  - name: test_sensitive_invoice_amounts_facility_partition
+    model: int__sensitive_encounter_invoice_amounts
+    description: >
+      The sensitive half, on the same invoices: the sensitive model reads `sensitive_facilities`,
+      so it returns the sensitive facility's invoice, with its amount, and nothing else.
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select 'enc_std' as id, '2024-01-14 09:00:00'::timestamp as start_datetime, null::timestamp as end_datetime, 'pat_001' as patient_id, 'loc_std' as location_id, null::text as department_id, null::text as clinician_id, null::text as patient_billing_type_id
+          union all
+          select 'enc_sen', '2024-01-14 09:00:00'::timestamp, null::timestamp, 'pat_001', 'loc_sen', null::text, null::text, null::text
+          union all
+          select 'enc_nowhere', '2024-01-14 09:00:00'::timestamp, null::timestamp, 'pat_001', 'loc_missing', null::text, null::text, null::text
+
+      - input: ref('locations')
+        format: sql
+        rows: |
+          select 'loc_std' as id, 'fac_std' as facility_id
+          union all
+          select 'loc_sen', 'fac_sen'
+
+      - input: ref('sensitive_facilities')
+        format: sql
+        rows: |
+          select 'fac_sen' as id, 'Sensitive Clinic' as name, 'sn_001' as sensitive_network_id
+
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001' as id, '1990-01-01'::date as date_of_birth
+
+      - input: ref('patient_additional_data')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as patient_billing_type_id where false
+
+      - input: ref('invoices')
+        format: sql
+        rows: |
+          select 'inv_std' as id, 'enc_std' as encounter_id, 'in_progress' as status, '2024-01-14 09:00:00'::timestamp as datetime, 'INV-STD' as display_id
+          union all
+          select 'inv_sen', 'enc_sen', 'in_progress', '2024-01-14 09:00:00'::timestamp, 'INV-SEN'
+          union all
+          select 'inv_nowhere', 'enc_nowhere', 'in_progress', '2024-01-14 09:00:00'::timestamp, 'INV-NOWHERE'
+
+      - input: ref('invoices_change_logs')
+        format: sql
+        rows: |
+          select null::text as invoice_id, null::timestamp as logged_at, null::text as status, null::text as previous_status where false
+
+      - input: ref('invoice_items')
+        format: sql
+        rows: |
+          select 'item_std'::text as id, 'inv_std' as invoice_id, 'Consultation' as product_name_final, '2024-01-14'::date as date, 'prod_001' as product_id, 10.00::numeric as price_final, null::numeric as manual_entry_price, 1::integer as quantity, null::text as source_record_type, null::text as source_record_id, false as is_fixed_price_final
+          union all
+          select 'item_sen'::text, 'inv_sen', 'Consultation', '2024-01-14'::date, 'prod_001', 20.00::numeric, null::numeric, 1::integer, null::text, null::text, false
+          union all
+          select 'item_nowhere'::text, 'inv_nowhere', 'Consultation', '2024-01-14'::date, 'prod_001', 30.00::numeric, null::numeric, 1::integer, null::text, null::text, false
+
+      - input: ref('invoice_products')
+        format: sql
+        rows: |
+          select 'prod_001' as id, 'Consultation' as category, false as insurable, null::text as name
+
+      - input: ref('invoice_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_id, null::numeric as amount, null::text as original_payment_id, null::date as date where false
+
+      - input: ref('invoice_insurer_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_payment_id where false
+
+      - input: ref('invoice_patient_payments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_payment_id where false
+
+      - input: ref('invoice_item_finalised_insurances')
+        format: sql
+        rows: |
+          select null::text as invoice_item_id, null::text as invoice_insurance_plan_id, null::numeric as coverage_value_final where false
+
+      - input: ref('invoices_invoice_insurance_plans')
+        format: sql
+        rows: |
+          select null::text as id, null::text as invoice_id, null::text as invoice_insurance_plan_id where false
+
+      - input: ref('invoice_insurance_plan_items')
+        format: sql
+        rows: |
+          select null::text as invoice_insurance_plan_id, null::text as invoice_product_id, null::numeric as coverage_value where false
+
+      - input: ref('invoice_insurance_plans')
+        format: sql
+        rows: |
+          select null::text as id, null::numeric as default_coverage where false
+
+      - input: ref('invoice_item_discounts')
+        format: sql
+        rows: |
+          select null::text as invoice_item_id, null::numeric as amount, null::text as type, null::text as id where false
+
+      - input: ref('invoice_discounts')
+        format: sql
+        rows: |
+          select null::text as invoice_id, null::numeric as percentage, null::timestamp as applied_time, null::text as id where false
+
+      - input: ref('invoice_price_lists')
+        format: sql
+        rows: |
+          select null::text as id, null::text as code, null::jsonb as rules, null::integer as evaluation_order, null::timestamp as created_at, null::text as visibility_status where false
+
+      - input: ref('invoice_price_list_items')
+        format: sql
+        rows: |
+          select null::text as invoice_price_list_id, null::text as invoice_product_id, null::numeric as price, null::boolean as is_hidden, null::boolean as is_fixed_price where false
+
+    expect:
+      rows:
+        - {invoice_id: inv_sen, invoice_total: '20.00'}

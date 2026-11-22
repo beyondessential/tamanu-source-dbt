@@ -54,7 +54,8 @@ invoice_data as (
         -- patient_subtotal, so an encounter whose every non-cancelled invoice
         -- has no items must still read 0 rather than blank.
         coalesce(sum(ei.patient_subtotal), 0) as patient_subtotal
-    from {{ ref('ds__encounter_invoices') }} ei
+    -- BL-017: each variant reads the invoices of its own facility partition
+    from {{ ref('ds__sensitive_encounter_invoices' if is_sensitive else 'ds__encounter_invoices') }} ei
     join encounters_in_scope eis
         on eis.encounter_id = ei.encounter_id
     where ei.status != 'cancelled'

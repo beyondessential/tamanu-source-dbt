@@ -3,14 +3,15 @@ unit_tests:
     model: sensitive-audit-encounter-invoice
     description: >
       BL-001 of encounters_in_scope, asserted from the sensitive side. The same two
-      facilities are in scope as the standard-variant tests -- one sensitive, one not --
-      and each carries an encounter that would otherwise qualify. The sensitive variant
-      must return the encounter at the sensitive facility and only that one.
+      locations are in scope as the standard-variant tests, each with an encounter that
+      would otherwise qualify, but only the sensitive facility is in the
+      `sensitive_facilities` stub. The sensitive variant must return the encounter at the
+      sensitive facility and only that one.
 
       This is the inverse of what test_encounter_invoice_audit_aggregation asserts, and
-      the two together pin both halves of the partition. Without this test, changing
-      `(f.sensitive_network_id is not null) = {{ is_sensitive }}` to a constant `= false` would still pass
-      every other audit-encounter-invoice test, because they all run the standard variant.
+      the two together pin both halves of the partition. Without this test, pointing the
+      sensitive variant at `facilities` would still pass every other audit-encounter-invoice
+      test, because they all run the standard variant.
       test_encounter_summary_start_sensitive_variant asserts the same partition at the
       encounter summary's call site.
     overrides:
@@ -39,12 +40,10 @@ unit_tests:
           union all
           select 'loc_002', 'fac_002'
 
-      - input: ref('facilities')
+      - input: ref('sensitive_facilities')
         format: sql
         rows: |
-          select 'fac_001' as id, 'General Hospital' as name, null::text as sensitive_network_id
-          union all
-          select 'fac_002', 'Sensitive Clinic', 'sn_001'
+          select 'fac_002' as id, 'Sensitive Clinic' as name, 'sn_001' as sensitive_network_id
 
       - input: ref('patients')
         format: sql
@@ -68,7 +67,7 @@ unit_tests:
         rows: |
           select null::text as id, null::text as name where false
 
-      - input: ref('ds__encounter_invoices')
+      - input: ref('ds__sensitive_encounter_invoices')
         format: sql
         rows: |
           select

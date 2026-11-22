@@ -22,7 +22,7 @@ Resolve Tamanu's in-app invoice calculations — price-list selection, item disc
 
 ## Grain
 
-One row per invoice (every non-deleted invoice, any status). Facility-agnostic: the consumer applies facility or sensitivity scoping. The `status` column lets consumers filter (e.g. exclude cancelled) and aggregate.
+One row per non-deleted invoice, any status, whose encounter's location is at a standard (non-sensitive) facility. `ds__sensitive_encounter_invoices` holds the same columns, built by the same `encounter_invoices_dataset()` macro, for invoices at sensitive facilities. The `status` column lets consumers filter (e.g. exclude cancelled) and aggregate.
 
 ## Inputs
 
@@ -94,3 +94,4 @@ derived in this dataset's projection rather than the shared ephemeral.
 | 2026-09-04 | Maui team | Added `patient_subtotal` (BL-020), promoting `audit-encounter-invoice`'s own BL-013 formula into this dataset so `tamanu-dbt-fsm`'s new `daily-cash-collection-summary` report does not have to re-derive it independently; `encounter_invoice_audit_report` refactored to sum the column directly instead of re-deriving it from the aggregated components. |
 | 2026-10-02 | Maui team | [MAUI-6967](https://linear.app/bes/issue/MAUI-6967): BL-008 now charges fixed-price (flat fee) lines once (`unit_price × 1`), per `ds__encounter_invoice_items` BL-009. `invoice_total` and everything downstream of it (audit report, `metric__billing`, `clinical__cost`) previously multiplied fixed-price medications by their dispensed quantity. BL-012 and BL-013 read their payments through the shared `invoice_payment_amounts()` macro, with no change to either rule. |
 | 2026-10-13 | Maui team | [MAUI-6911](https://linear.app/bes/issue/MAUI-6911): `invoice_total` is the total before item adjustments (BL-009), matching the app's "Invoice total", and item adjustments are their own column, `item_adjustment` (BL-021). `invoice_discount` and `patient_subtotal` are unchanged in value. |
+| 2026-11-22 | Maui team | Covers invoices at standard facilities only, and `ds__sensitive_encounter_invoices` holds the sensitive ones, built by the same `encounter_invoices_dataset()` macro. An invoice is scoped by its encounter's facility, so one whose encounter or location does not resolve has no row. |
