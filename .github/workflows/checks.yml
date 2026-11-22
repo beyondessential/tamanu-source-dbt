@@ -146,10 +146,17 @@ jobs:
       - name: Install dbt packages
         run: dbt deps
 
+      - name: Parse the standard-only graph
+        # The sensitive models are opt-in (has_sensitive_facility, default false), which is how
+        # most deployments run. A standard model that refs a sensitive one fails this parse.
+        run: dbt parse --no-partial-parse --profiles-dir config --target reporting_release
+
       - name: Fail on dbt deprecations
         # dbt_project.yml promotes every deprecation to an error, and some are only raised
-        # during a full parse.
-        run: dbt parse --no-partial-parse --show-all-deprecations --profiles-dir config --target reporting_release
+        # during a full parse. Every step from here enables the sensitive models, so this repo
+        # tests them although a deployment has to opt in.
+        run: |
+          dbt parse --no-partial-parse --show-all-deprecations --profiles-dir config --target reporting_release --vars '{has_sensitive_facility: true}'
 
       - name: Lint SQL
         # sqlfluff's dbt templater reads the profile from DBT_PROFILES_DIR, not a flag.
@@ -164,7 +171,8 @@ jobs:
         run: python scripts/check_translations.py
 
       - name: Run dbt unit tests
-        run: dbt test --select "unit_test:*" --profiles-dir config --target reporting_release
+        run: |
+          dbt test --select "unit_test:*" --profiles-dir config --target reporting_release --vars '{has_sensitive_facility: true}'
 
       # BL-003: create every model as a view on the lowest supported Postgres, against an empty
       # copy of the Tamanu schema (specs/testing/model-postgres-compatibility.md). A model using
@@ -178,5 +186,5 @@ jobs:
 
       - name: Seed and create every model
         run: |
-          dbt seed --profiles-dir config --target reporting_release
-          dbt run --profiles-dir config --target reporting_release
+          dbt seed --profiles-dir config --target reporting_release --vars '{has_sensitive_facility: true}'
+          dbt run --profiles-dir config --target reporting_release --vars '{has_sensitive_facility: true}'

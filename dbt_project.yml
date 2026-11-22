@@ -23,6 +23,11 @@ flags:
       - DeprecationsSummary
 
 vars:
+  # Opt-in for the sensitive models: the sensitive_facilities base, intermediate/sensitive,
+  # datasets/sensitive, reports/sql/sensitive and the unit and data tests on them. Off by
+  # default, so a deployment builds only the standard models unless it sets this to true.
+  # This repo's CI and `make check` pass --vars '{has_sensitive_facility: true}' so the
+  # sensitive side is always tested here.
   has_sensitive_facility: false
   # reference_data id of the deployment's home country. Used by the
   # upcoming-vaccinations report's "Exclude overseas patients" parameter
@@ -90,6 +95,8 @@ models:
       +materialized: view
       +tags:
         - base
+      sensitive_facilities:
+        +enabled: "{{ var('has_sensitive_facility', false) }}"
     intermediate:
       +materialized: ephemeral
       # generate_reporting_schema_script() creates no `reporting` view for an
@@ -98,6 +105,7 @@ models:
       # cannot expose episode-grain rows to `tamanu_reporting` on every deployment.
       # It is the same mechanism datasets/sensitive and reports/sql/sensitive use below.
       sensitive:
+        +enabled: "{{ var('has_sensitive_facility', false) }}"
         +tags:
           - restricted
     ref:
@@ -159,6 +167,7 @@ models:
       +tags:
         - datasets
       sensitive:
+        +enabled: "{{ var('has_sensitive_facility', false) }}"
         +tags:
           - restricted
     reports:
@@ -173,6 +182,8 @@ models:
         - reports
       sql:
         sensitive:
+          # repeats the reports-level analytics condition, which this setting replaces
+          +enabled: "{{ var('has_sensitive_facility', false) and not target.name.startswith('analytics') }}"
           +tags:
             - restricted
 

@@ -4,8 +4,7 @@
     config(
         materialized='incremental' if target.name.startswith('analytics') else 'view',
         incremental_strategy='delete+insert',
-        unique_key='appointment_id',
-        enabled=(var('has_sensitive_facility', false) if is_sensitive else true)
+        unique_key='appointment_id'
     )
 }}
 

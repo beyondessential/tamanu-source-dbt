@@ -31,6 +31,10 @@ processes = -1
 [sqlfluff:templater:dbt]
 project_dir = ./
 
+# Passed to dbt as vars. Enables the opt-in sensitive models so they are linted here too.
+[sqlfluff:templater:dbt:context]
+has_sensitive_facility = True
+
 [sqlfluff:templater:jinja]
 apply_dbt_builtins = True
 

@@ -67,6 +67,21 @@ accepts the top-level spelling without a deprecation, so `dbt parse` cannot catc
 `scripts/tests/test_property_layout.py` does, in CI. The manifest is the same either way, so the
 data platform and tupaia-data-product, which read `node.meta` and `column.meta`, are unaffected.
 
+## Standard and sensitive models
+
+A facility is sensitive when it belongs to a sensitive network. The split sits in the bases:
+`facilities` holds standard facilities only and `sensitive_facilities` the sensitive ones. A
+shared macro takes `is_sensitive` and reads `ref('sensitive_facilities' if is_sensitive else
+'facilities')`. It never filters on `sensitive_network_id` itself.
+
+Sensitive models are opt-in. `sensitive_facilities`, `intermediate/sensitive/`,
+`datasets/sensitive/` and `reports/sql/sensitive/` are enabled only when
+`has_sensitive_facility` is true, and dbt disables the unit tests on them with them. A deployment
+sets the var in its own `dbt_project.yml` to build them. This repo always tests them: CI, `make
+check` and `.sqlfluff` pass `has_sensitive_facility: true`, and CI also parses with the default
+to catch a standard model that refs a sensitive one. A data test that reads a sensitive model
+wraps that `ref()` in `{% if var('has_sensitive_facility', false) %}`.
+
 ## Base model conventions
 
 - All base model `.yml` files require a domain-specific `config.tags` — use the tag that matches the entity type: `clinical` (clinical entities), `reference` (reference/lookup data), `log` (change log models), `administration` (admin entities), `patient` (patient-specific models)

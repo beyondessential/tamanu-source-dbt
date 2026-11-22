@@ -1,15 +1,25 @@
 {#
-    Two-way check of a crosswalk column of Tamanu facility ids against the facilities base model.
-    Each returned row is a mismatch: a facility absent from the crosswalk, or a crosswalk entry
-    that is not a facility. Historical facilities are checked like any other.
+    Two-way check of a crosswalk column of Tamanu facility ids against the facility bases. Each
+    returned row is a mismatch: a facility absent from the crosswalk, or a crosswalk entry that is
+    not a facility. Historical facilities are checked like any other.
+    Where the deployment sets has_sensitive_facility, the check covers `facilities` and
+    `sensitive_facilities` together, so every facility must be in the crosswalk. Otherwise
+    `sensitive_facilities` is disabled and the check covers standard facilities only, so a
+    crosswalk entry for a sensitive facility is reported as not a standard facility.
     `unmapped_facility_ids` lists Tamanu facilities that are deliberately left out of the
     crosswalk. `ignore_ids` lists placeholder entries that are deliberately not facilities.
     Severity is set where the test is called.
 #}
 {% test facility_crosswalk_coverage(model, column_name, unmapped_facility_ids=[], ignore_ids=[]) %}
+{%- set include_sensitive = var('has_sensitive_facility', false) %}
 with facilities as (
     select id::text as facility_id
     from {{ ref('facilities') }}
+    {%- if include_sensitive %}
+    union all
+    select id::text as facility_id
+    from {{ ref('sensitive_facilities') }}
+    {%- endif %}
 ),
 
 crosswalk as (
@@ -32,7 +42,7 @@ union all
 
 select
     crosswalk.facility_id,
-    'crosswalk entry is not a facility' as problem
+    '{{ "crosswalk entry is not a facility" if include_sensitive else "crosswalk entry is not a standard facility" }}' as problem
 from crosswalk
 left join facilities on facilities.facility_id = crosswalk.facility_id
 where facilities.facility_id is null

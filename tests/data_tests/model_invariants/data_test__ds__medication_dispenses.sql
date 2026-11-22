@@ -1,16 +1,19 @@
--- Cross-model invariants for ds__medication_dispenses and ds__sensitive_medication_dispenses.
--- Returns violating rows (a passing test returns none). Severity is the repo default, warn.
+-- Cross-model invariants for ds__medication_dispenses and, where the deployment opts in with
+-- has_sensitive_facility, ds__sensitive_medication_dispenses. Returns violating rows (a passing
+-- test returns none). Severity is the repo default, warn.
 
 with dispenses as (
     select
         id,
         facility_id
     from {{ ref('ds__medication_dispenses') }}
-    union all
-    select
-        id,
-        facility_id
-    from {{ ref('ds__sensitive_medication_dispenses') }}
+    {%- if var('has_sensitive_facility', false) %}
+        union all
+        select
+            id,
+            facility_id
+        from {{ ref('ds__sensitive_medication_dispenses') }}
+    {%- endif %}
 ),
 
 medication_dispenses as (
