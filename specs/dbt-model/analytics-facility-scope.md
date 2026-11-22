@@ -2,15 +2,16 @@
 
 ## Purpose
 
-The analytics layer (OMOP `clinical__` models, `metric__` models, the OMOP intermediates and the
-care-site lookups) covers standard facilities only. Data recorded at a sensitive facility, one that
-belongs to a sensitive network, does not reach it or the Tupaia data tables and dashboards built on
-it. This matches the standard datasets and reports, which already read the standard-only
-`facilities` base.
+The OMOP layer (`clinical__` models, the OMOP intermediates and the care-site lookups) covers
+every facility, standard and sensitive, so a program model a deployment builds on it sees all of
+its data. A `metric__` model classified `internal` covers standard facilities only, so a general
+Tupaia data table never counts activity at a sensitive facility, one that belongs to a sensitive
+network. A `metric__` model classified `restricted` covers every facility, and its data table names
+its permission group explicitly.
 
-**Who consumes it?** Every `clinical__` and `metric__` model, and the Tupaia data tables and
-dashboards built on them. Each model's own spec keeps its other clauses. This spec owns the rule
-for which facility decides whether a row is in scope.
+**Who consumes it?** Every `clinical__` and package `metric__` model, the deployment models built
+on them, and the Tupaia data tables built on those. Each model's own spec keeps its other clauses.
+This spec owns the rule for which facilities a model covers.
 
 ## Identity
 
@@ -27,54 +28,45 @@ for which facility decides whether a row is in scope.
 
 ## Scope
 
-A row's **deciding facility** is the facility named below for its family. A facility is
-**standard** when it is in the `facilities` base, which holds the facilities that belong to no
-sensitive network (`models/bases/facilities.sql`).
+A facility is **standard** when it is in the `facilities` base, and **sensitive** when it is in
+the `sensitive_facilities` base, which is enabled only where `has_sensitive_facility` is true.
 
-| Family | Models | Deciding facility |
+| Group | Models | Facilities covered |
 |---|---|---|
-| Encounter events | `clinical__visit_occurrence`, the encounter branch of `clinical__condition_occurrence`, `clinical__drug_exposure`, `clinical__measurement`, `clinical__observation`, `clinical__cost`, and the metrics built on them | the encounter's location's facility |
-| Visit segments | `clinical__visit_detail`, `int__emergency_visits`, `int__inpatient_admission`, and the metrics that attribute a row to a segment | the encounter's facility and the segment's location's facility |
-| Own location | `clinical__procedure_occurrence`, `metric__ed_procedure`, `int__vaccine_administration_attributes` | the encounter's facility and the row's own location's facility |
-| Registry | `int__program_enrolments`, `int__registration_status_history`, `clinical__episode`, the registry branch of `clinical__condition_occurrence`, `metric__program_registry_enrolment` | the registering facility |
-| Births | the birth branch of `clinical__measurement`, `metric__birth` | the birth facility |
-| Deaths | `metric__death` | the death record's facility, else the facility of the encounter the patient died in (its BL-004) |
-| Appointments | `metric__appointment` | the appointment's location group's facility |
-| User logins | `metric__user_login` (`active_user`, `user_login`) | the allowed facility on the row |
-| WHO DAK forms | `int__who_dak_anc_submissions`, `int__who_dak_anc_contacts`, `int__who_dak_hiv_form_answers` and their indicators | the form's encounter's location's facility, and a contact location group's facility |
-| Care sites | `ref__care_site`, `ref__care_site_location` | the care site's own facility |
+| OMOP layer | every `clinical__` model, `models/intermediate/omop/`, `ref__care_site`, `ref__care_site_location` | every facility |
+| Internal metrics | each package `metric__` model whose `classification` is `internal`: `appointment`, `billing`, `ed_imaging_request`, `ed_lab_order`, `ed_pharmacy_order`, `ed_procedure`, `emergency_stay`, `emergency_visit`, `encounter`, `encounter_diagnosis`, `imaging_request`, `inpatient_admission`, `inpatient_transfer`, `ipd_diagnosis`, `lab_order`, `medication_administration`, `medication_dispense`, `opd_diagnosis`, `opd_visit_department`, `outpatient_visit`, `pharmacy_order`, `prescription`, `prescription_discontinuation`, `procedure`, `user_login` | standard facilities only |
+| Restricted metrics | each package `metric__` model whose `classification` is `restricted`: `birth`, `death`, `immunisation_dose`, `immunisation_refusal`, `patient_condition`, `program_registry_enrolment`, `who_dak_anc_indicators`, `who_dak_hiv_indicators` | every facility |
+
+A metric implemented in a deployment repo follows its own canonical spec, as `metric__hiv_testing`
+BL-007 and `metric__sti_screening` BL-006 do.
 
 ## Business logic
 
-- **BL-001:** A row whose deciding facility is set but is not a standard facility is excluded.
-- **BL-002:** A row with no deciding facility set is kept.
-- **BL-003:** Where a family names two deciding facilities, a row is excluded when either is set and not standard.
-- **BL-004:** A metric that attributes a row to an encounter or segment covers only the encounters and segments the `clinical__` models keep.
-- **BL-005:** A registry row's currently-at facility reads as null when it is set and not standard.
-- **BL-006:** `ref__care_site` and `ref__care_site_location` hold location, department and facility care sites at standard facilities only.
-- **BL-007:** `clinical__observation_period` spans only the events the other `clinical__` models keep.
-- **BL-008:** `clinical__person`, `ref__location` and `ref__provider` carry no facility and are unchanged.
-- **BL-009:** The analytics layer has no sensitive variant and never reads `sensitive_facilities`, whatever `has_sensitive_facility` is set to.
+- **BL-001:** An internal metric excludes a row whose `facility_id` is set and is not a standard facility.
+- **BL-002:** An internal metric keeps a row whose `facility_id` is null.
+- **BL-003:** The facility BL-001 tests is the `facility_id` the metric emits, as its own spec attributes it.
+- **BL-004:** An internal metric tests standard facilities against the `facilities` base only and never reads `sensitive_facilities`.
+- **BL-005:** A restricted metric covers every facility.
+- **BL-006:** The `clinical__` models and the OMOP intermediates cover every facility.
+- **BL-007:** Where `has_sensitive_facility` is true, `ref__care_site`, `ref__care_site_location` and `int__program_enrolments` read facility names and types from `facilities` and `sensitive_facilities` together, and from `facilities` alone otherwise.
+- **BL-008:** Where `has_sensitive_facility` is true, `ref__care_site` holds a facility care site for every standard and sensitive facility.
+- **BL-009:** A new package `metric__` model takes its facility scope from its `classification`, by BL-001 or BL-005.
 - **BL-010:** The `is_sensitive` flags on surveys and lab test types play no part in this scope.
 
 ## Acceptance criteria
 
-Each is a dbt unit test on the named model, with a fixture holding one row at a standard facility,
-one at a facility absent from the `facilities` stub, and, where the family allows it, one with no
-facility.
+Unit-test fixtures hold one row at a standard facility, one at a facility in the
+`sensitive_facilities` stub and absent from the `facilities` stub, and, where the model allows it,
+one with no facility. CI runs unit tests with `has_sensitive_facility` true.
 
 | ID | Criterion | Implements | Test type |
 |---|---|---|---|
-| AC-001 | `clinical__visit_occurrence` and each encounter-event `clinical__` model drop the event whose encounter is at a non-standard facility | BL-001 | unit test per model |
-| AC-002 | `clinical__visit_detail` drops a segment at a non-standard location, and every segment of an encounter at a non-standard facility | BL-001, BL-003 | unit test |
-| AC-003 | `clinical__procedure_occurrence` drops a procedure whose own location, or whose encounter, is at a non-standard facility | BL-001, BL-003 | unit test |
-| AC-004 | `int__program_enrolments` drops an enrolment registered at a non-standard facility, keeps one with no registering facility, and nulls a non-standard currently-at facility | BL-001, BL-002, BL-005 | unit test |
-| AC-005 | `metric__birth` and `metric__death` drop a birth or death at a non-standard facility and keep one with no facility | BL-001, BL-002 | unit test per model |
-| AC-006 | `metric__appointment` and `metric__user_login` drop the rows at a non-standard facility | BL-001 | unit test per model |
-| AC-007 | `int__who_dak_anc_contacts` and `int__who_dak_hiv_form_answers` drop a form at a non-standard facility and keep one with no facility | BL-001, BL-002 | unit test per model |
-| AC-008 | `ref__care_site` holds no care site at a non-standard facility | BL-006 | unit test |
-| AC-009 | A metric built on a segment carries no row for a segment `clinical__visit_detail` dropped | BL-004 | unit test on `metric__outpatient_visit` |
-| AC-010 | No analytics model depends on `sensitive_facilities` | BL-009 | CI's standard-only parse, where the model is disabled |
+| AC-001 | `metric__encounter`, `metric__emergency_visit` and `metric__user_login` drop the sensitive-facility row and keep the standard and null-facility rows | BL-001, BL-002, BL-003 | unit test per model |
+| AC-002 | No internal metric emits a `facility_id` that is in `sensitive_facilities` | BL-001 | singular data test `model_invariants/data_test__analytics_facility_scope.sql`, gated on `has_sensitive_facility` |
+| AC-003 | `metric__who_dak_hiv_indicators` and `metric__death` keep the sensitive-facility row | BL-005 | unit test per model |
+| AC-004 | `clinical__visit_occurrence` keeps an encounter at a sensitive facility | BL-006 | unit test |
+| AC-005 | `ref__care_site_location` names a location's sensitive facility, and `ref__care_site` holds that facility's care site | BL-007, BL-008 | unit test |
+| AC-006 | With `has_sensitive_facility` false the project parses, and no internal metric depends on `sensitive_facilities` | BL-004, BL-007 | CI's standard-only parse |
 
 ## Superseded clauses
 
@@ -83,34 +75,31 @@ ships with until then.
 
 | Spec | Clause | Change |
 |---|---|---|
-| `metric__emergency_visit.md` | BL-010 | Drop "with no facility sensitivity filter, so standard and sensitive facilities alike are covered", and point at this spec. |
+| `metric__emergency_visit.md` | BL-010 | Replace "with no facility sensitivity filter, so standard and sensitive facilities alike are covered" with standard facilities only, pointing at this spec. |
 | `metric__inpatient_admission.md` | BL-010 | The same. |
 | `metric__inpatient_transfer.md` | BL-010 | The same. |
-| `ref__care_site.md` | BL-003, BL-007 | Care sites at standard facilities only (BL-006), replacing the left join that keeps a care site with no facility name. |
-| `clinical__episode.md` | facility clauses | The registering facility decides scope (Registry). |
-| `metric__death.md` | BL-004 | Deaths at a non-standard facility excluded, matching `ds__deaths` BL-015. |
+| `ref__care_site.md` | BL-003, BL-007 | Facility names and facility care sites come from both bases where `has_sensitive_facility` is true (BL-007, BL-008). |
 
-Every other model in the Scope table gains a line pointing at this spec in its own facility
-clause, in the same PR.
+Every other internal metric's spec gains a line pointing at this spec in the same PR.
 
 ## Lineage
 
 ```
-facilities (standard only) ──┬──► ref__care_site_location ──► ref__care_site
-                             ├──► clinical__visit_occurrence / visit_detail / events ──► metric__*
-                             ├──► int__program_enrolments ──► clinical__episode ──► metric__program_registry_enrolment
-                             └──► int__who_dak_* ──► metric__who_dak_*_indicators
-                                                                     └──► Tupaia data tables
+facilities ─────────────┬──────────────────────────────► internal metric__* (BL-001) ──► general data tables
+sensitive_facilities ───┴─(has_sensitive_facility)─► ref__care_site_location / ref__care_site / int__program_enrolments
+                                                         │
+                                         clinical__* ────┴──► restricted metric__* ──► permissioned data tables
+                                                         └──► deployment program metrics
 ```
 
 ## Open questions
 
 | ID | Question | Owner | Due |
 |---|---|---|---|
-| OQ-001 | Is one shared helper, such as an ephemeral `int__standard_locations` (locations at standard facilities), the right way to apply BL-001 across about 45 models, rather than a join to `facilities` in each? | Maui team | Before the implementation PR |
+| OQ-001 | Should BL-001 be one shared macro applied to each internal metric's final select, and BL-007 one ephemeral model holding both bases, rather than the same SQL repeated in each model? | Maui team | Before the implementation PR |
 
 ## Change log
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-11-22 | Maui team | Initial draft: the analytics layer covers standard facilities only, superseding the "no facility sensitivity filter" clauses. |
+| 2026-11-22 | Maui team | Initial draft: the OMOP layer and restricted metrics cover every facility, and internal metrics cover standard facilities only, superseding the "no facility sensitivity filter" clauses. |
