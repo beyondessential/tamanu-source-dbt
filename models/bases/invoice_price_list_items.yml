@@ -26,3 +26,6 @@ models:
       - name: is_hidden
         data_type: boolean
         description: "{{ doc('invoice_price_list_items__is_hidden') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

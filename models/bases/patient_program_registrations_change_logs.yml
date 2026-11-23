@@ -57,11 +57,19 @@ models:
       - name: deactivated_datetime
         data_type: timestamp
         description: "{{ doc('patient_program_registrations__deactivated_date') }} from history."
+      - name: record_updated_at
+        data_type: timestamp
+        description: "{{ doc('logs__changes__record_updated_at') }}, in the deployment's local time."
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('logs__generic__updated_at_sync_tick') }}"
 unit_tests:
   - name: test_patient_program_registrations_change_logs
     model: patient_program_registrations_change_logs
     description: Test basic functionality of patient_program_registrations_change_logs model
     overrides:
+      macros:
+        is_incremental: false
       vars:
         timezone: UTC
     given:

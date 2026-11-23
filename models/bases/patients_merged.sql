@@ -1,3 +1,7 @@
+{{ incremental_from_table(
+    key='id',
+    table='patients'
+) }}
 select
     id
     {%- set columns = [
@@ -18,7 +22,11 @@ select
             ,
             {{ col.expr }} as {{ col.name }}
         {%- endif -%}
-    {%- endfor %}
+    {%- endfor %},
+    updated_at_sync_tick
 from {{ source('tamanu', 'patients') }}
 where id != '{{ var("test_patient") }}'
     and visibility_status = 'merged'
+    {%- if is_incremental() %}
+    and updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}
