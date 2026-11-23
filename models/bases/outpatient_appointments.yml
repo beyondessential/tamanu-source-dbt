@@ -74,3 +74,6 @@ models:
       - name: cancelled_at_date
         data_type: character(10)
         description: "{{ doc('appointment_schedules__cancelled_at_date') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"
