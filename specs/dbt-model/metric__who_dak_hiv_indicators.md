@@ -202,7 +202,7 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
 - **BL-052:** `who_dak_hiv_art_ltfu` counts a client in the month they become lost to follow-up:
   the day after the last day on ART of an ART period that has ended, or the day after the lapse
   date of a client with no ART supply recorded by it, at the facility of the client's latest record
-  (BL-021).
+  (BL-021), a supply being a record.
 - **BL-053:** `who_dak_hiv_art_reinitiated` counts a client in the month an ART period numbered 2
   or more starts, at the facility of the client's latest record (BL-021). It has no Annex C
   reference.
@@ -249,7 +249,7 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
 | AC-023 | A DSD.3 numerator row exists only where the same client has a denominator row in the same month | BL-014 | unit test `..._dsd_coverage` |
 | AC-024 | An answer fills its element's column through the question map, and a question answered on a survey the map does not list it under is not read | BL-002 | unit test `test_int__who_dak_hiv_form_answers_question_map` |
 | AC-037 | A care visit's HIV.D.DE462 answer fills `art_days_dispensed` as a number, and a follow-up's HIV.H.DE41 answer fills `hiv_treatment_outcome` | BL-047, BL-055 | unit test `test_int__who_dak_hiv_form_answers_question_map` |
-| AC-038 | A client supplied ART is on ART at a month end inside their period and not at the first month end after its last day on ART; they are on ART again once period 2 starts; a recorded death inside a period ends it from that month | BL-026, BL-048 | unit test `test_int__who_dak_hiv_client_month_state_art_supply` |
+| AC-038 | A client supplied ART is on ART at a month end inside their period and not at the first month end after its last day on ART; they are on ART again once period 2 starts; a recorded death inside a period ends it from that month and the client is not then counted lost to follow-up | BL-026, BL-048, BL-057 | unit test `test_int__who_dak_hiv_client_month_state_art_supply` |
 | AC-039 | A client with an ART start date and no supply record is on ART until their lapse date and not after; one whose ART start is after their site's first supply lapses from their own start; one whose site has no supply record and no `art_supply_start_dates` entry never lapses | BL-049–BL-051 | unit tests `test_int__who_dak_hiv_client_month_state_unrecorded_supply`, `test_int__who_dak_hiv_art_lapse` |
 | AC-040 | `who_dak_hiv_art_ltfu` counts a client once, in the month after their period's last day on ART or their lapse date; `who_dak_hiv_art_reinitiated` counts them in the month period 2 starts and never for period 1; neither adds an ART.4 row | BL-052–BL-054 | unit test `test_metric__who_dak_hiv_indicators_ltfu_reinitiation` |
 | AC-041 | A client recorded `Transferred out` is not on ART from that month end and is not counted lost to follow-up when their supply lapses; a later ART period puts them back on ART; a recorded `Lost to follow-up` outcome changes nothing | BL-055–BL-057 | unit test `test_int__who_dak_hiv_client_month_state_transferred_out` |

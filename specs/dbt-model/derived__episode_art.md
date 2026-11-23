@@ -109,8 +109,8 @@ drug exposures carry as `drug_source_value`) and `medication_name`.
 - **BL-014:** A period numbered 2 or more is a re-initiation, dated at its start, and a client's
   first period never is.
 - **BL-015:** The 90 days in BL-010 and BL-011 are the `art_ltfu_days` var.
-- **BL-016:** A period's parent is the client's enrolment in `clinical__episode` in the registry the
-  `art_episode_registry_id` var names, which defaults to the DAK HIV registry
+- **BL-016:** A period's parent is the client's earliest enrolment in `clinical__episode` in the
+  registry the `art_episode_registry_id` var names, which defaults to the DAK HIV registry
   (`programRegistry-who-dak-hiv`).
 
 ## Acceptance criteria
