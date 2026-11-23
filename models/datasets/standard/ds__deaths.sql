@@ -36,6 +36,22 @@ encounters_with_death as (
         on p.id = e.patient_id
         and p.date_of_death between e.start_datetime and e.end_datetime
     order by e.patient_id asc, e.end_datetime desc, e.start_datetime desc, e.id asc
+),
+
+-- BL-015 (see specs/reports/deceased-patients-line-list.md): a death is listed at a standard
+-- or a sensitive facility, where the deployment has sensitive facilities
+all_facilities as (
+    select
+        f.id,
+        f.name
+    from {{ ref("facilities") }} f
+    {%- if var('has_sensitive_facility', false) %}
+        union all
+        select
+            sf.id,
+            sf.name
+        from {{ ref("sensitive_facilities") }} sf
+    {%- endif %}
 )
 
 select
@@ -156,7 +172,7 @@ left join {{ ref("locations") }} location
 -- BL-012 (see specs/reports/deceased-patients-line-list.md): the death record's facility,
 -- falling back to the facility of the encounter the patient died in unless the record says
 -- the death was outside a health facility. metric__death resolves the facility the same way.
-left join {{ ref("facilities") }} facility
+left join all_facilities facility
     on facility.id = coalesce(
         pdd.facility_id,
         case when pdd.was_outside_health_facility is not true then location.facility_id end
@@ -166,11 +182,3 @@ left join {{ ref("location_groups") }} location_group
 left join {{ ref("users") }} clinician
     on clinician.id = pdd.recorded_by_id
 where p.date_of_death is not null
-    -- BL-015: standard facilities only: drop a row whose facility is set but is not in `facilities`
-    and (
-        coalesce(
-            pdd.facility_id,
-            case when pdd.was_outside_health_facility is not true then location.facility_id end
-        ) is null
-        or facility.id is not null
-    )

@@ -11,7 +11,10 @@ unit_tests:
       death closed both of p7's open encounters at the time of death -- a stale clinic visit
       (e7a) and a later admission (e7b) -- so the later-started e7b is matched, giving fac9,
       Medical and Ward 1. BL-015, AC-007: p8's death record names facSen, a sensitive facility
-      and so absent from the `facilities` stub, and p8 has no row.
+      in the `sensitive_facilities` stub, and p8 is listed with that facility's name. Enabled
+      with `has_sensitive_facility`, as CI runs it, because it mocks `sensitive_facilities`.
+    config:
+      enabled: "{{ var('has_sensitive_facility', false) }}"
     given:
       - input: ref('patients')
         format: sql
@@ -104,6 +107,11 @@ unit_tests:
           union all
           select 'fac9', 'Facility 9'
 
+      - input: ref('sensitive_facilities')
+        format: sql
+        rows: |
+          select 'facSen' as id, 'Sensitive Facility' as name
+
       - input: ref('departments')
         format: sql
         rows: |
@@ -143,3 +151,4 @@ unit_tests:
         - {patient_id: p3, facility_id: facC, place_of_death: Facility C, department: General OPD, location: Clinic room}
         - {patient_id: p5, facility_id: null, place_of_death: null, department: null, location: null}
         - {patient_id: p7, facility_id: fac9, place_of_death: Facility 9, department: Medical, location: Ward 1}
+        - {patient_id: p8, facility_id: facSen, place_of_death: Sensitive Facility, department: null, location: null}
