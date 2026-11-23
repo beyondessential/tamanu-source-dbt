@@ -5,6 +5,9 @@ unit_tests:
       `facilities` holds standard facilities only: a facility in a sensitive network is absent,
       and so is a soft-deleted one. Every standard dataset and report reads this model, so this
       is where the standard side of the sensitivity partition is asserted.
+    overrides:
+      macros:
+        is_incremental: false
     given: &facility_source
       - input: source('tamanu', 'facilities')
         format: sql
@@ -13,16 +16,17 @@ unit_tests:
                  null::text as division, null::text as type, null::text as email,
                  null::text as contact_number, null::text as city_town, null::text as street_address,
                  null::text as catchment_id, 'current'::text as visibility_status,
-                 null::text as sensitive_network_id, null::timestamptz as deleted_at
+                 null::text as sensitive_network_id, null::timestamptz as deleted_at,
+                 1::bigint as updated_at_sync_tick
           union all
           select 'fac_sen', 'SEN', 'Sensitive Hospital', null, null, null, null, null, null, null,
-                 'current', 'sn_001', null::timestamptz
+                 'current', 'sn_001', null::timestamptz, 1
           union all
           select 'fac_std_deleted', 'DEL', 'Closed Hospital', null, null, null, null, null, null, null,
-                 'current', null, '2024-01-01 00:00:00+00'::timestamptz
+                 'current', null, '2024-01-01 00:00:00+00'::timestamptz, 1
           union all
           select 'fac_sen_deleted', 'SDEL', 'Closed Sensitive Hospital', null, null, null, null, null,
-                 null, null, 'current', 'sn_001', '2024-01-01 00:00:00+00'::timestamptz
+                 null, null, 'current', 'sn_001', '2024-01-01 00:00:00+00'::timestamptz, 1
     expect:
       rows:
         - {id: fac_std}
@@ -33,6 +37,9 @@ unit_tests:
       The other half of the partition, on the same fixture: `sensitive_facilities` holds the
       sensitive facility and nothing else. Together the two show every live facility reaches
       exactly one of the two bases.
+    overrides:
+      macros:
+        is_incremental: false
     given: *facility_source
     expect:
       rows:

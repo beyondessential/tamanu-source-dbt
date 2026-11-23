@@ -17,3 +17,6 @@ models:
         description: "{{ doc('lab_test_panel_lab_test_types__lab_test_panel_id') }}"
       - name: lab_test_type_id
         description: "{{ doc('lab_test_panel_lab_test_types__lab_test_type_id') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

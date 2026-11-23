@@ -10,6 +10,9 @@ models:
         pii: true
         classification: restricted
     columns:
+      - name: id
+        data_type: character varying(255)
+        description: "{{ doc('generic__id') }} in patient_field_values."
       - name: value
         data_type: text
         description: "{{ doc('patient_field_values__value') }}"
@@ -19,3 +22,6 @@ models:
       - name: patient_id
         data_type: character varying(255)
         description: "{{ doc('patient_field_values__patient_id') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

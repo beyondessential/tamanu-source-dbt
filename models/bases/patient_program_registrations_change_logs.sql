@@ -1,10 +1,19 @@
+{{ incremental_from_logs(
+    key='id',
+    table='patient_program_registrations'
+) }}
 with filtered_changes as (
+    -- noqa: disable=LT01,LT02
     {{ base_history_from_log('patient_program_registrations') }}
         and (
             version = 'unknown'
             or string_to_array(version, '.')::int[] >= string_to_array('2.33.0', '.')::int[]
         )
         and record_data ->> 'patient_id' != '{{ var("test_patient") }}'
+        {%- if is_incremental() %}
+        and record_id in ({{ changed_since_last_run('patient_program_registrations') }})
+        {%- endif %}
+    -- noqa: enable=LT01,LT02
 )
 
 select
@@ -26,5 +35,6 @@ select
     fc.record_data ->> 'deactivated_clinician_id' as deactivated_by_id,
     (fc.record_data ->> 'deactivated_date')::timestamp as deactivated_datetime,
     fc.record_updated_at at time zone '{{ var("timezone") }}' as record_updated_at,
-    fc.record_updated_at at time zone 'UTC' as record_updated_at_utc
+    fc.record_updated_at at time zone 'UTC' as record_updated_at_utc,
+    fc.updated_at_sync_tick
 from filtered_changes fc
