@@ -81,6 +81,16 @@
 
 -- The highest tick already loaded, -1 when empty. Compare with >= not >: rows from one sync
 -- session share a tick, and rereading it is harmless.
+-- Looked up when the model is rendered and written into the SQL as a number. Left as a subquery,
+-- the planner cannot tell how few rows pass the tick filter, and it reads the whole history of
+-- the table to find a handful of changed records. The subquery stays as the fallback for when
+-- nothing can be queried: at parse time, or before the model's table exists.
 {% macro last_sync_tick() -%}
-    (select coalesce(max(updated_at_sync_tick), -1) from {{ this }})
+    {%- set subquery = '(select coalesce(max(updated_at_sync_tick), -1) from ' ~ this ~ ')' -%}
+    {%- set loaded = adapter.get_relation(this.database, this.schema, this.identifier) if execute else none -%}
+    {%- if loaded is not none -%}
+        {{- run_query('select ' ~ subquery).columns[0].values()[0] -}}
+    {%- else -%}
+        {{- subquery -}}
+    {%- endif -%}
 {%- endmacro %}
