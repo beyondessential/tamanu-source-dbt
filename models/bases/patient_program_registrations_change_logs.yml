@@ -58,6 +58,9 @@ models:
       - name: deactivated_datetime
         data_type: timestamp
         description: "{{ doc('patient_program_registrations__deactivated_date') }} from history."
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('logs__generic__updated_at_sync_tick') }}"
 unit_tests:
   - name: test_patient_program_registrations_change_logs
     model: patient_program_registrations_change_logs
@@ -65,6 +68,8 @@ unit_tests:
     overrides:
       vars:
         timezone: UTC
+      macros:
+        is_incremental: false
     given:
       - input: source('logs__tamanu', 'changes')
         format: csv

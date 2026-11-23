@@ -1,3 +1,7 @@
+{{ incremental_from_table(
+    key='patient_id',
+    table='patient_additional_data'
+) }}
 select
     patient_id
     {%- set columns = [
@@ -43,7 +47,11 @@ select
             ,
             {{ col.expr }} as {{ col.name }}
         {%- endif -%}
-    {%- endfor %}
+    {%- endfor %},
+    updated_at_sync_tick
 from {{ source('tamanu', 'patient_additional_data') }}
 where deleted_at is null
     and id != '{{ var("test_patient") }}'
+    {%- if is_incremental() %}
+    and updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

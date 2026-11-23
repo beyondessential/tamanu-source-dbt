@@ -1,3 +1,7 @@
+{{ incremental_from_logs(
+    key='discharge_id',
+    table='discharges'
+) }}
 -- Base model for discharge change logs
 -- Extracts discharge record changes from logs.changes
 -- Each row represents a change event on a discharge record, ordered by change_sequence
@@ -14,7 +18,8 @@ select
     row_number() over (
         partition by c.record_id
         order by c.logged_at, c.record_updated_at, c.id
-    ) as change_sequence
+    ) as change_sequence,
+    c.updated_at_sync_tick
 from {{ source('logs__tamanu', 'changes') }} c
 join {{ source('tamanu', 'discharges') }} d
     on d.id = c.record_id
@@ -26,3 +31,6 @@ join {{ source('tamanu', 'encounters') }} e
 where
     c.table_name = 'discharges'
     and c.record_deleted_at is null
+    {%- if is_incremental() %}
+    and c.record_id in ({{ changed_since_last_run('discharges') }})
+    {%- endif %}

@@ -3,6 +3,9 @@ version: 2
 unit_tests:
   - name: test_invoices_change_logs_window_functions
     model: invoices_change_logs
+    overrides:
+      macros:
+        is_incremental: false
     description: >
       Verifies that previous_status (LAG) and change_sequence (ROW_NUMBER) are
       computed correctly across two change events for the same invoice, and that
