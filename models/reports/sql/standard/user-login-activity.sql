@@ -25,13 +25,29 @@ user_designations_agg as (
     group by ud.user_id
 ),
 
+-- BL-010: a user's facilities are named from the standard base and, where the deployment has
+-- sensitive facilities, the sensitive base too
+all_facilities as (
+    select
+        f.id,
+        f.name
+    from {{ ref('facilities') }} f
+    {%- if var('has_sensitive_facility', false) %}
+        union all
+        select
+            sf.id,
+            sf.name
+        from {{ ref('sensitive_facilities') }} sf
+    {%- endif %}
+),
+
 user_facilities_agg as (
     select
         uf.user_id,
         string_agg(distinct f.name, ', ' order by f.name) as facilities,
         array_agg(distinct uf.facility_id) as facility_ids
     from {{ ref('user_facilities') }} uf
-    inner join {{ ref('facilities') }} f on f.id = uf.facility_id
+    inner join all_facilities f on f.id = uf.facility_id
     group by uf.user_id
 ),
 
