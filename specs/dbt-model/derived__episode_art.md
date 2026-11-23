@@ -90,8 +90,8 @@ drug exposures carry as `drug_source_value`) and `medication_name`.
   date.
 - **BL-004:** A form answer supplies `art_days_dispensed` days, dated on its submission's date.
 - **BL-005:** A supply of fewer than 1 day or more than 366 days is not a supply record.
-- **BL-006:** A client's supply records on the same day are one supply day, covering the largest
-  of their days.
+- **BL-006:** A client's supply records on the same day are one supply day covering the largest of their
+  days, at the facility of the largest drug exposure record that has one, else of the largest form record.
 - **BL-007:** Supply is read only for clients the WHO HIV indicators treat as living with HIV
   (`metric__who_dak_hiv_indicators` BL-008).
 

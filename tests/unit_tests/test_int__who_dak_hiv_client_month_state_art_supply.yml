@@ -9,7 +9,8 @@ unit_tests:
       
       pat_s has a first period from 2026-01-15 to 2026-04-30, so they are on ART at the January to April
       month ends, lost to follow-up in May and off ART in May and June. Their second period starts on
-      2026-07-10, so they are on ART in July and August and re-initiated in July. pat_d is on ART in an open
+      2026-07-10, so they are on ART in July and August and re-initiated in July, and that supply names no
+      facility, so it does not blank the facility their forms and first supply name. pat_d is on ART in an open
       period but their stop is dated 2026-03-20, so they are on ART in January and February only, and are
       never lost to follow-up. pat_r is in an open period with a stop dated 2026-03-01, so they are off ART
       in March, but their forms record a new ART start on 2026-04-01, which supersedes the stop: they are on
@@ -56,7 +57,7 @@ unit_tests:
         rows: |
           select 'pat_s' as subject_id, '2026-01-15'::date as supply_date, 90 as supply_days, 'fac_s' as facility_id
           union all
-          select 'pat_s', '2026-07-10'::date, 90, 'fac_s'
+          select 'pat_s', '2026-07-10'::date, 90, null::text
           union all
           select 'pat_d', '2026-01-15'::date, 90, 'fac_s'
           union all

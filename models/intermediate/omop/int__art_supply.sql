@@ -83,12 +83,12 @@ supply as (
 
 -- BL-005: a supply of under a day or over 366 days is not a supply record. BL-006: a client's
 -- records on one day are one supply day covering the largest of their days, at the facility of
--- the largest record that has one. BL-007: only for clients living with HIV
+-- the largest drug exposure record that has one, else of the largest form record. BL-007: only for clients living with HIV
 select
     s.subject_id,
     s.supply_date,
     max(s.supply_days)::int as supply_days,
-    (array_agg(s.facility_id order by s.facility_id is null, s.supply_days desc))[1] as facility_id,
+    (array_agg(s.facility_id order by s.facility_id is null, s.has_drug_exposure desc, s.supply_days desc))[1] as facility_id,
     bool_or(s.has_drug_exposure) as has_drug_exposure
 from supply s
 join plhiv on plhiv.patient_id = s.subject_id

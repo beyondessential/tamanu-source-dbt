@@ -8,8 +8,10 @@ unit_tests:
       form's facility. Two records on one day are one supply day covering the larger, a quantity of
       0 or of 400 days is not a supply, and a client with no HIV-positive evidence has no supply.
 
-      pat_a has a 90 and a 30 day dispense on the same day at a facility, an unmapped dispense, a
-      prescription and a form answer of 30 days. pat_b has a dispense of 0 days, one of 400 days and
+      pat_a has a 90 and a 30 day dispense on the same day at a facility, a form answer of 100 days
+      the same day at another facility, an unmapped dispense, a prescription and a form answer of 30
+      days on a later day. The day's supply is the 100 days, at the dispensing facility, so a form
+      record never credits its facility with a supply made in Tamanu. pat_b has a dispense of 0 days, one of 400 days and
       a form answer of 400 days, so none of it is supply. pat_c has a dispense but nothing that makes
       them a client living with HIV.
     given:
@@ -51,10 +53,12 @@ unit_tests:
           select 'r1' as response_id, 'pat_a' as patient_id, 'fac_form' as facility_id, 'carevisit' as survey_code, '2026-04-01 09:00:00'::timestamp as submitted_datetime, null::text as hiv_status, null::text as hiv_test_result, 30::numeric as art_days_dispensed
           union all
           select 'r2', 'pat_b', 'fac_form', 'carevisit', '2026-04-02 09:00:00'::timestamp, null::text, null::text, 400::numeric
+          union all
+          select 'r3', 'pat_a', 'fac_form', 'carevisit', '2026-01-10 14:00:00'::timestamp, null::text, null::text, 100::numeric
 
     expect:
       format: sql
       rows: |
-        select 'pat_a' as subject_id, '2026-01-10'::date as supply_date, 90 as supply_days, 'fac_1' as facility_id, true as has_drug_exposure
+        select 'pat_a' as subject_id, '2026-01-10'::date as supply_date, 100 as supply_days, 'fac_1' as facility_id, true as has_drug_exposure
         union all
         select 'pat_a', '2026-04-01'::date, 30, 'fac_form', false

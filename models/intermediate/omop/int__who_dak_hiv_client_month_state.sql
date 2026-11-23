@@ -136,7 +136,8 @@ months as (
     where first_month <= last_month
 ),
 
--- a client's latest ART supply in each month, which is all the state needs of it
+-- a client's latest ART supply in each month, which is all the state needs of it. A supply with no
+-- facility is left out: it would blank the facility of a client whose forms name one (BL-021)
 monthly_supply as (
     select distinct on (subject_id, date_trunc('month', supply_date))
         subject_id,
@@ -144,6 +145,7 @@ monthly_supply as (
         supply_days,
         facility_id
     from supply
+    where facility_id is not null
     order by subject_id asc, date_trunc('month', supply_date) asc, supply_date desc
 ),
 
