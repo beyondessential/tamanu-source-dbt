@@ -48,7 +48,7 @@ exposure_supply as (
     select
         de.person_id::varchar as subject_id,
         de.drug_exposure_start_date as supply_date,
-        floor(de.quantity)::int as supply_days,
+        floor(de.quantity) as supply_days,
         s.facility_id::varchar as facility_id,
         true as has_drug_exposure
     from drug_exposures de
@@ -67,7 +67,7 @@ form_supply as (
     select
         a.patient_id::varchar as subject_id,
         a.submitted_datetime::date as supply_date,
-        floor(a.art_days_dispensed)::int as supply_days,
+        floor(a.art_days_dispensed) as supply_days,
         a.facility_id::varchar as facility_id,
         false as has_drug_exposure
     from answers a
@@ -87,7 +87,7 @@ supply as (
 select
     s.subject_id,
     s.supply_date,
-    max(s.supply_days) as supply_days,
+    max(s.supply_days)::int as supply_days,
     (array_agg(s.facility_id order by s.facility_id is null, s.supply_days desc))[1] as facility_id,
     bool_or(s.has_drug_exposure) as has_drug_exposure
 from supply s

@@ -4,18 +4,20 @@ unit_tests:
     description: >
       BL-050, BL-051. A client's lapse date is the later of their site's first ART supply in Tamanu
       and their ART start date, plus the 90 days a held supply lasts and the 90 days of the lost to
-      follow-up allowance. A site's first supply is its earliest drug exposure supply, else the date
-      the art_supply_start_dates var gives it, and a site with neither gives its clients no lapse
+      follow-up allowance. A site's first supply is the date the art_supply_start_dates var gives it,
+      else its earliest drug exposure supply, and a site with neither gives its clients no lapse
       date. A client's site is the facility of the latest submission that recorded their ART start.
 
       fac_a has dispensed ART since 2026-01-01. fac_b has only a form-recorded supply, which does not
       show the site recording ART in Tamanu, so pat_nosite has no lapse date. fac_cfg is given
-      2026-02-01 by the var. pat_two recorded an ART start at fac_a and later another at fac_cfg,
+      2026-02-01 by the var. fac_both is given 2026-03-01 by the var but has a stray supply record
+      on 2025-12-01, and the var wins. pat_two recorded an ART start at fac_a and later another at fac_cfg,
       so the later one decides their site.
     overrides:
       vars:
         art_supply_start_dates:
           fac_cfg: '2026-02-01'
+          fac_both: '2026-03-01'
     given:
       - input: ref('int__who_dak_hiv_form_answers')
         format: sql
@@ -33,6 +35,8 @@ unit_tests:
           select 'r6', 'pat_two', 'fac_cfg', '2026-02-01 09:00:00'::timestamp, '2026-02-10'::date
           union all
           select 'r7', 'pat_noart', 'fac_a', '2026-01-10 09:00:00'::timestamp, null::date
+          union all
+          select 'r8', 'pat_both', 'fac_both', '2026-01-10 09:00:00'::timestamp, '2025-11-01'::date
 
       - input: ref('int__art_supply')
         format: sql
@@ -42,11 +46,15 @@ unit_tests:
           select 'pat_y', '2026-02-15'::date, 'fac_a', true
           union all
           select 'pat_z', '2025-06-01'::date, 'fac_b', false
+          union all
+          select 'pat_w', '2025-12-01'::date, 'fac_both', true
 
     expect:
       format: sql
       rows: |
-        select 'pat_cfg' as patient_id, 'fac_cfg' as site_facility_id, '2025-12-01'::date as art_start_date, '2026-07-31'::date as lapse_date
+        select 'pat_both' as patient_id, 'fac_both' as site_facility_id, '2025-11-01'::date as art_start_date, '2026-08-28'::date as lapse_date
+        union all
+        select 'pat_cfg', 'fac_cfg', '2025-12-01'::date, '2026-07-31'::date
         union all
         select 'pat_early', 'fac_a', '2025-11-01'::date, '2026-06-30'::date
         union all

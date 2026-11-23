@@ -64,15 +64,16 @@ configured_starts as (
 )
 
 -- BL-050: the later of the site's first supply and the client's ART start, plus the days a held
--- supply lasts and the lost to follow-up allowance. A site with neither date has no lapse date
+-- supply lasts and the lost to follow-up allowance. BL-051: the date the deployment gives a site
+-- is the one used, else its first supply, and a site with neither has no lapse date
 select
     ss.patient_id,
     ss.site_facility_id,
     ss.art_start_date,
-    greatest(coalesce(sfs.first_supply_date, cs.start_date), ss.art_start_date)
+    greatest(coalesce(cs.start_date, sfs.first_supply_date), ss.art_start_date)
     + {{ var('art_unrecorded_supply_days') }}
     + {{ var('art_ltfu_days') }} as lapse_date
 from start_submissions ss
 left join site_first_supply sfs on sfs.facility_id = ss.site_facility_id
 left join configured_starts cs on cs.facility_id = ss.site_facility_id
-where coalesce(sfs.first_supply_date, cs.start_date) is not null
+where coalesce(cs.start_date, sfs.first_supply_date) is not null

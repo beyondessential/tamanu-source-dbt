@@ -314,7 +314,8 @@ select
     c.facility_id,
 
     -- BL-048: a client supplied ART by the month end is on ART when a period on ART covers it,
-    -- unless a recorded stop dated after the period began ends it (BL-026). BL-049: a client with
+    -- unless a recorded stop dated after the period began, and after any ART start the forms
+    -- record, ends it (BL-026). BL-049: a client with
     -- no supply recorded keeps the state their forms give them until their lapse date.
     -- BL-056: a client recorded as transferred out is not on ART
     (
@@ -326,6 +327,7 @@ select
                         p.art_stopped_date is not null
                         and p.art_stopped_date > p.period_start_date
                         and p.art_stopped_date <= p.month_end
+                        and (p.art_start_date is null or p.art_stopped_date > p.art_start_date)
                     )
             else p.on_art_by_form and (p.lapse_date is null or p.month_end <= p.lapse_date)
         end

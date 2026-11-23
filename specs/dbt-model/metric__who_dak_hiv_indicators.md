@@ -188,16 +188,16 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
   reads as a supply record.
 - **BL-048:** A client with an ART supply record on or before a month end is on ART at that month
   end when one of their `derived__episode_art` periods has started by then and has not passed its
-  last day on ART, unless a recorded ART stop dated after that period's start and on or before the
-  month end ends it.
+  last day on ART, unless a recorded ART stop dated after that period's start and after any ART
+  start date, and on or before the month end, ends it.
 - **BL-049:** A client with no ART supply record by a month end keeps the state BL-018 and BL-026
   give them until their lapse date, and is not on ART at a month end after it.
 - **BL-050:** A client's lapse date is the later of their site's first ART supply in Tamanu and
   their ART start date, plus the `art_unrecorded_supply_days` var (default 90), plus the
   `art_ltfu_days` var (default 90).
 - **BL-051:** A client's site is the facility of the submission that recorded their ART start, and
-  its first ART supply in Tamanu is the earliest drug-exposure supply record in `int__art_supply` at
-  that facility, else the date the `art_supply_start_dates` var gives for it. A client whose site
+  its first ART supply in Tamanu is the date the `art_supply_start_dates` var gives for it, else the
+  earliest drug-exposure supply record in `int__art_supply` at that facility. A client whose site
   has neither has no lapse date.
 - **BL-052:** `who_dak_hiv_art_ltfu` counts a client in the month they become lost to follow-up:
   the day after the last day on ART of an ART period that has ended, or the day after the lapse
