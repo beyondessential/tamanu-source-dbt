@@ -94,7 +94,7 @@ unit_tests:
         select 'pat_001' as patient_id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 34 as age, 'male' as sex, null::text as village_id, null::text as village, 'fac_001' as facility_id, 'Central Hospital' as facility, null::text as department, null::text as department_id, 'loc_001' as location_id, 'Room 101' as location, null::text as location_group_id, null::text as location_group, null::text as laboratory_id, null::text as laboratory, 'LR001' as request_id, 'Published' as status, 'published' as status_id, '2024-05-15 10:00:00'::timestamp as requested_datetime, null::text as requested_by_id, null::text as requested_by, null::text as requesting_department_id, null::text as requesting_department, null::text as priority_id, null::text as priority, null::text as lab_test_category_id, null::text as lab_test_category, null::text as lab_test_panel, 'Full Blood Count' as tests, null::timestamp as collected_datetime, null::text as collected_by_id, null::text as collected_by, null::text as specimen_type_id, null::text as specimen_type, null::text as site, null::timestamp as completed_datetime, null::text as reason_for_cancellation
 
   - name: test_ds__sensitive_lab_requests_sensitive_facilities
-    model: ds__sensitive_example_lab_requests
+    model: ds__sn_example_lab_requests
     description: >
       The mirror of the standard-dataset test above: the sensitive dataset must include
       the lab request from the sensitive facility (regardless of its test type's own

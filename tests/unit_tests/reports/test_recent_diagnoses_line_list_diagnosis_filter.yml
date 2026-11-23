@@ -42,7 +42,7 @@ unit_tests:
         timezone: UTC
         diagnosisId: dx_002
     given:
-      - input: ref('ds__sensitive_example_diagnoses')
+      - input: ref('ds__sn_example_diagnoses')
         format: sql
         rows: |
           select 'dx_001' as diagnosis_id, 'Malaria' as diagnosis, '2024-01-10 09:00:00'::timestamp as diagnosis_datetime, 'Ana' as first_name, 'Tui' as last_name, 'P001' as display_id, 30::double precision as age, 'female' as sex, '555-0101' as contact_number, 'vil_001' as village_id, 'Apia' as village, 'clin_001' as clinician_id, 'Dr Lee' as clinician, 'ED' as department, 'Confirmed' as certainty, 'Yes' as is_primary, 'fac_001' as facility_id
@@ -88,7 +88,7 @@ unit_tests:
         timezone: UTC
         diagnosisId: [dx_001, dx_002]
     given:
-      - input: ref('ds__sensitive_example_diagnoses')
+      - input: ref('ds__sn_example_diagnoses')
         format: sql
         rows: |
           select 'dx_001' as diagnosis_id, 'Malaria' as diagnosis, '2024-01-10 09:00:00'::timestamp as diagnosis_datetime, 'Ana' as first_name, 'Tui' as last_name, 'P001' as display_id, 30::double precision as age, 'female' as sex, '555-0101' as contact_number, 'vil_001' as village_id, 'Apia' as village, 'clin_001' as clinician_id, 'Dr Lee' as clinician, 'ED' as department, 'Confirmed' as certainty, 'Yes' as is_primary, 'fac_001' as facility_id

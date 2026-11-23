@@ -92,7 +92,7 @@ unit_tests:
         select 'md_moved', 50, '2026-09-05 09:00:00'::timestamp, 'pat_1', 'fac_std', 'General Hospital', 'drug_a', 'DRUG-A', 'Drug A'
 
   - name: test_ds__sensitive_medication_dispenses_dispensed_drug
-    model: ds__sensitive_example_medication_dispenses
+    model: ds__sn_example_medication_dispenses
     description: >
       AC-004: the sensitive variant, built from the same macro, also reports the
       dispensed drug. A modified dispense on an encounter at a sensitive facility must report

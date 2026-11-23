@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- metric__who_dak_anc_indicators -- D5 metric view for the WHO SMART guidelines antenatal care
 -- DAK indicators registered in documentations/metrics/who_dak_anc.yml.
 -- Spec: specs/dbt-model/metric__who_dak_anc_indicators.md (BL-001..BL-013).
@@ -8,7 +9,7 @@
 -- Sources only from clinical__ and int__ (D10).
 
 with contacts as (
-    select * from {{ ref('int__who_dak_anc_contacts') }}
+    select * from {{ partition_ref('int__who_dak_anc_contacts', network) }}
 ),
 
 person as (

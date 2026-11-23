@@ -13,7 +13,7 @@ dbt_packages/
 models/reports/sql/standard/audit-outpatient-appointments.sql
 models/reports/sql/sensitive/sensitive-*-audit-outpatient-appointments.sql
 models/datasets/standard/ds__outpatient_appointments_audit.sql
-models/datasets/sensitive/ds__sensitive_*_outpatient_appointments_audit.sql
+models/datasets/sensitive/ds__sn_*_outpatient_appointments_audit.sql
 
 # The compiled encounter_summary reports exceed sqlfluff's sqlparse token limit
 # (10000) and crash during parsing. The underlying SQL runs fine under dbt;

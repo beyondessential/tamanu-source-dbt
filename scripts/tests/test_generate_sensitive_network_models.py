@@ -76,8 +76,8 @@ def test_network_key_lowercases_and_joins_other_characters():
 
 def test_partition_name_follows_each_layer():
     assert partition_name("encounters", "HIV") == "sn_hiv_encounters"
-    assert partition_name("ds__admissions", "HIV") == "ds__sensitive_hiv_admissions"
-    assert partition_name("clinical__visit_occurrence", "HIV") == "clinical__sensitive_hiv_visit_occurrence"
+    assert partition_name("ds__admissions", "HIV") == "ds__sn_hiv_admissions"
+    assert partition_name("clinical__visit_occurrence", "HIV") == "clinical__sn_hiv_visit_occurrence"
     assert partition_name("admissions-line-list", "Mental Health") == "sensitive-mental-health-admissions-line-list"
 
 
@@ -92,8 +92,8 @@ def test_ac_002_generates_each_partitioned_model_for_each_network(source, tmp_pa
         "bases/sensitive/sn_hiv_encounters.yml",
         "bases/sensitive/sn_mh_encounters.sql",
         "bases/sensitive/sn_mh_encounters.yml",
-        "datasets/sensitive/ds__sensitive_hiv_admissions.sql",
-        "datasets/sensitive/ds__sensitive_mh_admissions.sql",
+        "datasets/sensitive/ds__sn_hiv_admissions.sql",
+        "datasets/sensitive/ds__sn_mh_admissions.sql",
         "reports/config/sensitive/sensitive-hiv-admissions-line-list.json",
         "reports/config/sensitive/sensitive-mh-admissions-line-list.json",
         "reports/sql/sensitive/sensitive-hiv-admissions-line-list.sql",

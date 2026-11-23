@@ -15,8 +15,10 @@
 
 
 -- The name of `model`'s counterpart in a partition. The generator names its files the same way.
+-- A relation takes the short `sn_` token: Postgres allows a name 63 characters, and dbt adds 12
+-- to an ephemeral model's.
 --   encounters                  sn_<key>_encounters
---   ds__admissions              ds__sensitive_<key>_admissions
+--   ds__admissions              ds__sn_<key>_admissions
 --   admissions-line-list        sensitive-<key>-admissions-line-list
 {%- macro partition_name(model, network=none) -%}
     {%- if network is none -%}
@@ -25,11 +27,10 @@
     {%- set key = network_key(network) -%}
     {%- if '__' in model -%}
         {%- set parts = model.split('__', 1) -%}
-        {{- return(parts[0] ~ '__sensitive_' ~ key ~ '_' ~ parts[1]) -}}
+        {{- return(parts[0] ~ '__sn_' ~ key ~ '_' ~ parts[1]) -}}
     {%- elif '-' in model -%}
         {{- return('sensitive-' ~ (key | replace('_', '-')) ~ '-' ~ model) -}}
     {%- else -%}
-        {#- a base: the short prefix keeps the longest base name within Postgres's 63 characters -#}
         {{- return('sn_' ~ key ~ '_' ~ model) -}}
     {%- endif -%}
 {%- endmacro -%}

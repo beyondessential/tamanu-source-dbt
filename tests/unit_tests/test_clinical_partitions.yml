@@ -40,7 +40,7 @@ unit_tests:
         - {visit_occurrence_id: enc_std, care_site_id: loc_std}
 
   - name: ac_006_clinical__visit_occurrence_network_partition
-    model: clinical__sensitive_example_visit_occurrence
+    model: clinical__sn_example_visit_occurrence
     description: >
       BL-015, BL-017: the `example` network's visit occurrence reads that network's encounters
       base and nothing from the standard one, so its visits are that network's.
@@ -101,3 +101,42 @@ unit_tests:
       rows:
         - {care_site_id: fac_std, care_site_type: facility, facility_name: Standard Hospital}
         - {care_site_id: fac_ex, care_site_type: facility, facility_name: Network Clinic}
+
+  - name: ac_009_metric__program_registry_enrolment_network_partition
+    model: metric__sn_example_program_registry_enrolment
+    description: >
+      BL-022, BL-026: the `example` network's enrolment metric counts that network's episodes
+      and emits the same metric_id as the standard metric.
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
+    given:
+      - input: ref('clinical__sn_example_episode')
+        format: sql
+        rows: |
+          select
+              'ep_ex'::text as episode_id,
+              'pat_1'::text as person_id,
+              '2026-01-01'::date as episode_start_date,
+              '2026-01-01 08:00:00'::timestamp as episode_start_datetime,
+              null::timestamp as episode_end_datetime,
+              'hiv'::text as episode_source_value,
+              'HIV register'::text as episode_source_name,
+              null::text as clinical_status_source_value,
+              null::text as clinical_status_source_name,
+              'active'::text as registration_status,
+              null::text as episode_end_source,
+              null::text as currently_at_type,
+              null::text as currently_at_id,
+              'fac_ex'::text as care_site_id
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select
+              'pat_1'::text as person_id,
+              'female'::text as gender_source_value,
+              1990 as year_of_birth,
+              6 as month_of_birth,
+              1 as day_of_birth
+    expect:
+      rows:
+        - {metric_id: program_registry_enrolment, subject_id: ep_ex, facility_id: fac_ex, age_years: 35}

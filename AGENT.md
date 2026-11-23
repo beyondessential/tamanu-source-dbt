@@ -103,7 +103,7 @@ belongs to none. The rules are in `specs/dbt-model/sensitive-facility-partition.
 Macros that wrap a model layer live in `macros/<layer>/`, mirroring `models/<layer>/`:
 
 - `macros/bases/` — utilities used by base models (e.g. `base_history_from_log`, `get_metadata_from_changes`)
-- `macros/datasets/` — `<entity>_dataset(network)` macros materialised by `ds__<entity>` and each sensitive network's `ds__sensitive_<network>_<entity>`
+- `macros/datasets/` — `<entity>_dataset(network)` macros materialised by `ds__<entity>` and each sensitive network's `ds__sn_<network>_<entity>`
 - `macros/intermediate/` — utilities used by models under `models/intermediate/`
 - `macros/reports/` — `<report>_report(...)` macros called by SQL files under `models/reports/sql/{standard,sensitive}/`
 

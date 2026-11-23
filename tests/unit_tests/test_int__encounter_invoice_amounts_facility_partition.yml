@@ -128,7 +128,7 @@ unit_tests:
         - {invoice_id: inv_std, invoice_total: '10.00'}
 
   - name: test_sensitive_invoice_amounts_facility_partition
-    model: int__sensitive_example_encounter_invoice_amounts
+    model: int__sn_example_encounter_invoice_amounts
     description: >
       The sensitive half, on the same invoices: the sensitive model reads `sn_example_facilities`,
       so it returns the sensitive facility's invoice, with its amount, and nothing else.

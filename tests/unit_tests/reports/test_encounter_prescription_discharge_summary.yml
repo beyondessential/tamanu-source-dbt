@@ -67,7 +67,7 @@ unit_tests:
         timezone: UTC
         medicationId: med_002
     given:
-      - input: ref('ds__sensitive_example_encounter_prescriptions')
+      - input: ref('ds__sn_example_encounter_prescriptions')
         format: sql
         rows: |
           select 'rx_001' as prescription_id, 'fac_001' as facility_id, 'med_001' as medication_id, 'Amoxicillin' as medication, 'AMX' as medication_code, 10 as quantity, true as is_selected_for_discharge, '2024-01-05 09:00:00'::timestamp as datetime
@@ -125,7 +125,7 @@ unit_tests:
         timezone: UTC
         medicationId: [med_001, med_002]
     given:
-      - input: ref('ds__sensitive_example_encounter_prescriptions')
+      - input: ref('ds__sn_example_encounter_prescriptions')
         format: sql
         rows: |
           select 'rx_001' as prescription_id, 'fac_001' as facility_id, 'med_001' as medication_id, 'Amoxicillin' as medication, 'AMX' as medication_code, 10 as quantity, true as is_selected_for_discharge, '2024-01-05 09:00:00'::timestamp as datetime

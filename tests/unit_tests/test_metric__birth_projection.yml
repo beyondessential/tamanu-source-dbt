@@ -21,6 +21,8 @@ unit_tests:
       Covers the thresholds against controlled rows, because a deployment database carries no
       guarantee of a birth at each boundary.
 
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     given:
       # b_1: at a facility, all three measures recorded and all three under threshold
       # b_2: no measure under threshold -- birth only. Boundary values: exactly 2.5 kg,
@@ -33,17 +35,40 @@ unit_tests:
       - input: ref('patient_birth_data')
         format: sql
         rows: |
-          select 'b_1' as patient_id, '06:30'::time as birth_time, 34.0::float as gestational_age_estimate, 'midwife' as attendant_at_birth, null::varchar as name_of_attendant_at_birth, 'single' as birth_type, 'normal_vaginal_delivery' as birth_delivery_type, 2.1::numeric as birth_weight, 45.0::numeric as birth_length, 5 as apgar_score_one_minute, 6 as apgar_score_five_minutes, 8 as apgar_score_ten_minutes, 'health_facility' as registered_birth_place, 'fac_1' as birth_facility_id, '2024-05-15'::date as registration_date
-          union all
-          select 'b_2', '11:00'::time, 37.0::float, 'doctor', null::varchar, 'single', 'elective_c_section', 2.5::numeric, 50.0::numeric, 9, 7, 9, 'health_facility', 'fac_1', '2024-05-16'::date
-          union all
-          select 'b_3', '18:45'::time, null::float, 'traditional_birth_attentdant', null::varchar, 'single', 'normal_vaginal_delivery', null::numeric, null::numeric, null::integer, null::integer, null::integer, 'home', null::varchar, '2024-05-17'::date
-          union all
-          select 'b_4', '23:30'::time, 40.0::float, 'nurse', null::varchar, 'plural', 'breech', 3.2::numeric, 51.0::numeric, 9, 9, 9, 'health_facility', 'fac_1', '2024-05-20'::date
-          union all
-          select 'b_5', null::time, 39.0::float, 'doctor', null::varchar, 'single', 'forceps', 3.0::numeric, 49.0::numeric, 9, 9, 9, 'other', 'fac_1', '2024-06-01'::date
-          union all
-          select 'b_6', null::time, 41.0::float, null::varchar, null::varchar, null::varchar, null::varchar, 3.4::numeric, 52.0::numeric, 9, 9, 9, null::varchar, 'fac_retired', '2024-06-02'::date
+          select fx.* from (
+            select 'b_1' as patient_id, '06:30'::time as birth_time, 34.0::float as gestational_age_estimate, 'midwife' as attendant_at_birth, null::varchar as name_of_attendant_at_birth, 'single' as birth_type, 'normal_vaginal_delivery' as birth_delivery_type, 2.1::numeric as birth_weight, 45.0::numeric as birth_length, 5 as apgar_score_one_minute, 6 as apgar_score_five_minutes, 8 as apgar_score_ten_minutes, 'health_facility' as registered_birth_place, 'fac_1' as birth_facility_id, '2024-05-15'::date as registration_date
+            union all
+            select 'b_2', '11:00'::time, 37.0::float, 'doctor', null::varchar, 'single', 'elective_c_section', 2.5::numeric, 50.0::numeric, 9, 7, 9, 'health_facility', 'fac_1', '2024-05-16'::date
+            union all
+            select 'b_3', '18:45'::time, null::float, 'traditional_birth_attentdant', null::varchar, 'single', 'normal_vaginal_delivery', null::numeric, null::numeric, null::integer, null::integer, null::integer, 'home', null::varchar, '2024-05-17'::date
+            union all
+            select 'b_4', '23:30'::time, 40.0::float, 'nurse', null::varchar, 'plural', 'breech', 3.2::numeric, 51.0::numeric, 9, 9, 9, 'health_facility', 'fac_1', '2024-05-20'::date
+            union all
+            select 'b_5', null::time, 39.0::float, 'doctor', null::varchar, 'single', 'forceps', 3.0::numeric, 49.0::numeric, 9, 9, 9, 'other', 'fac_1', '2024-06-01'::date
+            union all
+            select 'b_6', null::time, 41.0::float, null::varchar, null::varchar, null::varchar, null::varchar, 3.4::numeric, 52.0::numeric, 9, 9, 9, null::varchar, 'fac_retired', '2024-06-02'::date
+          ) fx
+          where not (fx.patient_id = 'b_2')
+
+      # AC-008, BL-021 (specs/dbt-model/sensitive-facility-partition.md): b_2's birth record is in
+      # the `example` network's partition, and b_2 is still counted
+      - input: ref('sn_example_patient_birth_data')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'b_1' as patient_id, '06:30'::time as birth_time, 34.0::float as gestational_age_estimate, 'midwife' as attendant_at_birth, null::varchar as name_of_attendant_at_birth, 'single' as birth_type, 'normal_vaginal_delivery' as birth_delivery_type, 2.1::numeric as birth_weight, 45.0::numeric as birth_length, 5 as apgar_score_one_minute, 6 as apgar_score_five_minutes, 8 as apgar_score_ten_minutes, 'health_facility' as registered_birth_place, 'fac_1' as birth_facility_id, '2024-05-15'::date as registration_date
+            union all
+            select 'b_2', '11:00'::time, 37.0::float, 'doctor', null::varchar, 'single', 'elective_c_section', 2.5::numeric, 50.0::numeric, 9, 7, 9, 'health_facility', 'fac_1', '2024-05-16'::date
+            union all
+            select 'b_3', '18:45'::time, null::float, 'traditional_birth_attentdant', null::varchar, 'single', 'normal_vaginal_delivery', null::numeric, null::numeric, null::integer, null::integer, null::integer, 'home', null::varchar, '2024-05-17'::date
+            union all
+            select 'b_4', '23:30'::time, 40.0::float, 'nurse', null::varchar, 'plural', 'breech', 3.2::numeric, 51.0::numeric, 9, 9, 9, 'health_facility', 'fac_1', '2024-05-20'::date
+            union all
+            select 'b_5', null::time, 39.0::float, 'doctor', null::varchar, 'single', 'forceps', 3.0::numeric, 49.0::numeric, 9, 9, 9, 'other', 'fac_1', '2024-06-01'::date
+            union all
+            select 'b_6', null::time, 41.0::float, null::varchar, null::varchar, null::varchar, null::varchar, 3.4::numeric, 52.0::numeric, 9, 9, 9, null::varchar, 'fac_retired', '2024-06-02'::date
+          ) fx
+          where fx.patient_id = 'b_2'
 
       - input: ref('patients')
         format: sql

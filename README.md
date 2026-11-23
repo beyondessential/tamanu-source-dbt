@@ -103,7 +103,7 @@ python dbt_packages/tamanu_source_dbt/scripts/generate_sensitive_network_models.
 ```
 
 Each network gets its own copy of every partitioned dataset and report, named
-`ds__sensitive_<network>_<name>` and `sensitive-<network>-<name>`, holding only that network's
+`ds__sn_<network>_<name>` and `sensitive-<network>-<name>`, holding only that network's
 facilities. A facility in a network the var does not list appears in no model. The generated
 models are tagged `restricted`: they are included when generating reports and the reporting
 schema script only while the var lists a network, and are otherwise left out of both

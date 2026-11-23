@@ -67,7 +67,7 @@ unit_tests:
         rows: |
           select null::text as id, null::text as name where false
 
-      - input: ref('ds__sensitive_example_encounter_invoices')
+      - input: ref('ds__sn_example_encounter_invoices')
         format: sql
         rows: |
           select

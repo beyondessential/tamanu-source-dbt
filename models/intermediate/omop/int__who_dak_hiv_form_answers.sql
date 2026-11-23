@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- int__who_dak_hiv_form_answers -- one row per WHO DAK HIV form submission, with the data
 -- elements the indicator metric reads pivoted into columns (BL-002).
 --
@@ -43,19 +44,19 @@
 } %}
 
 with responses as (
-    select * from {{ ref('survey_responses') }}
+    select * from {{ partition_ref('survey_responses', network) }}
 ),
 
 answers as (
-    select * from {{ ref('survey_response_answers') }}
+    select * from {{ partition_ref('survey_response_answers', network) }}
 ),
 
 encounters as (
-    select * from {{ ref('encounters') }}
+    select * from {{ partition_ref('encounters', network) }}
 ),
 
 locations as (
-    select * from {{ ref('locations') }}
+    select * from {{ partition_ref('locations', network) }}
 ),
 
 surveys as (

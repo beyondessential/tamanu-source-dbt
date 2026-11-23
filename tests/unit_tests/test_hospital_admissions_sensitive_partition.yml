@@ -67,7 +67,7 @@ unit_tests:
           false               as death
 
   - name: test_int__sensitive_admission_history_location_partition
-    model: int__sensitive_example_admission_history_location
+    model: int__sn_example_admission_history_location
     description: >
       The other half of BL-012: the sensitive variant reads `sn_example_facilities`, so it
       carries the sensitive facility's episode and drops the one at a facility absent from that
@@ -190,7 +190,7 @@ unit_tests:
           false               as death
 
   - name: test_int__sensitive_admission_history_department_partition
-    model: int__sensitive_example_admission_history_department
+    model: int__sn_example_admission_history_department
     description: >
       The sensitive half for the department intermediate, reading `sn_example_facilities`.
     overrides:

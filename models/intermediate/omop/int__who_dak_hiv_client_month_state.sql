@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- int__who_dak_hiv_client_month_state -- one row per DAK HIV client per complete reporting
 -- month, carrying the client's last known treatment state as at the end of that month
 -- (BL-018).
@@ -25,7 +26,7 @@
 -- Spec: specs/dbt-model/metric__who_dak_hiv_indicators.md, BL-018..BL-021.
 
 with answers as (
-    select * from {{ ref('int__who_dak_hiv_form_answers') }}
+    select * from {{ partition_ref('int__who_dak_hiv_form_answers', network) }}
 ),
 
 -- BL-020: the reporting spine, first submission month to the last complete month.

@@ -18,8 +18,10 @@
 --
 -- The registry carries the definition; this model is its implementation (BL-001).
 
+-- BL-021 (see specs/dbt-model/sensitive-facility-partition.md): covers every
+-- facility, so each partitioned input is read from every partition
 with patient_birth_data as (
-    select * from {{ ref('patient_birth_data') }}
+    {{ every_partition('patient_birth_data') }}
 ),
 
 patients as (

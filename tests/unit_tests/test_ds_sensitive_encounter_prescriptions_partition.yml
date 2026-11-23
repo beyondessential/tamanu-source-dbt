@@ -1,6 +1,6 @@
 unit_tests:
   - name: test_ds_sensitive_encounter_prescriptions_partition
-    model: ds__sensitive_example_encounter_prescriptions
+    model: ds__sn_example_encounter_prescriptions
     description: >
       BL-009 of specs/reports/encounter-prescription-discharge-summary.md. The sensitive
       dataset, and so the sensitive report, holds only prescriptions on encounters at a

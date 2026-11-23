@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- int__who_dak_anc_contacts -- one row per WHO DAK ANC contact: a woman seen for antenatal care on
 -- a day, with the DAK data elements recorded for her that day.
 -- See specs/dbt-model/metric__who_dak_anc_indicators.md for the BL clauses this model implements.
@@ -37,19 +38,19 @@
 {%- endif %}
 
 with submissions as (
-    select * from {{ ref('int__who_dak_anc_submissions') }}
+    select * from {{ partition_ref('int__who_dak_anc_submissions', network) }}
 ),
 
 locations as (
-    select * from {{ ref('locations') }}
+    select * from {{ partition_ref('locations', network) }}
 ),
 
 location_groups as (
-    select * from {{ ref('location_groups') }}
+    select * from {{ partition_ref('location_groups', network) }}
 ),
 
 encounter_history as (
-    select * from {{ ref('encounter_history') }}
+    select * from {{ partition_ref('encounter_history', network) }}
 ),
 
 -- BL-014: locations in a location group who_dak_anc_contact_location_groups names
@@ -69,7 +70,7 @@ contact_location_encounters as (
     select
         e.id as encounter_id,
         cl.facility_id
-    from {{ ref('encounters') }} e
+    from {{ partition_ref('encounters', network) }} e
     join contact_locations cl on cl.location_id = e.location_id
 
     union
@@ -90,7 +91,7 @@ encounter_contacts as (
         e.start_datetime as source_datetime,
         e.id as source_id
     from contact_location_encounters cle
-    join {{ ref('encounters') }} e on e.id = cle.encounter_id
+    join {{ partition_ref('encounters', network) }} e on e.id = cle.encounter_id
     where e.encounter_type != 'surveyResponse'
 ),
 

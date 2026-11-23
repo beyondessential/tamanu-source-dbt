@@ -22,6 +22,8 @@ unit_tests:
       true and true; d2 answers unknown and d5 leaves both blank, so p2 and p5 read NULL; d7
       answers 'NO', upper case, to was_pregnant and leaves the other blank; p3 has no record, so
       both are NULL.
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     given:
       - input: ref('patients')
         format: sql
@@ -56,17 +58,40 @@ unit_tests:
       - input: ref('patient_death_data')
         format: sql
         rows: |
-          select 'd1a' as id, 'p1' as patient_id, 'current' as visibility_status, false as is_final, 'facA' as facility_id, 'c1' as primary_cause_condition_id, false as was_outside_health_facility, 'Disease' as manner, 'no' as was_pregnant, 'no' as pregnancy_contributed
-          union all
-          select 'd1b', 'p1', 'current', true, 'facB', 'c2', false, 'Disease', 'yes', 'yes'
-          union all
-          select 'd2', 'p2', 'current', true, null::text, null::text, true, null::text, 'unknown', 'unknown'
-          union all
-          select 'd4', 'p4', 'historical', true, 'facA', 'c1', false, 'Disease', 'yes', 'yes'
-          union all
-          select 'd5', 'p5', 'current', true, null::text, 'c1', null::boolean, 'Disease', null::text, null::text
-          union all
-          select 'd7', 'p7', 'current', true, null::text, 'c2', false, 'Disease', 'NO', null::text
+          select fx.* from (
+            select 'd1a' as id, 'p1' as patient_id, 'current' as visibility_status, false as is_final, 'facA' as facility_id, 'c1' as primary_cause_condition_id, false as was_outside_health_facility, 'Disease' as manner, 'no' as was_pregnant, 'no' as pregnancy_contributed
+            union all
+            select 'd1b', 'p1', 'current', true, 'facB', 'c2', false, 'Disease', 'yes', 'yes'
+            union all
+            select 'd2', 'p2', 'current', true, null::text, null::text, true, null::text, 'unknown', 'unknown'
+            union all
+            select 'd4', 'p4', 'historical', true, 'facA', 'c1', false, 'Disease', 'yes', 'yes'
+            union all
+            select 'd5', 'p5', 'current', true, null::text, 'c1', null::boolean, 'Disease', null::text, null::text
+            union all
+            select 'd7', 'p7', 'current', true, null::text, 'c2', false, 'Disease', 'NO', null::text
+          ) fx
+          where not (fx.patient_id = 'p2')
+
+      # AC-008, BL-021 (specs/dbt-model/sensitive-facility-partition.md): p2's death record is in the
+      # `example` network's partition, and p2 is still counted
+      - input: ref('sn_example_patient_death_data')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'd1a' as id, 'p1' as patient_id, 'current' as visibility_status, false as is_final, 'facA' as facility_id, 'c1' as primary_cause_condition_id, false as was_outside_health_facility, 'Disease' as manner, 'no' as was_pregnant, 'no' as pregnancy_contributed
+            union all
+            select 'd1b', 'p1', 'current', true, 'facB', 'c2', false, 'Disease', 'yes', 'yes'
+            union all
+            select 'd2', 'p2', 'current', true, null::text, null::text, true, null::text, 'unknown', 'unknown'
+            union all
+            select 'd4', 'p4', 'historical', true, 'facA', 'c1', false, 'Disease', 'yes', 'yes'
+            union all
+            select 'd5', 'p5', 'current', true, null::text, 'c1', null::boolean, 'Disease', null::text, null::text
+            union all
+            select 'd7', 'p7', 'current', true, null::text, 'c2', false, 'Disease', 'NO', null::text
+          ) fx
+          where fx.patient_id = 'p2'
 
       - input: ref('encounters')
         format: sql
@@ -83,12 +108,40 @@ unit_tests:
           union all
           select 'e7b', 'p7', '2026-03-24 14:00:00'::timestamp, '2026-03-25 10:00:00'::timestamp, 'dept_med', 'loc_ward'
 
+      - input: ref('sn_example_encounters')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'e1' as id, 'p1' as patient_id, '2026-03-04 08:00:00'::timestamp as start_datetime, '2026-03-06 08:00:00'::timestamp as end_datetime, 'dept_med' as department_id, 'loc_ward' as location_id
+            union all
+            select 'e2', 'p2', '2026-02-01 09:00:00'::timestamp, '2026-03-10 10:00:00'::timestamp, 'dept_opd', 'loc_clinic'
+            union all
+            select 'e3', 'p3', '2026-03-12 06:00:00'::timestamp, '2026-03-12 12:00:00'::timestamp, 'dept_opd', 'loc_clinic'
+            union all
+            select 'e5', 'p5', '2026-03-19 08:00:00'::timestamp, null::timestamp, 'dept_med', 'loc_ward'
+            union all
+            select 'e7a', 'p7', '2026-02-01 09:00:00'::timestamp, '2026-03-25 10:00:00'::timestamp, 'dept_opd', 'loc_clinic'
+            union all
+            select 'e7b', 'p7', '2026-03-24 14:00:00'::timestamp, '2026-03-25 10:00:00'::timestamp, 'dept_med', 'loc_ward'
+          ) fx
+          where false
+
       - input: ref('locations')
         format: sql
         rows: |
           select 'loc_ward' as id, 'fac9' as facility_id
           union all
           select 'loc_clinic', 'facC'
+
+      - input: ref('sn_example_locations')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'loc_ward' as id, 'fac9' as facility_id
+            union all
+            select 'loc_clinic', 'facC'
+          ) fx
+          where false
 
       - input: ref('reference_data')
         format: sql
@@ -103,6 +156,16 @@ unit_tests:
           select 'dept_med' as id, 'Medical' as name
           union all
           select 'dept_opd', 'General OPD'
+
+      - input: ref('sn_example_departments')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'dept_med' as id, 'Medical' as name
+            union all
+            select 'dept_opd', 'General OPD'
+          ) fx
+          where false
 
     expect:
       format: sql

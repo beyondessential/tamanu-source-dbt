@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- metric__who_dak_hiv_indicators -- D5 metric view for the WHO SMART guidelines HIV DAK
 -- indicators registered in documentations/metrics/who_dak_hiv.yml.
 -- Spec: specs/dbt-model/metric__who_dak_hiv_indicators.md (BL-001..BL-028).
@@ -29,13 +30,13 @@
 {% endset %}
 
 with answers as (
-    select * from {{ ref('int__who_dak_hiv_form_answers') }}
+    select * from {{ partition_ref('int__who_dak_hiv_form_answers', network) }}
 ),
 
 -- BL-018: the client's last known state at each month end, for the indicators Annex C defines
 -- at a point in time rather than on an event
 client_months as (
-    select * from {{ ref('int__who_dak_hiv_client_month_state') }}
+    select * from {{ partition_ref('int__who_dak_hiv_client_month_state', network) }}
 ),
 
 -- BL-022: one row per client per key population they belong to. A MultiSelect answer, so a
@@ -44,7 +45,7 @@ client_months as (
 -- injects drugs belongs in both of Annex C's disaggregation groups, and adding a column would
 -- make the plain count double them.
 key_populations as (
-    select * from {{ ref('int__who_dak_hiv_key_populations') }}
+    select * from {{ partition_ref('int__who_dak_hiv_key_populations', network) }}
 ),
 
 -- BL-008: every ART and DSD numerator in Annex C is gated on "HIV status"='HIV-positive'.
