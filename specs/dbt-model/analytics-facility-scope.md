@@ -24,7 +24,7 @@ This spec owns the rule for which facilities a model covers.
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-11-22 |
-| **Last updated** | 2026-11-22 |
+| **Last updated** | 2026-11-23 |
 
 ## Scope
 
@@ -78,7 +78,6 @@ ships with until then.
 | `metric__emergency_visit.md` | BL-010 | Replace "with no facility sensitivity filter, so standard and sensitive facilities alike are covered" with standard facilities only, pointing at this spec. |
 | `metric__inpatient_admission.md` | BL-010 | The same. |
 | `metric__inpatient_transfer.md` | BL-010 | The same. |
-| `metric__death.md` | Purpose, Related | Its population matches `ds__deaths` except that a death at a sensitive facility is counted here and left out of `ds__deaths`. |
 | `ref__care_site.md` | BL-003, BL-007 | Facility names and facility care sites come from both bases where `has_sensitive_facility` is true (BL-007, BL-008). |
 
 Every other standard-only metric's spec gains a line pointing at this spec in the same PR.
