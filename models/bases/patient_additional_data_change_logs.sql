@@ -36,10 +36,16 @@
     {'expr': "fc.record_data -> 'updated_at_by_field'", 'name': 'updated_by_field', 'is_direct_identifier': false},
     {'expr': "(fc.record_data ->> 'created_at')::date", 'name': 'registration_date', 'is_direct_identifier': false}
 ] -%}
-
+{{ incremental_from_logs(
+    key='patient_id',
+    table='patient_additional_data'
+) }}
 with filtered_changes as (
     {{ base_history_from_log('patient_additional_data') }}
         and record_id != '{{ var("test_patient") }}' -- noqa: ST10
+        {%- if is_incremental() %}
+        and record_id in ({{ changed_since_last_run('patient_additional_data') }})
+        {%- endif %}
 )
 
 select
@@ -52,5 +58,6 @@ select
             ,
             {{ col.expr }} as {{ col.name }}
         {%- endif -%}
-    {%- endfor %}
+    {%- endfor %},
+    fc.updated_at_sync_tick
 from filtered_changes fc
