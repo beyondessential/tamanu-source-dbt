@@ -1,4 +1,4 @@
-{% macro user_audit_dataset(is_sensitive=false) %}
+{% macro user_audit_dataset(network=none) %}
 
 with non_system_notes as (
     select distinct on (n.record_id)
@@ -52,7 +52,7 @@ left join {{ ref('reference_data') }} bt
 left join {{ ref('triages') }} t on t.encounter_id = e.id
 join {{ ref('locations') }} l on l.id = e.location_id
 left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
-join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
+join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
 left join {{ ref('departments') }} d on d.id = e.department_id
 left join {{ ref('discharges') }} ds on ds.encounter_id = e.id

@@ -67,20 +67,28 @@ accepts the top-level spelling without a deprecation, so `dbt parse` cannot catc
 `scripts/tests/test_property_layout.py` does, in CI. The manifest is the same either way, so the
 data platform and tupaia-data-product, which read `node.meta` and `column.meta`, are unaffected.
 
-## Standard and sensitive models
+## Standard and sensitive network models
 
-A facility is sensitive when it belongs to a sensitive network. The split sits in the bases:
-`facilities` holds standard facilities only and `sensitive_facilities` the sensitive ones. A
-shared macro takes `is_sensitive` and reads `ref('sensitive_facilities' if is_sensitive else
-'facilities')`. It never filters on `sensitive_network_id` itself.
+A facility is in the partition of its sensitive network, or in the standard partition when it
+belongs to none. The rules are in `specs/dbt-model/sensitive-facility-partition.md`.
 
-Sensitive models are opt-in. `sensitive_facilities`, `intermediate/sensitive/`,
-`datasets/sensitive/` and `reports/sql/sensitive/` are enabled only when
-`has_sensitive_facility` is true, and dbt disables the unit tests on them with them. A deployment
-sets the var in its own `dbt_project.yml` to build them. This repo always tests them: CI, `make
-check` and `.sqlfluff` pass `has_sensitive_facility: true`, and CI also parses with the default
-to catch a standard model that refs a sensitive one. A data test that reads a sensitive model
-wraps that `ref()` in `{% if var('has_sensitive_facility', false) %}`.
+- A partitioned model's body is a macro taking `network`: `none` for the standard partition, or
+  a sensitive network's code. The standard model calls it with `network=none`. A plain report
+  starts with `{%- set network = none -%}` instead.
+- Inside a body, read another partitioned model with `partition_ref('<model>', network)`,
+  never a hard-coded sensitive name, and never filter on `sensitive_network_id` yourself.
+  A model that reads every partition uses `every_partition('<model>', [columns])`. Both are
+  in `macros/sensitive_networks.sql`.
+- A deployment lists its networks by `sensitive_networks.code` in the `sensitive_networks`
+  var and runs `scripts/generate_sensitive_network_models.py`, which writes each network's
+  models, property files and report configs into its own repo.
+- This repo carries one fixture network, `example`, in the `sensitive/` folders. Never edit
+  those files: change the standard model or its macro, then run
+  `python scripts/generate_sensitive_network_models.py --networks example`. CI fails on drift.
+- The fixture models are enabled only when `example` is listed. CI, `make check` and
+  `.sqlfluff` list it, and CI also parses with no network listed, to catch a standard model
+  that refs a network's model. A unit test that mocks a fixture model sets
+  `config: enabled: "{{ 'example' in var('sensitive_networks', []) }}"`.
 
 ## Base model conventions
 
@@ -95,7 +103,7 @@ wraps that `ref()` in `{% if var('has_sensitive_facility', false) %}`.
 Macros that wrap a model layer live in `macros/<layer>/`, mirroring `models/<layer>/`:
 
 - `macros/bases/` — utilities used by base models (e.g. `base_history_from_log`, `get_metadata_from_changes`)
-- `macros/datasets/` — `<entity>_dataset(is_sensitive)` macros materialised by `ds__<entity>` and `ds__sensitive_<entity>`
+- `macros/datasets/` — `<entity>_dataset(network)` macros materialised by `ds__<entity>` and each sensitive network's `ds__sensitive_<network>_<entity>`
 - `macros/intermediate/` — utilities used by models under `models/intermediate/`
 - `macros/reports/` — `<report>_report(...)` macros called by SQL files under `models/reports/sql/{standard,sensitive}/`
 
@@ -121,14 +129,14 @@ Never write inline descriptions in `.yml` files when a `{{ doc() }}` reference e
 
 Reports live under `models/reports/` and are organised into two categories:
 
-- `standard/` — general reports available to all users
-- `sensitive/` — versions of standard reports that include personally identifiable or clinically sensitive columns
+- `standard/` — the reports written by hand, covering standard facilities
+- `sensitive/` — generated copies of the partitioned standard reports for the fixture sensitive network
 
-Every sensitive report has a corresponding standard report. The naming convention is:
+The naming convention is:
 - Standard: `<name>.sql` / `<name>.json`
-- Sensitive equivalent: `sensitive-<name>.sql` / `sensitive-<name>.json`
+- A sensitive network's copy: `sensitive-<network>-<name>.sql` / `sensitive-<network>-<name>.json`
 
-When creating a new sensitive report, always create the standard version first, then the sensitive variant prefixed with `sensitive-`.
+To give a report sensitive network copies, make the standard report partitioned (see "Standard and sensitive network models") and run the generator. Never write a sensitive report by hand.
 
 File naming conventions:
 - Patient-level data: `<description>-line-list.sql`
@@ -136,7 +144,7 @@ File naming conventions:
 
 Each report has a matching config in `models/reports/config/standard/` or `models/reports/config/sensitive/`.
 
-When the standard and sensitive variants share non-trivial SELECT/WHERE logic, extract it into a macro at `macros/reports/<name>.sql` parameterised on `is_sensitive`, and reduce each SQL file to a single `{{ <name>_report(is_sensitive=...) }}` call. The macro picks `ds__<name>` vs `ds__sensitive_<name>` based on the flag. See `admissions_line_list_report` for the pattern.
+When a partitioned report has non-trivial SELECT/WHERE logic, hold it in a macro at `macros/reports/<name>.sql` parameterised on `network`, and reduce the SQL file to a single `{{ <name>_report(network=none) }}` call. The macro reads its dataset through `partition_ref()`. See `admissions_line_list_report` for the pattern.
 
 Most reports need nothing beyond a plain `ref()` — see "Reuse: picking a sharing mechanism" in [`dbt-conventions.md`](.maui/knowledge/standards/dbt-conventions.md) before reaching for a macro. In particular, `encounter_summary_report` is **not** an example of the pattern above: it has no dataset and builds directly off base models.
 

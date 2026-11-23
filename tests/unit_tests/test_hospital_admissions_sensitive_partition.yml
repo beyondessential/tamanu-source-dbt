@@ -67,9 +67,9 @@ unit_tests:
           false               as death
 
   - name: test_int__sensitive_admission_history_location_partition
-    model: int__sensitive_admission_history_location
+    model: int__sensitive_example_admission_history_location
     description: >
-      The other half of BL-012: the sensitive variant reads `sensitive_facilities`, so it
+      The other half of BL-012: the sensitive variant reads `sensitive_example_facilities`, so it
       carries the sensitive facility's episode and drops the one at a facility absent from that
       base. A sensitive variant reading `facilities` fails here, as that input is not stubbed.
     overrides:
@@ -107,7 +107,7 @@ unit_tests:
           select 'lg_std'::text as id, 'Standard Ward'::text as name
           union all
           select 'lg_sen', 'Sensitive Ward'
-      - input: ref('sensitive_facilities')
+      - input: ref('sensitive_example_facilities')
         format: sql
         rows: |
           select 'fac_sen'::text as id, 'Sensitive Hospital'::text as name, 'sn_001'::text as sensitive_network_id
@@ -190,9 +190,9 @@ unit_tests:
           false               as death
 
   - name: test_int__sensitive_admission_history_department_partition
-    model: int__sensitive_admission_history_department
+    model: int__sensitive_example_admission_history_department
     description: >
-      The sensitive half for the department intermediate, reading `sensitive_facilities`.
+      The sensitive half for the department intermediate, reading `sensitive_example_facilities`.
     overrides:
       vars:
         timezone: UTC
@@ -222,7 +222,7 @@ unit_tests:
           select 'dep_std'::text as id, 'Std Dept'::text as name, 'fac_std'::text as facility_id
           union all
           select 'dep_sen', 'Sen Dept', 'fac_sen'
-      - input: ref('sensitive_facilities')
+      - input: ref('sensitive_example_facilities')
         format: sql
         rows: |
           select 'fac_sen'::text as id, 'Sensitive Hospital'::text as name, 'sn_001'::text as sensitive_network_id

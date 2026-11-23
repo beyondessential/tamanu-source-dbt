@@ -1,1 +1,1 @@
-{{ vaccinations_dataset(is_sensitive=false) }}
+{{ vaccinations_dataset(network=none) }}

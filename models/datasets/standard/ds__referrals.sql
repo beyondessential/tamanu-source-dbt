@@ -1,1 +1,1 @@
-{{ referrals_dataset(is_sensitive=false) }}
+{{ referrals_dataset(network=none) }}

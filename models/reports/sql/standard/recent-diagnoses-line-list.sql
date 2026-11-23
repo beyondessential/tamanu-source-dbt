@@ -1,3 +1,4 @@
+{%- set network = none -%}
 select
     to_char({{ to_user_selected_timezone('diagnosis_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('diagnosisDateTime') }}",
     diagnosis as "{{ translate_label('diagnoses') }}",
@@ -12,7 +13,7 @@ select
     department as "{{ translate_label('department') }}",
     certainty as "{{ translate_label('diagnosisCertainty') }}",
     is_primary as "{{ translate_label('diagnosisIsPrimary') }}"
-from {{ ref('ds__diagnoses') }}
+from {{ partition_ref('ds__diagnoses', network) }}
 where
     {{ to_user_selected_timezone('diagnosis_datetime') }}
     >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}

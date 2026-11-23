@@ -1,1 +1,1 @@
-{{ encounter_invoices_dataset(is_sensitive=false) }}
+{{ encounter_invoices_dataset(network=none) }}

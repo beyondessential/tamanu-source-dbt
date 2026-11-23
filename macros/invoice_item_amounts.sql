@@ -9,19 +9,19 @@
       - encounter_invoice_amounts()           wraps it as `with items as (...)` and
                                                aggregates to invoice grain
 
-    is_sensitive picks the facility partition: false reads `facilities` (standard only),
-    true reads `sensitive_facilities`. An invoice at a facility outside the partition has
-    no item rows.
+    network picks the facility partition: none reads `facilities` (standard only), a
+    sensitive network's code reads that network's facilities. An invoice at a facility
+    outside the partition has no item rows.
 
     Embedding via a macro (rather than one int ref'ing the other) keeps invoice_items /
     price lists / discounts / insurance plans as direct refs of int__encounter_invoice_amounts,
     so its unit tests mock those bases exactly as before. One definition, no drift.
     See specs/dbt-model/ds__encounter_invoice_items.md.
 #}
-{% macro invoice_item_amounts(is_sensitive=false) %}
+{% macro invoice_item_amounts(network=none) %}
 with invoice_context as materialized (
     -- Per-invoice context for price-list resolution, mirroring the inputs the
-    -- app passes to getIdForPatientEncounter, for invoices in the is_sensitive
+    -- app passes to getIdForPatientEncounter, for invoices in the network
     -- facility partition. Billing type falls back to the patient's additional
     -- data when the encounter has none.
     -- `materialized` is load-bearing: it is referenced once, so without the hint
@@ -39,7 +39,7 @@ with invoice_context as materialized (
         on e.id = i.encounter_id
     join {{ ref('locations') }} l
         on l.id = e.location_id
-    join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
+    join {{ partition_ref('facilities', network) }} f
         on f.id = l.facility_id
     join {{ ref('patients') }} p
         on p.id = e.patient_id

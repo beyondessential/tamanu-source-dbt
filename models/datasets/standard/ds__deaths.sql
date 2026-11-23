@@ -38,20 +38,10 @@ encounters_with_death as (
     order by e.patient_id asc, e.end_datetime desc, e.start_datetime desc, e.id asc
 ),
 
--- BL-015 (see specs/reports/deceased-patients-line-list.md): a death is listed at a standard
--- or a sensitive facility, where the deployment has sensitive facilities
+-- BL-015 (see specs/reports/deceased-patients-line-list.md): a death is listed at a facility
+-- in any partition the deployment has
 all_facilities as (
-    select
-        f.id,
-        f.name
-    from {{ ref("facilities") }} f
-    {%- if var('has_sensitive_facility', false) %}
-        union all
-        select
-            sf.id,
-            sf.name
-        from {{ ref("sensitive_facilities") }} sf
-    {%- endif %}
+    {{ every_partition('facilities', ['id', 'name']) }}
 )
 
 select

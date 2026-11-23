@@ -4,10 +4,10 @@ unit_tests:
     description: >
       BL-007, BL-010 (specs/reports/user-login-activity.md). u1 is allowed at a standard and a
       sensitive facility, u2 at the standard one only. Filtering on the sensitive facility keeps
-      u1, whose Allowed facilities names both, and drops u2. Enabled with
-      `has_sensitive_facility`, as CI runs it, because it mocks `sensitive_facilities`.
+      u1, whose Allowed facilities names both, and drops u2. Enabled with the `example`
+      sensitive network listed, as CI runs it, because it mocks `sensitive_example_facilities`.
     config:
-      enabled: "{{ var('has_sensitive_facility', false) }}"
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     overrides:
       vars:
         timezone: UTC
@@ -55,7 +55,7 @@ unit_tests:
         rows: |
           select 'fac_std'::text as id, 'Alpha Clinic'::text as name
 
-      - input: ref('sensitive_facilities')
+      - input: ref('sensitive_example_facilities')
         format: sql
         rows: |
           select 'fac_sen'::text as id, 'Beta Sensitive Clinic'::text as name

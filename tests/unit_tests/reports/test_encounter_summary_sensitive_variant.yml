@@ -1,11 +1,11 @@
 unit_tests:
   - name: test_encounter_summary_start_sensitive_variant
-    model: sensitive-encounter-summary-by-start-date
+    model: sensitive-example-encounter-summary-by-start-date
     description: >
       The inverse of test_encounter_summary_start_excludes_sensitive: the sensitive
       variant must return the sensitive facility's encounter and only that one.
       Without this, pointing the sensitive variant at `facilities` rather than
-      `sensitive_facilities` passes every other encounter summary test, since they all run a
+      `sensitive_example_facilities` passes every other encounter summary test, since they all run a
       standard variant.
 
       enc_002 is given an encounter_history row on purpose. The report inner-joins
@@ -86,7 +86,7 @@ unit_tests:
           union all
           select 'lg_002', 'Psychiatric Wing'
 
-      - input: ref('sensitive_facilities')
+      - input: ref('sensitive_example_facilities')
         format: sql
         rows: |
           select 'fac_002' as id, 'Psychiatric Hospital' as name, 'sn_001' as sensitive_network_id

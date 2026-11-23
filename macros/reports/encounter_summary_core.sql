@@ -1,4 +1,4 @@
-{% macro encounter_summary_core(date_field, is_sensitive=false) %}
+{% macro encounter_summary_core(date_field, network=none) %}
 {#-
     Encounter summary rows: the patient, the encounter's movement history and its
     clinical aggregates, resolved and mostly unformatted.
@@ -35,7 +35,7 @@
     result exact. See the note above the filter itself.
 -#}
 
-{#- The facility scope and the is_sensitive partition come from encounters_core();
+{#- The facility scope and the network partition come from encounters_core();
     see specs/dbt-model/encounters_core.md. The predicates below are this report's own
     and reference the `e` / `f` aliases that macro contracts on (its BL-003).
 
@@ -134,7 +134,7 @@ with encounters_in_scope as (
         reason_for_encounter,
         facility
     from (
-        {{ encounters_core(is_sensitive=is_sensitive, extra_predicates=scope_filter) }}
+        {{ encounters_core(network=network, extra_predicates=scope_filter) }}
     ) scope
 ),
 

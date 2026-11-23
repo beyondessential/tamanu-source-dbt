@@ -2,7 +2,8 @@ name: Checks
 
 # Runs on every PR and every push to main: unit tests for the helper scripts,
 # plus a guard that the committed generated macros (translation +
-# metric-definition) and WHO DAK map models are still in sync with their sources. All are
+# metric-definition), WHO DAK map models and the fixture sensitive network's models are still
+# in sync with their sources. All are
 # generated but committed, so they can silently drift if someone edits a CSV
 # and forgets to regenerate.
 #
@@ -66,22 +67,26 @@ jobs:
           python scripts/generate_translation_macro.py
           python scripts/generate_metric_definitions_macro.py
           python scripts/generate_who_dak_maps.py
+          python scripts/generate_sensitive_network_models.py --networks example
 
-      - name: Fail if generated files drift from their CSVs
+      - name: Fail if generated files drift from their sources
         # git status also catches a generated model that was never committed.
         # BL-004: the WHO DAK map models match their copies (see specs/dbt-model/map__who_dak.md)
+        # BL-013: the fixture network's models match the standard models they are generated from
+        # (see specs/dbt-model/sensitive-facility-partition.md)
         run: |
-          if [ -n "$(git status --porcelain -- macros/default_translations.sql macros/metric_definitions.sql models/maps/who_dak)" ]; then
-            echo "::error::Generated macros or WHO DAK map models are out of sync with their source CSVs."
+          if [ -n "$(git status --porcelain -- macros/default_translations.sql macros/metric_definitions.sql models)" ]; then
+            echo "::error::Generated macros, WHO DAK map models or sensitive network models are out of sync with their sources."
             echo "Run the generators and commit the result:"
             echo "  python scripts/generate_translation_macro.py"
             echo "  python scripts/generate_metric_definitions_macro.py"
             echo "  python scripts/generate_who_dak_maps.py"
-            git status --short -- models/maps/who_dak
+            echo "  python scripts/generate_sensitive_network_models.py --networks example"
+            git status --short -- models
             git diff -- macros/default_translations.sql macros/metric_definitions.sql models/maps/who_dak
             exit 1
           fi
-          echo "Generated macros and WHO DAK map models are in sync."
+          echo "Generated macros and models are in sync."
 
   dbt-unit-tests:
     name: dbt unit tests
@@ -147,16 +152,16 @@ jobs:
         run: dbt deps
 
       - name: Parse the standard-only graph
-        # The sensitive models are opt-in (has_sensitive_facility, default false), which is how
-        # most deployments run. A standard model that refs a sensitive one fails this parse.
+        # A deployment lists its sensitive networks (sensitive_networks, default none), and most
+        # list none. A standard model that refs a network's model fails this parse.
         run: dbt parse --no-partial-parse --profiles-dir config --target reporting_release
 
       - name: Fail on dbt deprecations
         # dbt_project.yml promotes every deprecation to an error, and some are only raised
-        # during a full parse. Every step from here enables the sensitive models, so this repo
-        # tests them although a deployment has to opt in.
+        # during a full parse. Every step from here lists the fixture sensitive network, so this
+        # repo always tests the partition.
         run: |
-          dbt parse --no-partial-parse --show-all-deprecations --profiles-dir config --target reporting_release --vars '{has_sensitive_facility: true}'
+          dbt parse --no-partial-parse --show-all-deprecations --profiles-dir config --target reporting_release --vars '{sensitive_networks: [example]}'
 
       - name: Lint SQL
         # sqlfluff's dbt templater reads the profile from DBT_PROFILES_DIR, not a flag.
@@ -172,7 +177,7 @@ jobs:
 
       - name: Run dbt unit tests
         run: |
-          dbt test --select "unit_test:*" --profiles-dir config --target reporting_release --vars '{has_sensitive_facility: true}'
+          dbt test --select "unit_test:*" --profiles-dir config --target reporting_release --vars '{sensitive_networks: [example]}'
 
       # BL-003: create every model as a view on the lowest supported Postgres, against an empty
       # copy of the Tamanu schema (specs/testing/model-postgres-compatibility.md). A model using
@@ -186,5 +191,5 @@ jobs:
 
       - name: Seed and create every model
         run: |
-          dbt seed --profiles-dir config --target reporting_release --vars '{has_sensitive_facility: true}'
-          dbt run --profiles-dir config --target reporting_release --vars '{has_sensitive_facility: true}'
+          dbt seed --profiles-dir config --target reporting_release --vars '{sensitive_networks: [example]}'
+          dbt run --profiles-dir config --target reporting_release --vars '{sensitive_networks: [example]}'

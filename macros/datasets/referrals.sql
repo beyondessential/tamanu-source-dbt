@@ -1,4 +1,4 @@
-{% macro referrals_dataset(is_sensitive=false) %}
+{% macro referrals_dataset(network=none) %}
 
 with diagnoses as (
     select
@@ -25,7 +25,7 @@ select
 from {{ ref('referrals') }} rf
 join {{ ref('encounters') }} e on e.id = rf.initiating_encounter_id
 join {{ ref('locations') }} l on l.id = e.location_id
-join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
+join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
 join {{ ref('survey_responses') }} sr on sr.id = rf.survey_response_id
 join {{ ref('surveys') }} s on s.id = sr.survey_id

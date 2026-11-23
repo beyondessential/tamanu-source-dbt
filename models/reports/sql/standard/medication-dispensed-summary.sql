@@ -1,8 +1,9 @@
+{%- set network = none -%}
 select
     md.medication as "{{ translate_label('encounterPrescriptionMedication') }}",
     md.medication_code as "{{ translate_label('encounterPrescriptionMedicationCode') }}",
     sum(md.quantity) as "{{ translate_label('encounterPrescriptionQuantity') }}"
-from {{ ref('ds__medication_dispenses') }} md
+from {{ partition_ref('ds__medication_dispenses', network) }} md
 where
     case
         when {{ parameter('facilityId') }} is null then true

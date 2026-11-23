@@ -1,7 +1,7 @@
--- Body of the two facility bases, which split facilities by sensitivity: `facilities` holds
--- standard facilities (is_sensitive=false) and `sensitive_facilities` the ones in a sensitive
--- network (is_sensitive=true). Every live facility is in exactly one of them.
-{%- macro facilities_base(is_sensitive=false) -%}
+-- Body of the facility bases, which split facilities by partition: `facilities` holds standard
+-- facilities (network=none) and each listed sensitive network has a base holding its own.
+-- See specs/dbt-model/sensitive-facility-partition.md for the BL clauses.
+{%- macro facilities_base(network=none) -%}
 select
     id,
     code,
@@ -18,7 +18,8 @@ select
     updated_at_sync_tick
 from {{ source('tamanu', 'facilities') }}
 where deleted_at is null
-    and sensitive_network_id is {{ 'not null' if is_sensitive else 'null' }}
+    -- BL-001: a facility is in its sensitive network's partition, or standard when it has none
+    and {{ facility_in_partition(network) }}
 {%- if is_incremental() %}
     and updated_at_sync_tick >= {{ last_sync_tick() }}
     {%- endif %}

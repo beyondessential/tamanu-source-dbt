@@ -1,3 +1,4 @@
+{%- set network = none -%}
 with reporting_dates as (
     select date::date as date
     from generate_series(
@@ -21,7 +22,7 @@ select
         where {{ to_user_selected_timezone('ir.completed_datetime') }}::date = rd.date
     ) as "{{ translate_label('imagingCompletedRequests') }}"
 from reporting_dates rd
-left join {{ ref('ds__imaging_requests') }} ir
+left join {{ partition_ref('ds__imaging_requests', network) }} ir
     on ir.status_id not in ('cancelled', 'deleted', 'entered_in_error')
     and {{ to_user_selected_timezone('ir.requested_datetime') }}::date <= rd.date
     and ({{ to_user_selected_timezone('ir.completed_datetime') }}::date >= rd.date or ir.completed_datetime is null)

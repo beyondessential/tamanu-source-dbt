@@ -1,0 +1,26 @@
+{
+  "query": "replace this",
+  "name": "Sensitive example incomplete referrals",
+  "status": "published",
+  "notes": "This report lists all patients that have a pending referral for the selected parameters.\n\nThis version covers facilities in the 'example' sensitive network only.",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "allTime",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "VillageField",
+        "label": "Village",
+        "name": "villageId"
+      },
+      {
+        "parameterField": "PractitionerField",
+        "label": "Doctor/Nurse",
+        "name": "doctorId"
+      }
+    ]
+  }
+}

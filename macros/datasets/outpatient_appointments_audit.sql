@@ -1,4 +1,4 @@
-{% macro outpatient_appointments_audit_dataset(is_sensitive=false) %}
+{% macro outpatient_appointments_audit_dataset(network=none) %}
 
 {{
     config(
@@ -81,7 +81,7 @@ select
     facility
 from (
     {{ outpatient_appointments_audit_core(
-        is_sensitive=is_sensitive,
+        network=network,
         record_id_filter=candidate_filter if is_incremental() else none
     ) }}
 ) core

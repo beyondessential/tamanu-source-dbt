@@ -25,20 +25,9 @@ user_designations_agg as (
     group by ud.user_id
 ),
 
--- BL-010: a user's facilities are named from the standard base and, where the deployment has
--- sensitive facilities, the sensitive base too
+-- BL-010: a user's facilities are named from every partition the deployment has
 all_facilities as (
-    select
-        f.id,
-        f.name
-    from {{ ref('facilities') }} f
-    {%- if var('has_sensitive_facility', false) %}
-        union all
-        select
-            sf.id,
-            sf.name
-        from {{ ref('sensitive_facilities') }} sf
-    {%- endif %}
+    {{ every_partition('facilities', ['id', 'name']) }}
 ),
 
 user_facilities_agg as (

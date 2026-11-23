@@ -1,3 +1,4 @@
+{%- set network = none -%}
 select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
@@ -24,7 +25,7 @@ select
     site as "{{ translate_label('labRequestSampleSite') }}",
     to_char({{ to_user_selected_timezone('completed_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('labRequestCompletedDateTime') }}",
     reason_for_cancellation as "{{ translate_label('labRequestCancellationReason') }}"
-from {{ ref('ds__lab_requests') }}
+from {{ partition_ref('ds__lab_requests', network) }}
 where case
         when {{ parameter('requestedById') }} is null then true
         else requested_by_id = {{ parameter('requestedById') }}

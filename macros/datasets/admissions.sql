@@ -1,6 +1,6 @@
-{% macro admissions_dataset(is_sensitive=false) %}
+{% macro admissions_dataset(network=none) %}
 
-{#- The facility scope and the is_sensitive partition come from encounters_core();
+{#- The facility scope and the network partition come from encounters_core();
     see specs/dbt-model/encounters_core.md. Aliased back to this dataset's existing
     column names so nothing downstream changes. localise_timestamps is deliberately
     left off -- BL-005: a dataset must not carry the :timezone placeholder. -#}
@@ -17,7 +17,7 @@ with admission_encounters as (
         facility_id,
         facility as facility_name
     from (
-        {{ encounters_core(is_sensitive=is_sensitive, encounter_type='admission') }}
+        {{ encounters_core(network=network, encounter_type='admission') }}
     ) eis
 ),
 

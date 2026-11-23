@@ -1,4 +1,4 @@
-{% macro diagnoses_dataset(is_sensitive=false) %}
+{% macro diagnoses_dataset(network=none) %}
 
 select
     e.id as encounter_id,
@@ -35,7 +35,7 @@ left join {{ ref('reference_data') }} village on village.id = p.village_id
 left join {{ ref('users') }} clinician on clinician.id = e.clinician_id
 left join {{ ref('departments') }} d on d.id = e.department_id
 join {{ ref('locations') }} l on l.id = e.location_id
-join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
+join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
 
 {% endmacro %}

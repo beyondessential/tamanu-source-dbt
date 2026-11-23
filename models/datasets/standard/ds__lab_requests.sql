@@ -1,1 +1,1 @@
-{{ lab_requests_dataset(is_sensitive=false) }}
+{{ lab_requests_dataset(network=none) }}

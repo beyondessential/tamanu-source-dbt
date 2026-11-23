@@ -1,3 +1,4 @@
+{%- set network = none -%}
 select
     user_name as "{{ translate_label('userName') }}",
     user_role as "{{ translate_label('userRole') }}",
@@ -14,7 +15,7 @@ select
     to_char({{ to_user_selected_timezone('last_note_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('noteEndDateTime') }}",
     is_discharged as "{{ translate_label('encounterIsDischarged') }}",
     non_discharge_by_clinicians as "{{ translate_label('encounterNonDischargeClinician') }}"
-from {{ ref('ds__user_audit') }}
+from {{ partition_ref('ds__user_audit', network) }}
 where
     {{ to_user_selected_timezone('encounter_start_datetime') }}
     >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}

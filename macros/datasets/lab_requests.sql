@@ -1,4 +1,4 @@
-{% macro lab_requests_dataset(is_sensitive=false) %}
+{% macro lab_requests_dataset(network=none) %}
 
 with lab_test_data as (
     -- Lists every test on the request regardless of its own is_sensitive flag:
@@ -95,7 +95,7 @@ left join {{ ref('reference_data') }} village on village.id = p.village_id
 join {{ ref('locations') }} l on l.id = e.location_id
 left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
 left join {{ ref('departments') }} d on d.id = e.department_id
-join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
+join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
 left join {{ ref('reference_data') }} laboratory on laboratory.id = lr.lab_test_laboratory_id
 left join {{ ref('users') }} req_clinician on req_clinician.id = lr.requested_by_id

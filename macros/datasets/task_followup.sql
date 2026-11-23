@@ -1,4 +1,4 @@
-{% macro task_followup_dataset(is_sensitive=false) %}
+{% macro task_followup_dataset(network=none) %}
 
 -- Task Follow-up Dataset
 -- One row per designation-assigned task, with the encounter, discharge and follow-up
@@ -20,7 +20,7 @@ with scoped_encounters as not materialized (
         f.name as facility_name
     from {{ ref('encounters') }} e
     join {{ ref('locations') }} l on l.id = e.location_id
-    join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f on f.id = l.facility_id
+    join {{ partition_ref('facilities', network) }} f on f.id = l.facility_id
     left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
 ),
 

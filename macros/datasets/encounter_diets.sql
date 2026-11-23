@@ -1,4 +1,4 @@
-{% macro encounter_diets_dataset(is_sensitive=false) %}
+{% macro encounter_diets_dataset(network=none) %}
 
 with diets as (
     select
@@ -58,7 +58,7 @@ join {{ ref('patients') }} p
     on p.id = e.patient_id
 join {{ ref('locations') }} l
     on l.id = e.location_id
-join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
+join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
 left join {{ ref('location_groups') }} lg
     on lg.id = l.location_group_id

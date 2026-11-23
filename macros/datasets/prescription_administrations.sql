@@ -1,5 +1,5 @@
 -- See specs/dbt-model/ds__prescription_administrations.md for BL-003..BL-008, BL-011.
-{% macro prescription_administrations_dataset(is_sensitive=false) %}
+{% macro prescription_administrations_dataset(network=none) %}
 
 -- BL-006: each encounter history entry's department and location hold from its
 -- own time until the next entry's. Built in one pass rather than a per-row
@@ -66,7 +66,7 @@ join {{ ref('prescriptions') }} pr on pr.id = ep.prescription_id
 join {{ ref('reference_data') }} m on m.id = pr.medication_id
 join {{ ref('locations') }} l on l.id = e.location_id
 -- BL-007: standard vs sensitive split on the location's facility
-join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
+join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
 -- BL-008: prescriber_id is nullable, so this must stay a left join or prescriptions
 -- recorded without a prescriber would drop out of the dataset entirely

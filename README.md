@@ -92,15 +92,26 @@ The generated assets are written to the `compiled/` folder, which is not committ
 - Import script: `compiled/reports/importReports.js`
 - Versioned documentation: `compiled/v{VERSION}/reporting-docs-v{VERSION}-{DEPLOYMENT}.html`
 
-## Sensitive Facility Reporting
+## Sensitive Network Reporting
 
-Set `has_sensitive_facility: true` in the `vars` block of `dbt_project.yml` to include models
-tagged `restricted` (sensitive-facility dataset views) when generating reports and the reporting
-schema script. When `false` (the default), those models are silently excluded from both
+A deployment with sensitive facilities lists its sensitive networks, by `sensitive_networks.code`,
+in the `sensitive_networks` var of its `dbt_project.yml`, then generates each network's models,
+property files and report configs into its own repo and commits them:
+
+```bash
+python dbt_packages/tamanu_source_dbt/scripts/generate_sensitive_network_models.py
+```
+
+Each network gets its own copy of every partitioned dataset and report, named
+`ds__sensitive_<network>_<name>` and `sensitive-<network>-<name>`, holding only that network's
+facilities. A facility in a network the var does not list appears in no model. The generated
+models are tagged `restricted`: they are included when generating reports and the reporting
+schema script only while the var lists a network, and are otherwise left out of both
 `generate_project_reports()` and `generate_reporting_schema_script()`.
 
-The flag is read at script run-time from `dbt_project.yml` via `get_dbt_project_vars()`, not
+The var is read at script run-time from `dbt_project.yml` via `get_dbt_project_vars()`, not
 from the dbt runtime context, so it must be set in the file before running the build scripts.
+The rules are in `specs/dbt-model/sensitive-facility-partition.md`.
 
 ## Generate survey models
 To automatically generate dbt models and documentation for surveys from database, execute the following command:

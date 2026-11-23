@@ -1,1 +1,1 @@
-{{ admission_history_location(is_sensitive=false) }}
+{{ admission_history_location(network=none) }}

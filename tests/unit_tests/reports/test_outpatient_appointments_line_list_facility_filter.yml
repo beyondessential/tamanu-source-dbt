@@ -3,7 +3,7 @@ unit_tests:
     model: outpatient-appointments-line-list
     description: >
       facilityId is declared by the report config's FacilityField and is applied in the
-      dataset's scope CTE, alongside the date bounds and is_sensitive, so it narrows the
+      dataset's scope CTE, alongside the date bounds and the network partition, so it narrows the
       appointment scan rather than filtering the resolved rows afterwards. Two appointments
       in the window sit in different facilities; with facilityId=fac_b only the fac_b one is
       returned.

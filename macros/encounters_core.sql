@@ -1,4 +1,4 @@
-{% macro encounters_core(is_sensitive=false, encounter_type=none, extra_predicates=none,
+{% macro encounters_core(network=none, encounter_type=none, extra_predicates=none,
                          localise_timestamps=false) %}
 {#-
     Encounters resolved to their facility, partitioned by sensitivity.
@@ -9,8 +9,8 @@
     See specs/dbt-model/encounters_core.md for the BL clauses this macro implements.
 
     Arguments
-      is_sensitive      facility partition. false reads `facilities` (standard only),
-                        true reads `sensitive_facilities`.
+      network           facility partition. none reads `facilities` (standard only),
+                        a sensitive network's code reads that network's facilities.
       encounter_type    optional, restricts to one encounter_type (e.g. 'admission').
       extra_predicates  optional SQL text appended to the where clause.
       localise_timestamps  report-only. Adds start_datetime_local / end_datetime_local.
@@ -83,8 +83,8 @@ from {{ ref('encounters') }} e
 -- is null or dangling produces no row at all
 join {{ ref('locations') }} l
     on l.id = e.location_id
--- BL-001: facility scope partitioned by the is_sensitive argument, which picks the base
-join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
+-- BL-001: facility scope partitioned by the network argument, which picks the base
+join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
 {%- if predicates %}
 where {{ predicates | join('\n    and ') }}

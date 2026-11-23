@@ -1,4 +1,4 @@
-{% macro encounter_invoices_dataset(is_sensitive=false) %}
+{% macro encounter_invoices_dataset(network=none) %}
 {#-
     One row per invoice with the resolved billing figures, for one facility partition.
     Materialised by ds__encounter_invoices (standard) and ds__sensitive_encounter_invoices.
@@ -27,5 +27,5 @@ select
     invoice_total + item_adjustment
     - coalesce(insurance_coverage, 0) - coalesce(invoice_discount, 0) as patient_subtotal,
     products_no_category
-from {{ ref('int__sensitive_encounter_invoice_amounts' if is_sensitive else 'int__encounter_invoice_amounts') }}
+from {{ partition_ref('int__encounter_invoice_amounts', network) }}
 {% endmacro %}

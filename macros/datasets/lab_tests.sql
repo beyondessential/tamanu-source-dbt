@@ -1,4 +1,4 @@
-{% macro lab_tests_dataset(is_sensitive=false) %}
+{% macro lab_tests_dataset(network=none) %}
 
 select
     p.id as patient_id,
@@ -56,7 +56,7 @@ join {{ ref('locations') }} l on l.id = e.location_id
 left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
 left join {{ ref('departments') }} d on d.id = e.department_id
 left join {{ ref('departments') }} req_dept on req_dept.id = lr.department_id
-join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
+join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
 left join {{ ref('users') }} requester on requester.id = lr.requested_by_id
 left join {{ ref('reference_data') }} category on category.id = lr.lab_test_category_id

@@ -1,4 +1,4 @@
-{% macro procedures_dataset(is_sensitive=false) %}
+{% macro procedures_dataset(network=none) %}
 
 with filtered_procedure as (
     select
@@ -88,11 +88,11 @@ join {{ ref('locations') }} procedure_location
     on procedure_location.id = pc.location_id
 left join {{ ref('location_groups') }} procedure_area
     on procedure_area.id = procedure_location.location_group_id
-join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} procedure_facility
+join {{ partition_ref('facilities', network) }} procedure_facility
     on procedure_facility.id = procedure_location.facility_id
 join {{ ref('locations') }} encounter_location
     on encounter_location.id = e.location_id
-join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} encounter_facility
+join {{ partition_ref('facilities', network) }} encounter_facility
     on encounter_facility.id = encounter_location.facility_id
 join {{ ref('departments') }} encounter_department
     on encounter_department.id = coalesce(pc.department_id, e.department_id)

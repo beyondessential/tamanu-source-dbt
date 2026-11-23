@@ -37,14 +37,14 @@ unit_tests:
         select 'Paracetamol' as "Medication", 'PCM' as "Code", 20 as "Quantity"
 
   - name: test_medication_dispensed_summary_sensitive_one_selected
-    model: sensitive-medication-dispensed-summary
+    model: sensitive-example-medication-dispensed-summary
     description: The sensitive variant filters on the selected drug the same way.
     overrides:
       vars:
         timezone: UTC
         medicationId: med_002
     given:
-      - input: ref('ds__sensitive_medication_dispenses')
+      - input: ref('ds__sensitive_example_medication_dispenses')
         format: sql
         rows: |
           select 'fac_001' as facility_id, 'med_001' as medication_id, 'Amoxicillin' as medication, 'AMX' as medication_code, 10 as quantity, '2024-01-05 09:00:00'::timestamp as dispensed_at
@@ -83,14 +83,14 @@ unit_tests:
         select 'Paracetamol', 'PCM', 20
 
   - name: test_medication_dispensed_summary_sensitive_two
-    model: sensitive-medication-dispensed-summary
+    model: sensitive-example-medication-dispensed-summary
     description: The sensitive variant returns the rows for both selected values.
     overrides:
       vars:
         timezone: UTC
         medicationId: [med_001, med_002]
     given:
-      - input: ref('ds__sensitive_medication_dispenses')
+      - input: ref('ds__sensitive_example_medication_dispenses')
         format: sql
         rows: |
           select 'fac_001' as facility_id, 'med_001' as medication_id, 'Amoxicillin' as medication, 'AMX' as medication_code, 10 as quantity, '2024-01-05 09:00:00'::timestamp as dispensed_at

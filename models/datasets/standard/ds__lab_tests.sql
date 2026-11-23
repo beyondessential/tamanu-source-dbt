@@ -1,1 +1,1 @@
-{{ lab_tests_dataset(is_sensitive=false) }}
+{{ lab_tests_dataset(network=none) }}

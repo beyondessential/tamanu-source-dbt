@@ -1,7 +1,7 @@
 -- See specs/reports/medication-administration-record-line-list.md for BL-001..BL-011.
-{% macro medication_administration_record_line_list_report(is_sensitive=false) %}
+{% macro medication_administration_record_line_list_report(network=none) %}
 
-{% set dataset = 'ds__sensitive_prescription_administrations' if is_sensitive else 'ds__prescription_administrations' %}
+{% set dataset = partition_name('ds__prescription_administrations', network) %}
 
 select
     display_id as "{{ translate_label('patientDisplayId') }}",

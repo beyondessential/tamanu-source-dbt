@@ -1,1 +1,1 @@
-{{ task_followup_register_report(is_sensitive=false) }}
+{{ task_followup_register_report(network=none) }}

@@ -1,3 +1,4 @@
+{%- set network = none -%}
 select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
@@ -7,7 +8,7 @@ select
     village as "{{ translate_label('patientVillage') }}",
     facility as "{{ translate_label('facility') }}",
     count(*) as "{{ translate_label('triageRecordCount') }}"
-from {{ ref('ds__encounters_emergency') }}
+from {{ partition_ref('ds__encounters_emergency', network) }}
 where case
         when {{ parameter('patientId') }} is null then true
         else patient_id = {{ parameter('patientId') }}

@@ -1,4 +1,4 @@
-{% macro imaging_requests_dataset(is_sensitive=false) %}
+{% macro imaging_requests_dataset(network=none) %}
 
 with results as (
     select
@@ -108,7 +108,7 @@ join {{ ref('encounters') }} e on e.id = ir.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
 join {{ ref('locations') }} l on l.id = e.location_id
 left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
-join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
+join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
 left join {{ ref('departments') }} d on d.id = e.department_id
 left join {{ ref('users') }} su on su.id = e.clinician_id

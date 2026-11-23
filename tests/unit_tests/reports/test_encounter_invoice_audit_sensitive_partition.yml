@@ -1,11 +1,11 @@
 unit_tests:
   - name: test_encounter_invoice_audit_sensitive_partition
-    model: sensitive-audit-encounter-invoice
+    model: sensitive-example-audit-encounter-invoice
     description: >
       BL-001 of encounters_in_scope, asserted from the sensitive side. The same two
       locations are in scope as the standard-variant tests, each with an encounter that
       would otherwise qualify, but only the sensitive facility is in the
-      `sensitive_facilities` stub. The sensitive variant must return the encounter at the
+      `sensitive_example_facilities` stub. The sensitive variant must return the encounter at the
       sensitive facility and only that one.
 
       This is the inverse of what test_encounter_invoice_audit_aggregation asserts, and
@@ -40,7 +40,7 @@ unit_tests:
           union all
           select 'loc_002', 'fac_002'
 
-      - input: ref('sensitive_facilities')
+      - input: ref('sensitive_example_facilities')
         format: sql
         rows: |
           select 'fac_002' as id, 'Sensitive Clinic' as name, 'sn_001' as sensitive_network_id
@@ -67,7 +67,7 @@ unit_tests:
         rows: |
           select null::text as id, null::text as name where false
 
-      - input: ref('ds__sensitive_encounter_invoices')
+      - input: ref('ds__sensitive_example_encounter_invoices')
         format: sql
         rows: |
           select

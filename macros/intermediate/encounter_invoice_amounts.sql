@@ -1,4 +1,4 @@
-{% macro encounter_invoice_amounts(is_sensitive=false) %}
+{% macro encounter_invoice_amounts(network=none) %}
 {#-
     Shared per-invoice billing arithmetic, one row per invoice in one facility partition:
     item totals, item adjustments and insurance coverage (aggregated from the per-item
@@ -13,16 +13,17 @@
     unit testing. See specs/dbt-model/clinical__cost.md.
 
     Arguments
-      is_sensitive  facility partition. false reads `facilities`, true reads
-                    `sensitive_facilities`. The partition scopes the invoices themselves, not
-                    only their items, so no invoice survives with its amounts missing.
+      network  facility partition. none reads `facilities`, a sensitive network's code
+               reads that network's facilities. The partition scopes the invoices
+               themselves, not only their items, so no invoice survives with its amounts
+               missing.
 -#}
 
 with items as (
     -- Per-item price (BL-006/007), item discount (BL-008) and coverage (BL-010) as this
     -- dataset's spec describes them; implemented by the shared invoice_item_amounts() macro
     -- (anchored BL-002/003/004 in ds__encounter_invoice_items.md). Aggregated to invoice grain.
-    {{ invoice_item_amounts(is_sensitive=is_sensitive) }}
+    {{ invoice_item_amounts(network=network) }}
 ),
 
 invoice_finalised as (
@@ -154,7 +155,7 @@ join {{ ref('encounters') }} e
     on e.id = i.encounter_id
 join {{ ref('locations') }} l
     on l.id = e.location_id
-join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
+join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
 left join invoice_finalised inf
     on inf.invoice_id = i.id

@@ -23,12 +23,14 @@ flags:
       - DeprecationsSummary
 
 vars:
-  # Opt-in for the sensitive models: the sensitive_facilities base, intermediate/sensitive,
-  # datasets/sensitive, reports/sql/sensitive and the unit and data tests on them. Off by
-  # default, so a deployment builds only the standard models unless it sets this to true.
-  # This repo's CI and `make check` pass --vars '{has_sensitive_facility: true}' so the
-  # sensitive side is always tested here.
-  has_sensitive_facility: false
+  # The deployment's sensitive networks, by sensitive_networks.code. Each listed network gets
+  # its own partition of every facility-attributed model, generated in the deployment repo by
+  # scripts/generate_sensitive_network_models.py. Empty by default, so a deployment builds
+  # only the standard models. This repo carries the models of one fixture network, `example`,
+  # in the `sensitive` folders: its CI and `make check` pass
+  # --vars '{sensitive_networks: [example]}' so the partition is always tested here.
+  # See specs/dbt-model/sensitive-facility-partition.md.
+  sensitive_networks: []
   # reference_data id of the deployment's home country. Used by the
   # upcoming-vaccinations report's "Exclude overseas patients" parameter
   # (excludeNonHomeCountry) to drop patients recorded as resident elsewhere.
@@ -95,17 +97,21 @@ models:
       +materialized: view
       +tags:
         - base
-      sensitive_facilities:
-        +enabled: "{{ var('has_sensitive_facility', false) }}"
+      # The fixture network's bases. `restricted` keeps them out of the reporting schema
+      # unless the network is listed, as for the other `sensitive` folders below.
+      sensitive:
+        +enabled: "{{ 'example' in var('sensitive_networks', []) }}"
+        +tags:
+          - restricted
     intermediate:
       +materialized: ephemeral
       # generate_reporting_schema_script() creates no `reporting` view for an
       # ephemeral model. `restricted` also keeps a sensitive intermediate out of the
-      # schema unless has_sensitive_facility is set, so changing its materialisation
+      # schema unless its network is listed, so changing its materialisation
       # cannot expose episode-grain rows to `tamanu_reporting` on every deployment.
       # It is the same mechanism datasets/sensitive and reports/sql/sensitive use below.
       sensitive:
-        +enabled: "{{ var('has_sensitive_facility', false) }}"
+        +enabled: "{{ 'example' in var('sensitive_networks', []) }}"
         +tags:
           - restricted
     ref:
@@ -167,7 +173,7 @@ models:
       +tags:
         - datasets
       sensitive:
-        +enabled: "{{ var('has_sensitive_facility', false) }}"
+        +enabled: "{{ 'example' in var('sensitive_networks', []) }}"
         +tags:
           - restricted
     reports:
@@ -183,7 +189,7 @@ models:
       sql:
         sensitive:
           # repeats the reports-level analytics condition, which this setting replaces
-          +enabled: "{{ var('has_sensitive_facility', false) and not target.name.startswith('analytics') }}"
+          +enabled: "{{ 'example' in var('sensitive_networks', []) and not target.name.startswith('analytics') }}"
           +tags:
             - restricted
 

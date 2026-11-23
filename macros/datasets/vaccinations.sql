@@ -1,4 +1,4 @@
-{% macro vaccinations_dataset(is_sensitive=false) %}
+{% macro vaccinations_dataset(network=none) %}
 
 with vaccine_administrations_metadata as (
     select
@@ -84,7 +84,7 @@ left join vaccine_administrations_metadata vam on vam.id = av.id
 join {{ ref("locations") }} l on l.id = av.location_id
 left join {{ ref("departments") }} d on d.id = av.department_id
 left join {{ ref("location_groups") }} lg on lg.id = l.location_group_id
-join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
+join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
 left join {{ ref("vaccine_schedules") }} sv on sv.id = av.scheduled_vaccine_id
 left join {{ ref("users") }} u on u.id = av.recorded_by_id

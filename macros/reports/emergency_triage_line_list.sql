@@ -1,6 +1,6 @@
-{% macro emergency_triage_line_list_report(is_sensitive=false) %}
+{% macro emergency_triage_line_list_report(network=none) %}
 
-{%- set dataset = 'ds__sensitive_emergency_triage' if is_sensitive else 'ds__emergency_triage' -%}
+{%- set dataset = partition_name('ds__emergency_triage', network) -%}
 
 select
     display_id as "{{ translate_label('patientDisplayId') }}",

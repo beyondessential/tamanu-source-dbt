@@ -11,10 +11,11 @@ unit_tests:
       death closed both of p7's open encounters at the time of death -- a stale clinic visit
       (e7a) and a later admission (e7b) -- so the later-started e7b is matched, giving fac9,
       Medical and Ward 1. BL-015, AC-007: p8's death record names facSen, a sensitive facility
-      in the `sensitive_facilities` stub, and p8 is listed with that facility's name. Enabled
-      with `has_sensitive_facility`, as CI runs it, because it mocks `sensitive_facilities`.
+      in the `sensitive_example_facilities` stub, and p8 is listed with that facility's name.
+      Enabled with the `example` sensitive network listed, as CI runs it, because it mocks
+      `sensitive_example_facilities`.
     config:
-      enabled: "{{ var('has_sensitive_facility', false) }}"
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     given:
       - input: ref('patients')
         format: sql
@@ -107,7 +108,7 @@ unit_tests:
           union all
           select 'fac9', 'Facility 9'
 
-      - input: ref('sensitive_facilities')
+      - input: ref('sensitive_example_facilities')
         format: sql
         rows: |
           select 'facSen' as id, 'Sensitive Facility' as name

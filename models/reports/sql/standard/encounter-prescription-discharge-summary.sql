@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- See specs/reports/encounter-prescription-discharge-summary.md for the BL clauses this report implements.
 -- BL-001: Source rows are prescriptions from ds__encounter_prescriptions marked as selected
 -- for pharmacy discharge -- the pre-dispensing-module proxy for "sent to / dispensed by
@@ -9,7 +10,7 @@ select
     ep.medication as "{{ translate_label('encounterPrescriptionMedication') }}",
     ep.medication_code as "{{ translate_label('encounterPrescriptionMedicationCode') }}",
     sum(ep.quantity) as "{{ translate_label('encounterPrescriptionQuantity') }}"
-from {{ ref('ds__encounter_prescriptions') }} ep
+from {{ partition_ref('ds__encounter_prescriptions', network) }} ep
 where
     ep.is_selected_for_discharge = true
     and

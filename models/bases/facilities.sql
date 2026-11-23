@@ -2,4 +2,4 @@
     key='id',
     table='facilities'
 ) }}
-{{ facilities_base(is_sensitive=false) }}
+{{ facilities_base(network=none) }}

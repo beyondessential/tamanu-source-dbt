@@ -1,15 +1,13 @@
-{% macro admission_history_department(is_sensitive=false) %}
+{% macro admission_history_department(network=none) %}
 
 {#-
     Admission episodes per department, partitioned by facility sensitivity.
 
     See specs/reports/hospital-admissions-summaries.md for the BL clauses.
 
-    BL-012: the facility scope is partitioned by is_sensitive, exhaustively and
-    disjointly, so each facility's episodes reach exactly one of the two variants.
-    is_sensitive picks the facility base: `facilities` holds the standard facilities and
-    `sensitive_facilities` the sensitive ones, and between them they hold every facility
-    exactly once.
+    BL-012: the facility scope is partitioned by network, disjointly, so each facility's
+    episodes reach exactly one partition. network picks the facility base: `facilities`
+    holds the standard facilities and each listed sensitive network has a base of its own.
 -#}
 
 with admission_department_log as (
@@ -97,7 +95,7 @@ join {{ ref('encounters') }} e on e.id = dl.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
 join {{ ref('departments') }} d on d.id = dl.department_id
 -- BL-012 (specs/reports/hospital-admissions-summaries.md): facility partition
-join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f
+join {{ partition_ref('facilities', network) }} f
     on f.id = d.facility_id
 window w as (
     partition by encounter_id

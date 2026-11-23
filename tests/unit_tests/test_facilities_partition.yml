@@ -1,17 +1,18 @@
 unit_tests:
-  - name: test_facilities_standard_only
+  - name: ac_001_facilities_standard_partition
     model: facilities
     description: >
-      `facilities` holds standard facilities only: a facility in a sensitive network is absent,
-      and so is a soft-deleted one. Every standard dataset and report reads this model, so this
-      is where the standard side of the sensitivity partition is asserted.
+      BL-001, BL-010 (specs/dbt-model/sensitive-facility-partition.md). `facilities` holds
+      standard facilities only: a facility in a sensitive network is absent, listed or not, and
+      so is a soft-deleted one. Every standard dataset and report reads this model, so this is
+      where the standard side of the partition is asserted.
     overrides:
       macros:
         is_incremental: false
-    given: &facility_source
+    given:
       - input: source('tamanu', 'facilities')
         format: sql
-        rows: |
+        rows: &facility_rows |
           select 'fac_std'::text as id, 'STD'::text as code, 'Standard Hospital'::text as name,
                  null::text as division, null::text as type, null::text as email,
                  null::text as contact_number, null::text as city_town, null::text as street_address,
@@ -20,27 +21,42 @@ unit_tests:
                  1::bigint as updated_at_sync_tick
           union all
           select 'fac_sen', 'SEN', 'Sensitive Hospital', null, null, null, null, null, null, null,
-                 'current', 'sn_001', null::timestamptz, 1
+                 'current', 'sn_example', null::timestamptz, 1
+          union all
+          select 'fac_other', 'OTH', 'Unlisted Network Hospital', null, null, null, null, null,
+                 null, null, 'current', 'sn_other', null::timestamptz, 1
           union all
           select 'fac_std_deleted', 'DEL', 'Closed Hospital', null, null, null, null, null, null, null,
                  'current', null, '2024-01-01 00:00:00+00'::timestamptz, 1
           union all
           select 'fac_sen_deleted', 'SDEL', 'Closed Sensitive Hospital', null, null, null, null, null,
-                 null, null, 'current', 'sn_001', '2024-01-01 00:00:00+00'::timestamptz, 1
+                 null, null, 'current', 'sn_example', '2024-01-01 00:00:00+00'::timestamptz, 1
     expect:
       rows:
         - {id: fac_std}
 
-  - name: test_sensitive_facilities_sensitive_only
-    model: sensitive_facilities
+  - name: ac_001_facilities_network_partition
+    model: sensitive_example_facilities
     description: >
-      The other half of the partition, on the same fixture: `sensitive_facilities` holds the
-      sensitive facility and nothing else. Together the two show every live facility reaches
-      exactly one of the two bases.
+      BL-001, BL-010 (specs/dbt-model/sensitive-facility-partition.md). On the same facilities,
+      the `example` network's base holds that network's live facility and nothing else. The
+      facility in the unlisted network `other` is in neither base. Enabled with the `example`
+      sensitive network listed, as CI runs it.
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     overrides:
       macros:
         is_incremental: false
-    given: *facility_source
+    given:
+      - input: source('tamanu', 'facilities')
+        format: sql
+        rows: *facility_rows
+      - input: source('tamanu', 'sensitive_networks')
+        format: sql
+        rows: |
+          select 'sn_example'::text as id, 'example'::text as code, null::timestamptz as deleted_at
+          union all
+          select 'sn_other', 'other', null::timestamptz
     expect:
       rows:
         - {id: fac_sen}

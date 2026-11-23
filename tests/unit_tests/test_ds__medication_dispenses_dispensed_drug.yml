@@ -92,7 +92,7 @@ unit_tests:
         select 'md_moved', 50, '2026-09-05 09:00:00'::timestamp, 'pat_1', 'fac_std', 'General Hospital', 'drug_a', 'DRUG-A', 'Drug A'
 
   - name: test_ds__sensitive_medication_dispenses_dispensed_drug
-    model: ds__sensitive_medication_dispenses
+    model: ds__sensitive_example_medication_dispenses
     description: >
       AC-004: the sensitive variant, built from the same macro, also reports the
       dispensed drug. A modified dispense on an encounter at a sensitive facility must report
@@ -135,7 +135,7 @@ unit_tests:
         rows: |
           select 'drug_a' as id, 'DRUG-A' as code, 'Drug A' as name
           union all select 'drug_b', 'DRUG-B', 'Drug B'
-      - input: ref('sensitive_facilities')
+      - input: ref('sensitive_example_facilities')
         format: sql
         rows: |
           select 'fac_sen' as id, 'Sensitive Clinic' as name, 'sn_001' as sensitive_network_id

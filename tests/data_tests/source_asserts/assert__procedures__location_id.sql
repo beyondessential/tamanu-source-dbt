@@ -1,22 +1,12 @@
 {{ config(severity='warn') }}
 
 -- One row per procedure whose own location is at a different facility from its encounter's
--- location. ds__procedures and ds__sensitive_procedures each require both facilities to be in
--- their own partition, so a row with crosses_sensitivity_partition true is in neither dataset.
--- Without has_sensitive_facility only standard facilities resolve, so a procedure with either
--- side at a sensitive facility is not checked.
+-- location. ds__procedures and each sensitive network's copy of it require both facilities to
+-- be in their own partition, so a row with crosses_sensitivity_partition true is in no dataset.
+-- Only facilities in a partition the deployment has resolve, so a procedure with either side
+-- at a facility in an unlisted sensitive network is not checked.
 with all_facilities as (
-    select
-        id,
-        false as is_sensitive
-    from {{ ref('facilities') }}
-    {%- if var('has_sensitive_facility', false) %}
-        union all
-        select
-            id,
-            true as is_sensitive
-        from {{ ref('sensitive_facilities') }}
-    {%- endif %}
+    {{ every_partition('facilities', ['id', 'sensitive_network_id']) }}
 )
 
 select
@@ -24,7 +14,8 @@ select
     pc.encounter_id,
     procedure_facility.id as procedure_facility_id,
     encounter_facility.id as encounter_facility_id,
-    procedure_facility.is_sensitive != encounter_facility.is_sensitive as crosses_sensitivity_partition
+    coalesce(procedure_facility.sensitive_network_id, '') != coalesce(encounter_facility.sensitive_network_id, '')
+        as crosses_sensitivity_partition
 from {{ ref('procedures') }} pc
 join {{ ref('encounters') }} e
     on e.id = pc.encounter_id

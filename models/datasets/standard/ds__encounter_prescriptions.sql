@@ -1,1 +1,1 @@
-{{ encounter_prescriptions_dataset(is_sensitive=false) }}
+{{ encounter_prescriptions_dataset(network=none) }}

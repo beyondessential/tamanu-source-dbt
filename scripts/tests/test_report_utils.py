@@ -84,7 +84,7 @@ def test_restricted_dependency_names_the_var_that_excludes_it():
     with pytest.raises(ReportingSchemaDependencyError) as excinfo:
         order_models_for_schema(manifest, [model])
 
-    assert "has_sensitive_facility" in str(excinfo.value)
+    assert "sensitive_networks" in str(excinfo.value)
 
 
 def test_models_waiting_on_a_blocked_model_are_listed_separately():

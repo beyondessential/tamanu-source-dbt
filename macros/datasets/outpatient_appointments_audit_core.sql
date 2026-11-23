@@ -1,4 +1,4 @@
-{% macro outpatient_appointments_audit_core(is_sensitive=false, record_id_filter=none) %}
+{% macro outpatient_appointments_audit_core(network=none, record_id_filter=none) %}
 -- Shared audit rows: everything both the dataset and the report need, resolved but
 -- unformatted. Callers differ only in projection -- the dataset renames, the report applies
 -- translate_label and to_char. Keeping the logic here is what stops the two drifting, which
@@ -133,11 +133,11 @@ join {{ ref('location_groups') }} lg on lg.id = fc.location_group_id
 left join (
     select lg2.id, lg2.name
     from {{ ref('location_groups') }} lg2
-    join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f2 on f2.id = lg2.facility_id
+    join {{ partition_ref('facilities', network) }} f2 on f2.id = lg2.facility_id
 ) prev_lg on prev_lg.id = fc.prev_location_group_id
 left join {{ ref('reference_data') }} apt on apt.id = fc.appointment_type_id
 left join {{ ref('reference_data') }} prev_apt on prev_apt.id = fc.prev_appointment_type_id
--- BL-033: facility scope partitioned by the is_sensitive argument
-join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f on f.id = lg.facility_id
+-- BL-033: facility scope partitioned by the network argument
+join {{ partition_ref('facilities', network) }} f on f.id = lg.facility_id
 
 {% endmacro %}

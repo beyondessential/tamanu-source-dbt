@@ -1,3 +1,4 @@
+{%- set network = none -%}
 select
     to_char({{ to_user_selected_timezone('datetime') }}, '{{ var("date_format") }}') as "{{ translate_label('prescriptionDate') }}",
     display_id as "{{ translate_label('patientDisplayId') }}",
@@ -24,7 +25,7 @@ select
     unit_conversion as "{{ translate_label('prescriptionUnitConversion') }}",
     frequency as "{{ translate_label('prescriptionFrequency') }}",
     discontinuing_reason as "{{ translate_label('prescriptionDiscontinuingReason') }}"
-from {{ ref('ds__encounter_prescriptions') }}
+from {{ partition_ref('ds__encounter_prescriptions', network) }}
 where
     {{ to_user_selected_timezone('datetime') }} >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and {{ to_user_selected_timezone('datetime') }} <= {{ parameter('toDate', default_value='2024-01-31', data_type='date') }}

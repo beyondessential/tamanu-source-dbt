@@ -1,13 +1,13 @@
 unit_tests:
   - name: test_audit_outpatient_appointments_prev_area_symmetric
-    model: sensitive-audit-outpatient-appointments
+    model: sensitive-example-audit-outpatient-appointments
     description: >
       AC-037 / BL-033: the mirror of AC-036, pinning that the partition is symmetric rather
       than the sensitive variant being a privileged superset. An appointment moves out of a
       standard facility into a sensitive one, so the row is admitted to the sensitive report
       on its current facility, but "Previous area" comes back blank rather than naming the
       standard facility's area -- the sensitive variant carries only sensitive-facility data,
-      as every other is_sensitive partition in this project does.
+      as every other network partition in this project does.
       Note the cross-facility move this depends on is not a normal workflow: the
       appointment form's Area field is hard-scoped to the logged-in facility, so this
       state arrives via the API or a user at another facility. The test specifies
@@ -78,7 +78,7 @@ unit_tests:
           union all
           select 'lg_sensitive'::text, 'Restricted Ward'::text, 'fac_sensitive'::text
 
-      - input: ref('sensitive_facilities')
+      - input: ref('sensitive_example_facilities')
         format: sql
         rows: |
           select 'fac_sensitive'::text as id, 'Restricted Clinic'::text as name, 'sn_001' as sensitive_network_id

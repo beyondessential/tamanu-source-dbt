@@ -1,6 +1,6 @@
-{% macro emergency_triage_dataset(is_sensitive=false) %}
+{% macro emergency_triage_dataset(network=none) %}
 
-{%- set triage_source = 'ds__sensitive_encounters_emergency' if is_sensitive else 'ds__encounters_emergency' -%}
+{%- set triage_source = partition_name('ds__encounters_emergency', network) -%}
 
 -- BL-001: one row per triage record, which is one emergency department presentation
 -- BL-015: the sensitive variant differs only in which emergency dataset it reads

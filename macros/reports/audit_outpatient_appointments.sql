@@ -1,4 +1,4 @@
-{% macro audit_outpatient_appointments_report(is_sensitive=false) %}
+{% macro audit_outpatient_appointments_report(network=none) %}
 
 -- Outpatient Appointment Audit Report
 -- One row per change event, with current and previous appointment details.
@@ -35,7 +35,7 @@ c.appointment_id in (
     -- events the core would have dropped anyway.
     join {{ ref('location_groups') }} lg2
         on lg2.id = c2.record_data ->> 'location_group_id'
-    join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f2
+    join {{ partition_ref('facilities', network) }} f2
         on f2.id = lg2.facility_id
     -- BL-039: the final WHERE's own predicate, on the same value
     where {{ to_user_selected_timezone('c2.logged_at') }}
@@ -76,7 +76,7 @@ select
     end as "{{ translate_label('auditPrevPriority') }}"
 from (
     {{ outpatient_appointments_audit_core(
-        is_sensitive=is_sensitive,
+        network=network,
         record_id_filter=candidate_filter
     ) }}
 ) core

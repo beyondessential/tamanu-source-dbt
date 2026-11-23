@@ -1,4 +1,4 @@
-{% macro encounter_prescriptions_dataset(is_sensitive=false) %}
+{% macro encounter_prescriptions_dataset(network=none) %}
 
 select
     ep.encounter_id,
@@ -44,7 +44,7 @@ join {{ ref("prescriptions") }} pr on pr.id = ep.prescription_id
 join {{ ref("locations") }} l on l.id = e.location_id
 -- BL-009 (specs/reports/encounter-prescription-discharge-summary.md): the facility
 -- partition is applied here, so the sensitive report needs no parameter for it
-join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f 
+join {{ partition_ref('facilities', network) }} f 
     on f.id = l.facility_id
 left join {{ ref('patient_additional_data') }} pd on pd.patient_id = p.id
 left join {{ ref('reference_data') }} vil on vil.id = p.village_id

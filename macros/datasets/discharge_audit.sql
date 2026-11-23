@@ -1,4 +1,4 @@
-{% macro discharge_audit_dataset(is_sensitive=false, record_id_filter=none) %}
+{% macro discharge_audit_dataset(network=none, record_id_filter=none) %}
 
 -- Discharge Audit Dataset
 -- One row per discharge record, which is one row per discharged encounter.
@@ -60,7 +60,7 @@ encounter_details as (
     from {{ ref('encounters') }} e
     join {{ ref('locations') }} loc on loc.id = e.location_id
     -- BL-009: the standard and sensitive variants each read their own facility base
-    join {{ ref('sensitive_facilities' if is_sensitive else 'facilities') }} f on f.id = loc.facility_id
+    join {{ partition_ref('facilities', network) }} f on f.id = loc.facility_id
     left join {{ ref('departments') }} dept on dept.id = e.department_id
 ),
 

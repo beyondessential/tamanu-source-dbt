@@ -1,10 +1,10 @@
-{% macro medication_dispenses_dataset(is_sensitive=false) %}
+{% macro medication_dispenses_dataset(network=none) %}
 
 -- BL-006: the encounter's facility, through its location, partitioned by sensitivity -- the
 -- same resolution every encounter report uses, so a dispense lands in the same report variant
 -- as the rest of its encounter
 with encounters_in_scope as (
-    {{ encounters_core(is_sensitive=is_sensitive) }}
+    {{ encounters_core(network=network) }}
 )
 
 select
