@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- clinical__visit_occurrence -- OMOP-lite VISIT_OCCURRENCE domain. One row per encounter,
 -- provided its encounter_type is covered by map__omop_visit_type (BL-001, BL-002 -- inner
 -- join, see BL-002 for the consequence of an unmapped encounter_type). Visit-concept shadow
@@ -6,7 +7,7 @@
 -- See specs/dbt-model/clinical__visit_occurrence.md for BL-001..BL-008.
 
 with encounters as (
-    select * from {{ ref('encounters') }}
+    select * from {{ partition_ref('encounters', network) }}
 ),
 
 visit_map as (
@@ -19,7 +20,7 @@ encounter_history_types as (
     select distinct
         encounter_id,
         encounter_type
-    from {{ ref('encounter_history') }}
+    from {{ partition_ref('encounter_history', network) }}
 ),
 
 -- BL-002: encounters with an emergency, triage or observation phase in their history -- an

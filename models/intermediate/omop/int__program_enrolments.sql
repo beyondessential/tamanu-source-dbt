@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- int__program_enrolments -- BL-026: one row per patient enrolment in a program registry, with
 -- the registry, clinical status and currently-at resolved.
 --
@@ -17,7 +18,7 @@
 -- Spec: specs/dbt-model/clinical__episode.md, BL-026.
 
 with registrations as (
-    select * from {{ ref('patient_program_registrations') }}
+    select * from {{ partition_ref('patient_program_registrations', network) }}
 ),
 
 program_registries as (
@@ -28,8 +29,10 @@ clinical_statuses as (
     select * from {{ ref('program_registry_clinical_statuses') }}
 ),
 
+-- BL-014 (see specs/dbt-model/sensitive-facility-partition.md): the facility a patient is
+-- currently at can be in another partition than the registering facility
 facilities as (
-    select * from {{ ref('facilities') }}
+    {{ every_partition('facilities') }}
 ),
 
 reference_data as (

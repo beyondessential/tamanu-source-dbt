@@ -3,7 +3,13 @@
 -- (D1 OMOP-lite). Sources only from bases/ (D10).
 -- See specs/dbt-model/clinical__person.md for the BL clauses this model implements.
 
-with patients as (
+-- BL-018 (see specs/dbt-model/sensitive-facility-partition.md): birth records from every
+-- partition, so a patient born at a sensitive facility keeps a birth time
+with all_patient_birth_data as (
+    {{ every_partition('patient_birth_data') }}
+),
+
+patients as (
     select * from {{ ref('patients') }}
 ),
 
@@ -26,7 +32,7 @@ birth as (
     select
         patient_id,
         birth_time
-    from {{ ref('patient_birth_data') }}
+    from all_patient_birth_data
 ),
 
 sex_map as (

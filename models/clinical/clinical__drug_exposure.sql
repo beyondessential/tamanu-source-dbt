@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- clinical__drug_exposure -- OMOP-lite DRUG_EXPOSURE domain. One row per drug exposure,
 -- unioning three standard sources: medication prescriptions (BL-006), vaccine
 -- administrations with status = 'GIVEN' (BL-007), and pharmacy dispenses (BL-008). Drug
@@ -7,11 +8,11 @@
 -- (see spec). See spec for BL-001..BL-008.
 
 with prescriptions as (
-    select * from {{ ref('prescriptions') }}
+    select * from {{ partition_ref('prescriptions', network) }}
 ),
 
 encounter_prescriptions as (
-    select * from {{ ref('encounter_prescriptions') }}
+    select * from {{ partition_ref('encounter_prescriptions', network) }}
 ),
 
 reference_data as (
@@ -19,7 +20,7 @@ reference_data as (
 ),
 
 vaccine_administrations as (
-    select * from {{ ref('vaccine_administrations') }}
+    select * from {{ partition_ref('vaccine_administrations', network) }}
 ),
 
 vaccine_schedules as (
@@ -27,19 +28,19 @@ vaccine_schedules as (
 ),
 
 medication_dispenses as (
-    select * from {{ ref('medication_dispenses') }}
+    select * from {{ partition_ref('medication_dispenses', network) }}
 ),
 
 pharmacy_order_prescriptions as (
-    select * from {{ ref('pharmacy_order_prescriptions') }}
+    select * from {{ partition_ref('pharmacy_order_prescriptions', network) }}
 ),
 
 pharmacy_orders as (
-    select * from {{ ref('pharmacy_orders') }}
+    select * from {{ partition_ref('pharmacy_orders', network) }}
 ),
 
 encounters as (
-    select * from {{ ref('encounters') }}
+    select * from {{ partition_ref('encounters', network) }}
 ),
 
 -- prescription branch: every prescription, joined to its encounter and drug (BL-006)

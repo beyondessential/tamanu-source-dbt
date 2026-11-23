@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- int__triage_observations -- unpivots the wide triages row into one row per recorded
 -- triage element (tall shape), for the triage branch of clinical__observation.
 -- Elements: the acuity score, and the chief/secondary complaints (resolved to their
@@ -5,7 +6,7 @@
 -- Values are kept as text here; the numeric cast happens in clinical__observation.
 
 with triages as (
-    select * from {{ ref('triages') }}
+    select * from {{ partition_ref('triages', network) }}
 ),
 
 reference_data as (

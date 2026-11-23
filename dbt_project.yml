@@ -114,6 +114,11 @@ models:
         +enabled: "{{ 'example' in var('sensitive_networks', []) }}"
         +tags:
           - restricted
+      omop:
+        sensitive:
+          +enabled: "{{ 'example' in var('sensitive_networks', []) }}"
+          +tags:
+            - restricted
     ref:
       +docs:
         show: true
@@ -140,6 +145,10 @@ models:
       +materialized: "{{ 'table' if target.name.startswith('analytics') else 'view' }}"
       +tags:
         - clinical
+      sensitive:
+        +enabled: "{{ 'example' in var('sensitive_networks', []) }}"
+        +tags:
+          - restricted
     derived:
       +docs:
         show: true
@@ -166,6 +175,10 @@ models:
       +schema: "{{ 'public_tupaia' if target.name.startswith('analytics') else '' }}"
       +tags:
         - metrics
+      sensitive:
+        +enabled: "{{ 'example' in var('sensitive_networks', []) }}"
+        +tags:
+          - restricted
     datasets:
       +docs:
         show: true

@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- clinical__cost -- OMOP-lite COST domain. One row per invoice (BL-001), anchored to
 -- the encounter's visit_occurrence via cost_event_id. Charges, coverage, net patient
 -- payment and net insurer payment all come from the shared
@@ -10,7 +11,7 @@
 -- "Decisions taken" note in specs/dbt-model/clinical__cost.md).
 
 with invoice_amounts as (
-    select * from {{ ref('int__encounter_invoice_amounts') }}
+    select * from {{ partition_ref('int__encounter_invoice_amounts', network) }}
 )
 
 select

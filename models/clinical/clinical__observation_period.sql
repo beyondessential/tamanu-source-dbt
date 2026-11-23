@@ -3,14 +3,36 @@
 -- dates across the five event domains (BL-002), per the OMOP EHR convention.
 -- See specs/dbt-model/clinical__observation_period.md for BL-001..BL-005.
 
-with visits as materialized (
+-- BL-018 (see specs/dbt-model/sensitive-facility-partition.md): each event domain from every
+-- partition
+with all_visit_occurrence as (
+    {{ every_partition('clinical__visit_occurrence') }}
+),
+
+all_drug_exposure as (
+    {{ every_partition('clinical__drug_exposure') }}
+),
+
+all_condition_occurrence as (
+    {{ every_partition('clinical__condition_occurrence') }}
+),
+
+all_measurement as (
+    {{ every_partition('clinical__measurement') }}
+),
+
+all_observation as (
+    {{ every_partition('clinical__observation') }}
+),
+
+visits as materialized (
     -- single scan of clinical__visit_occurrence -- both start and end feed
     -- event_dates below, without referencing the ref() twice
     select
         person_id,
         visit_start_date,
         visit_end_date
-    from {{ ref('clinical__visit_occurrence') }}
+    from all_visit_occurrence
 ),
 
 drug_exposures as materialized (
@@ -20,7 +42,7 @@ drug_exposures as materialized (
         person_id,
         drug_exposure_start_date,
         drug_exposure_end_datetime::date as drug_exposure_end_date
-    from {{ ref('clinical__drug_exposure') }}
+    from all_drug_exposure
 ),
 
 event_dates as (
@@ -45,7 +67,7 @@ event_dates as (
     select
         person_id,
         condition_start_date as event_date
-    from {{ ref('clinical__condition_occurrence') }}
+    from all_condition_occurrence
     where condition_start_date is not null
 
     union all
@@ -53,7 +75,7 @@ event_dates as (
     select
         person_id,
         measurement_date as event_date
-    from {{ ref('clinical__measurement') }}
+    from all_measurement
     where measurement_date is not null
 
     union all
@@ -77,7 +99,7 @@ event_dates as (
     select
         person_id,
         observation_date as event_date
-    from {{ ref('clinical__observation') }}
+    from all_observation
     where observation_date is not null
 )
 

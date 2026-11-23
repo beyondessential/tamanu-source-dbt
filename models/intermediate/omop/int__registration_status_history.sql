@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- int__registration_status_history -- one row per recorded change to a program registration,
 -- carrying the registration and clinical status as at that change.
 --
@@ -11,7 +12,7 @@
 -- Spec: specs/dbt-model/clinical__episode.md, BL-012..BL-016.
 
 with change_logs as (
-    select * from {{ ref('patient_program_registrations_change_logs') }}
+    select * from {{ partition_ref('patient_program_registrations_change_logs', network) }}
 ),
 
 -- BL-012: entries are scoped to the registrations clinical__episode models, read from the
@@ -27,7 +28,7 @@ enrolments as (
         registration_status,
         clinical_status_id,
         registered_by_id
-    from {{ ref('int__program_enrolments') }}
+    from {{ partition_ref('int__program_enrolments', network) }}
     where registration_status != 'recordedInError'
 ),
 

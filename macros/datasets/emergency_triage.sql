@@ -72,7 +72,7 @@ presentation_details as (
         disposition.name as discharge_disposition
     from presentations p
     join {{ partition_ref('encounters', network) }} e on e.id = p.encounter_id
-    left join {{ ref('clinical__visit_occurrence') }} vo on vo.visit_occurrence_id = p.encounter_id
+    left join {{ partition_ref('clinical__visit_occurrence', network) }} vo on vo.visit_occurrence_id = p.encounter_id
     left join encounter_diagnoses_agg dx on dx.encounter_id = p.encounter_id
     left join encounter_medications_agg rx on rx.encounter_id = p.encounter_id
     left join {{ partition_ref('discharges', network) }} dis on dis.encounter_id = p.encounter_id

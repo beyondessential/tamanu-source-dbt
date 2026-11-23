@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- clinical__measurement -- OMOP-lite MEASUREMENT domain. One row per clinical measurement,
 -- unioning three standard sources: vitals via the Tamanu Vitals survey (BL-006), lab tests
 -- carrying a reading (BL-007), and birth anthropometry unpivoted from patient_birth_data
@@ -9,11 +10,11 @@
 -- by per-deployment override (see spec). See spec for BL-001..BL-012.
 
 with survey_response_answers as (
-    select * from {{ ref('survey_response_answers') }}
+    select * from {{ partition_ref('survey_response_answers', network) }}
 ),
 
 survey_responses as (
-    select * from {{ ref('survey_responses') }}
+    select * from {{ partition_ref('survey_responses', network) }}
 ),
 
 surveys as (
@@ -25,15 +26,15 @@ program_data_elements as (
 ),
 
 encounters as (
-    select * from {{ ref('encounters') }}
+    select * from {{ partition_ref('encounters', network) }}
 ),
 
 lab_tests as (
-    select * from {{ ref('lab_tests') }}
+    select * from {{ partition_ref('lab_tests', network) }}
 ),
 
 lab_requests as (
-    select * from {{ ref('lab_requests') }}
+    select * from {{ partition_ref('lab_requests', network) }}
 ),
 
 lab_test_types as (
@@ -45,7 +46,7 @@ lab_result_encoding as (
 ),
 
 patient_birth_measurements as (
-    select * from {{ ref('int__patient_birth_measurements') }}
+    select * from {{ partition_ref('int__patient_birth_measurements', network) }}
 ),
 
 -- every recorded answer to the core Vitals survey; numeric and categorical alike (BL-006)

@@ -82,6 +82,17 @@
 {%- endmacro -%}
 
 
+-- BL-014: `model` from every partition, for a from or join clause that must stay a plain
+-- relation where the deployment lists no network. Give it an alias.
+{%- macro every_partition_relation(model) -%}
+    {%- if listed_sensitive_networks() -%}
+        ({{ every_partition(model) }})
+    {%- else -%}
+        {{ ref(model) }}
+    {%- endif -%}
+{%- endmacro -%}
+
+
 -- The predicates below place a base's row in a partition by the facility its link resolves to.
 -- Each takes the SQL expression holding the link. A link that is null, or resolves to no
 -- facility, is standard (BL-003), and one resolving to a facility in an unlisted network is in

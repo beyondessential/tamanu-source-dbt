@@ -9,12 +9,14 @@
 -- ref__care_site_location (BL-009); OMOP column naming applied (D2).
 -- See specs/dbt-model/ref__care_site.md for BL-001..BL-009.
 
+-- BL-019 (see specs/dbt-model/sensitive-facility-partition.md): departments and facilities
+-- from every partition
 with departments as (
-    select * from {{ ref('departments') }}
+    {{ every_partition('departments') }}
 ),
 
 facilities as (
-    select * from {{ ref('facilities') }}
+    {{ every_partition('facilities') }}
 ),
 
 -- organizational care unit (BL-001, BL-005)

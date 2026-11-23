@@ -101,7 +101,15 @@ def rename_tests(node, model, new_name):
         rename_tests(column, model, new_name)
 
 
-def model_properties(source_yml, model, new_name, source_relative):
+def model_properties(source_yml, model, new_name, source_relative, network, partitioned):
+    # A test that reads another partitioned model reads the network's copy of it (BL-015).
+    source_yml = re.sub(
+        r"ref\(\s*(['\"])([^'\"]+)\1\s*\)",
+        lambda m: (
+            f"ref('{partition_name(m.group(2), network)}')" if m.group(2) in partitioned else m.group(0)
+        ),
+        source_yml,
+    )
     document = yaml.safe_load(source_yml)
     nodes = [node for node in document.get("models") or [] if node.get("name") == model]
     if not nodes:
@@ -139,7 +147,9 @@ def config_path(relative_sql):
 def generate(source_models, output_models, networks):
     """Write every network's models under `output_models`, returning the paths written."""
     written = {}
-    for relative in partitioned_models(source_models):
+    models = partitioned_models(source_models)
+    partitioned = {relative.stem for relative in models}
+    for relative in models:
         model = relative.stem
         sql = (source_models / relative).read_text(encoding="utf-8")
         yml_path = (source_models / relative).with_suffix(".yml")
@@ -154,7 +164,9 @@ def generate(source_models, output_models, networks):
             target = output_dir(relative.parent) / new_name
             written[target.with_suffix(".sql")] = model_sql(sql, relative, network)
             if yml_path.exists():
-                properties = model_properties(yml_path.read_text(encoding="utf-8"), model, new_name, relative)
+                properties = model_properties(
+                    yml_path.read_text(encoding="utf-8"), model, new_name, relative, network, partitioned
+                )
                 if properties:
                     written[target.with_suffix(".yml")] = properties
             if json_relative and (source_models / json_relative).exists():

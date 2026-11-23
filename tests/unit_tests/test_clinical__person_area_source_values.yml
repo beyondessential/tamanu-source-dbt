@@ -6,6 +6,8 @@ unit_tests:
       carried as-is, and location_id is the patient's location from int__patient_address. pat_1
       has both, pat_2 has a location and no medical area, and pat_3 has no additional-data record
       and no location, so both are NULL and the patient is still returned (BL-005).
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     given:
       - input: ref('patients')
         format: sql
@@ -36,6 +38,14 @@ unit_tests:
         format: sql
         rows: |
           select null::text as patient_id, null::time as birth_time where false
+
+      - input: ref('sn_example_patient_birth_data')
+        format: sql
+        rows: |
+          select fx.* from (
+            select null::text as patient_id, null::time as birth_time where false
+          ) fx
+          where false
       - input: ref('map__omop_sex')
         format: sql
         rows: |

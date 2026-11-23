@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- clinical__observation -- OMOP-lite OBSERVATION domain. One row per clinical fact that is
 -- neither a measurement nor a drug exposure, unioning three standard sources:
 -- program/referral-survey answers (BL-006), vaccinations not given (BL-007), and triage
@@ -8,11 +9,11 @@
 -- override (see spec). See spec for BL-001..BL-008.
 
 with survey_response_answers as (
-    select * from {{ ref('survey_response_answers') }}
+    select * from {{ partition_ref('survey_response_answers', network) }}
 ),
 
 survey_responses as (
-    select * from {{ ref('survey_responses') }}
+    select * from {{ partition_ref('survey_responses', network) }}
 ),
 
 surveys as (
@@ -24,7 +25,7 @@ program_data_elements as (
 ),
 
 vaccine_administrations as (
-    select * from {{ ref('vaccine_administrations') }}
+    select * from {{ partition_ref('vaccine_administrations', network) }}
 ),
 
 vaccine_schedules as (
@@ -36,11 +37,11 @@ reference_data as (
 ),
 
 triage_observations as (
-    select * from {{ ref('int__triage_observations') }}
+    select * from {{ partition_ref('int__triage_observations', network) }}
 ),
 
 encounters as (
-    select * from {{ ref('encounters') }}
+    select * from {{ partition_ref('encounters', network) }}
 ),
 
 -- every recorded answer to a programs/referral survey; sensitive surveys included, echo /

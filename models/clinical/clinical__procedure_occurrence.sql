@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- clinical__procedure_occurrence -- OMOP-lite PROCEDURE_OCCURRENCE domain. Two sources,
 -- unioned: recorded procedures (bases/procedures) and imaging requests
 -- (bases/imaging_requests). OMOP has no dedicated domain for medical imaging -- the CDM
@@ -32,15 +33,15 @@
 -- See specs/dbt-model/clinical__procedure_occurrence.md for BL-001..BL-005.
 
 with procedures as (
-    select * from {{ ref('procedures') }}
+    select * from {{ partition_ref('procedures', network) }}
 ),
 
 imaging_requests as (
-    select * from {{ ref('imaging_requests') }}
+    select * from {{ partition_ref('imaging_requests', network) }}
 ),
 
 encounters as (
-    select * from {{ ref('encounters') }}
+    select * from {{ partition_ref('encounters', network) }}
 ),
 
 reference_data as (
@@ -48,7 +49,7 @@ reference_data as (
 ),
 
 visit_detail as (
-    select * from {{ ref('clinical__visit_detail') }}
+    select * from {{ partition_ref('clinical__visit_detail', network) }}
 ),
 
 -- recorded procedures

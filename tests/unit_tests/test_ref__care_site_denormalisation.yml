@@ -5,11 +5,21 @@ unit_tests:
       A department becomes a care_site_type='department' row, denormalised with its
       parent facility name and place-of-service source value (BL-001, BL-002, BL-003,
       BL-005).
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     given:
       - input: ref('departments')
         format: sql
         rows: |
           select 'dep1' as id, 'DEP1' as code, 'Emergency Dept' as name, 'fac1' as facility_id
+
+      - input: ref('sn_example_departments')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'dep1' as id, 'DEP1' as code, 'Emergency Dept' as name, 'fac1' as facility_id
+          ) fx
+          where false
       - input: ref('ref__care_site_location')
         format: sql
         rows: |
@@ -20,6 +30,14 @@ unit_tests:
         format: sql
         rows: |
           select 'fac1' as id, 'FAC1' as code, 'General Hospital' as name, 'hospital' as type
+
+      - input: ref('sn_example_facilities')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'fac1' as id, 'FAC1' as code, 'General Hospital' as name, 'hospital' as type
+          ) fx
+          where false
     expect:
       format: sql
       rows: |
@@ -40,11 +58,21 @@ unit_tests:
     description: >-
       A care site whose facility is absent from bases/facilities is still emitted; the
       facility-derived columns come through NULL rather than dropping the row (BL-003).
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     given:
       - input: ref('departments')
         format: sql
         rows: |
           select 'dep2' as id, 'DEP2' as code, 'Roving Clinic' as name, 'fac_gone' as facility_id
+
+      - input: ref('sn_example_departments')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'dep2' as id, 'DEP2' as code, 'Roving Clinic' as name, 'fac_gone' as facility_id
+          ) fx
+          where false
       - input: ref('ref__care_site_location')
         format: sql
         rows: |
@@ -55,6 +83,14 @@ unit_tests:
         format: sql
         rows: |
           select 'fac1' as id, 'FAC1' as code, 'General Hospital' as name, 'hospital' as type
+
+      - input: ref('sn_example_facilities')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'fac1' as id, 'FAC1' as code, 'General Hospital' as name, 'hospital' as type
+          ) fx
+          where false
     expect:
       format: sql
       rows: |
@@ -77,11 +113,21 @@ unit_tests:
       against itself so facility_id points at the care site and place-of-service comes
       through. This is the grain clinical__episode.care_site_id resolves to: an enrolment
       is registered at a facility and never at a room (BL-001, BL-002, BL-007).
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     given:
       - input: ref('departments')
         format: sql
         rows: |
           select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id where false
+
+      - input: ref('sn_example_departments')
+        format: sql
+        rows: |
+          select fx.* from (
+            select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id where false
+          ) fx
+          where false
       - input: ref('ref__care_site_location')
         format: sql
         rows: |
@@ -92,6 +138,14 @@ unit_tests:
         format: sql
         rows: |
           select 'fac1' as id, 'FAC1' as code, 'General Hospital' as name, 'hospital' as type
+
+      - input: ref('sn_example_facilities')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'fac1' as id, 'FAC1' as code, 'General Hospital' as name, 'hospital' as type
+          ) fx
+          where false
     expect:
       format: sql
       rows: |
@@ -106,11 +160,21 @@ unit_tests:
     description: >-
       Every ref__care_site_location row comes through unchanged, alongside the department and
       facility rows (BL-005, BL-009).
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     given:
       - input: ref('departments')
         format: sql
         rows: |
           select 'dep1' as id, 'DEP1' as code, 'Emergency Dept' as name, 'fac1' as facility_id
+
+      - input: ref('sn_example_departments')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'dep1' as id, 'DEP1' as code, 'Emergency Dept' as name, 'fac1' as facility_id
+          ) fx
+          where false
       - input: ref('ref__care_site_location')
         format: sql
         rows: |
@@ -121,6 +185,14 @@ unit_tests:
         format: sql
         rows: |
           select 'fac1' as id, 'FAC1' as code, 'General Hospital' as name, 'hospital' as type
+
+      - input: ref('sn_example_facilities')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'fac1' as id, 'FAC1' as code, 'General Hospital' as name, 'hospital' as type
+          ) fx
+          where false
     expect:
       format: sql
       rows: |

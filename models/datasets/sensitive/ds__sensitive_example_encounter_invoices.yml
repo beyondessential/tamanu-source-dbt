@@ -20,7 +20,7 @@ models:
     - unique
     - relationships:
         arguments:
-          to: ref('invoices')
+          to: ref('sn_example_invoices')
           field: id
   - name: encounter_id
     data_type: character varying(255)
@@ -29,7 +29,7 @@ models:
     - not_null
     - relationships:
         arguments:
-          to: ref('encounters')
+          to: ref('sn_example_encounters')
           field: id
   - name: status
     data_type: character varying(255)
