@@ -13,7 +13,7 @@
 | **Linear issue** | _none_ |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-17 |
-| **Last updated** | 2026-10-13 |
+| **Last updated** | 2026-11-24 |
 
 ## Purpose
 
@@ -45,16 +45,16 @@ One row per encounter that matches the parameter filters. An encounter without a
 
 | Argument | Values | Purpose |
 |---|---|---|
-| `is_sensitive` | `false` (standard) / `true` (sensitive) | Selects the facility partition. The standard wrapper covers non-sensitive facilities; the sensitive wrapper covers sensitive facilities. |
+| `network` | `none` (standard) / a sensitive network's code | Selects the facility partition. The standard wrapper covers non-sensitive facilities; the sensitive wrapper covers sensitive facilities. |
 
 ### Upstream models
 
 | Reference | Why we need it |
 |---|---|
-| `encounters_core()` | Shared macro resolving encounters to their facility and applying the `is_sensitive` partition (BL-001, BL-017). Reads `ref('encounters')`, `ref('locations')` and `ref('facilities')` or `ref('sensitive_facilities')` — see `specs/dbt-model/encounters_core.md` |
+| `encounters_core()` | Shared macro resolving encounters to their facility and applying the `network` partition (BL-001, BL-017). Reads `ref('encounters')`, `ref('locations')` and `ref('facilities')` or `ref('sn_<network>_facilities')` — see `specs/dbt-model/encounters_core.md` |
 | `ref('patients')` | Patient demographics + DOB for age |
 | `ref('departments')`, `ref('users')`, `ref('reference_data')` | Discharging department, supervising clinician, billing type labels |
-| `ref('ds__encounter_invoices')` / `ref('ds__sensitive_encounter_invoices')` | Per-invoice financials (totals, coverage, discounts, payments, finalisation) for the variant's facility partition (BL-017). Resolves the price-list/coverage/discount logic — see `specs/dbt-model/ds__encounter_invoices.md` |
+| `ref('ds__encounter_invoices')` / `ref('ds__sn_<network>_encounter_invoices')` | Per-invoice financials (totals, coverage, discounts, payments, finalisation) for the variant's facility partition (BL-017). Resolves the price-list/coverage/discount logic — see `specs/dbt-model/ds__encounter_invoices.md` |
 
 ## Output schema
 
@@ -93,7 +93,7 @@ One row per encounter that matches the parameter filters. An encounter without a
 - **BL-006 to BL-012, BL-015, BL-016, BL-020 (per-invoice financials):** Price-list resolution, item pricing and discount, invoice total, insurance coverage, invoice-level discount, patient-payment netting, patient subtotal, finalisation timestamp, and the no-category product list are realised per invoice in `ds__encounter_invoices` (see `specs/dbt-model/ds__encounter_invoices.md`).
 - **BL-013:** Patient subtotal is `invoiceTotal + invoiceItemAdjustments − insuranceCoverage − invoiceDiscount`, summed per encounter from `ds__encounter_invoices.patient_subtotal` (its BL-020) rather than re-derived from the aggregated components. The sum is coalesced to 0 for the same reason `invoiceTotal` is: a no-items invoice carries a null `patient_subtotal`, so an encounter whose every non-cancelled invoice has no items reads 0, while an encounter with no invoice at all stays null via the outer join.
 - **BL-014:** Patient total is `patientSubtotal − patientPayment`.
-- **BL-017:** Facility scope is partitioned by the `is_sensitive` macro argument, for encounters and invoices alike: the standard variant reads non-sensitive facilities and `ds__encounter_invoices`; the sensitive variant reads sensitive facilities and `ds__sensitive_encounter_invoices`.
+- **BL-017:** Facility scope is partitioned by the `network` macro argument, for encounters and invoices alike: the standard variant reads non-sensitive facilities and `ds__encounter_invoices`; the sensitive variant reads sensitive facilities and `ds__sn_<network>_encounter_invoices`.
   Realised by `encounters_core()` BL-001 — see `specs/dbt-model/encounters_core.md`.
   BL-002, BL-003 and BL-004 above remain this report's own, passed to that macro as
   `extra_predicates` under its row-selecting contract (its BL-004).
@@ -135,4 +135,5 @@ _None._
 | 2026-09-04 | Maui team | BL-013's patient subtotal now sums `ds__encounter_invoices.patient_subtotal` (its new BL-020) instead of re-deriving the formula from the aggregated invoice/insurance/discount sums, prompted by `tamanu-dbt-fsm`'s new `daily-cash-collection-summary` report needing the same formula. The two aggregation orders agree wherever any invoice has items, but not when every non-cancelled invoice on an encounter has none: summing a null per-invoice subtotal yields null where the old expression's `coalesce(sum(...), 0)` yielded 0. The summed subtotal is therefore coalesced to 0, restoring exact equivalence, and new AC-013 (`test_encounter_invoice_audit_no_items_invoice`) pins the case. |
 | 2026-10-13 | Maui team | [MAUI-6911](https://linear.app/bes/issue/MAUI-6911): `invoiceTotal` is the total before item adjustments, matching the app's "Invoice total", and item adjustments are their own column, `invoiceItemAdjustments`. Patient subtotal and patient total are unchanged in value. |
 | 2026-11-10 | Maui team | [MAUI-7088](https://linear.app/bes/issue/MAUI-7088/tamanu-reports-replace-repeated-filters-with-a-multi-select): the patient billing type filter is a multi-select. |
-| 2026-11-22 | Maui team | BL-017 covers invoices as well as encounters: the sensitive variant reads `ds__sensitive_encounter_invoices`. |
+| 2026-11-22 | Maui team | BL-017 covers invoices as well as encounters: the sensitive variant reads `ds__sn_<network>_encounter_invoices`. |
+| 2026-11-24 | Maui team | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

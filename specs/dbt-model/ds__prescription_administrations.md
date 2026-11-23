@@ -4,7 +4,7 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `medication_administration_records`, `medication_administration_record_doses` (bases) + `ds__prescription_administrations` / `ds__sensitive_prescription_administrations` (datasets) |
+| **Name** | `medication_administration_records`, `medication_administration_record_doses` (bases) + `ds__prescription_administrations` / `ds__sn_<network>_prescription_administrations` (datasets) |
 | **Type** | dbt model |
 | **Layer** | `base` + `ds` |
 | **Materialisation** | `view` |
@@ -13,7 +13,7 @@
 | **Linear issue** | [MAUI-7084](https://linear.app/bes/issue/MAUI-7084/tamanu-report-new-thrombolytic-administration-tenecteplase-alteplase) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-11-03 |
-| **Last updated** | 2026-11-03 |
+| **Last updated** | 2026-11-24 |
 
 ## Purpose
 
@@ -111,7 +111,7 @@ encounter_prescriptions ──────────────────�
 prescriptions ─────────────────────────────┤
 medication_administration_records (new) ───┼─►  ds__prescription_administrations ───────────►  medication-administration-record-line-list
 medication_administration_record_doses (new)┤
-encounters/patients/...  ──────────────────┘   ds__sensitive_prescription_administrations ─►  sensitive-medication-administration-record-line-list
+encounters/patients/...  ──────────────────┘   ds__sn_<network>_prescription_administrations ─►  sensitive-<network>-medication-administration-record-line-list
 ```
 
 ## Change log
@@ -119,3 +119,4 @@ encounters/patients/...  ──────────────────�
 | Date | Author | Change |
 |---|---|---|
 | 2026-11-03 | Maui team | Initial spec |
+| 2026-11-24 | Maui team | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

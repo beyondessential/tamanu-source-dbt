@@ -4,7 +4,7 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `emergency-triage-line-list` (+ `sensitive-emergency-triage-line-list`) + `ds__emergency_triage` (+ `ds__sensitive_emergency_triage`) |
+| **Name** | `emergency-triage-line-list` (+ `sensitive-<network>-emergency-triage-line-list`) + `ds__emergency_triage` (+ `ds__sn_<network>_emergency_triage`) |
 | **Type** | Tamanu in-product report + supporting dataset |
 | **Layer** | `ds` + `report` |
 | **Materialisation** | `view` |
@@ -13,7 +13,7 @@
 | **Linear issue** | [MAUI-6778](https://linear.app/bes/issue/MAUI-6778/tamanu-report-new-ttm-emergency-triage-report) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-08-11 |
-| **Last updated** | 2026-08-11 |
+| **Last updated** | 2026-11-24 |
 
 ## Purpose
 
@@ -38,7 +38,7 @@ at most one triage per encounter.
 
 | Reference | Why we need it |
 |---|---|
-| `ds__encounters_emergency` / `ds__sensitive_encounters_emergency` | Triage record with patient demographics, complaints, facility |
+| `ds__encounters_emergency` / `ds__sn_<network>_encounters_emergency` | Triage record with patient demographics, complaints, facility |
 | `clinical__visit_occurrence` | OMOP visit concept, to identify presentations that became inpatient admissions |
 | `encounters` | Encounter type and end date |
 | `encounter_diagnoses` | Diagnoses recorded during the encounter |
@@ -92,7 +92,7 @@ Durations are stored as `bigint` seconds and rendered as `hh:mm:ss` by the repor
 
 AC-002 to AC-006 and AC-008 run against the standard dataset only. The sensitive variant is
 generated from the same macro, so its logic is identical by construction; it carries the
-AC-001 schema tests in its own right. No `ds__sensitive_*` model in this repo has a singular
+AC-001 schema tests in its own right. No `ds__sn_<network>_*` model in this repo has a singular
 test.
 
 ## Open questions
@@ -117,3 +117,4 @@ discharges                 ──┘
 |---|---|---|
 | 2026-08-11 | Maui team | Initial spec + implementation (MAUI-6778) |
 | 2026-11-10 | Maui team | MAUI-7088: the triage category filter is a multi-select (BL-014, AC-009). |
+| 2026-11-24 | Maui team | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

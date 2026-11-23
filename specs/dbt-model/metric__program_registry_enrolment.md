@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-08-24 |
-| **Last updated** | 2026-08-24 |
+| **Last updated** | 2026-11-24 |
 
 ## Purpose
 
@@ -112,8 +112,8 @@ facility crosswalked to a Tupaia entity code.
 
   The model carries no `restricted` **tag**, so it ships in the compiled reporting bundle like
   every other `metric__` view. The tag and the classification are different axes: the tag gates a
-  model on `has_sensitive_facility`, which is a deployment feature rather than a statement about
-  PII, so tagging this would withhold the metric from every deployment without sensitive
+  model on the deployment listing a sensitive network, which is a deployment feature rather than a
+  statement about PII, so tagging this would withhold the metric from every deployment without sensitive
   facilities — the opposite of what is wanted. The shipped schema is patient-identifiable by
   design: `bases/patients` and `ds__patient_program_registrations` are both `pii: true`,
   `classification: restricted` and both ship, the latter carrying patient names alongside the

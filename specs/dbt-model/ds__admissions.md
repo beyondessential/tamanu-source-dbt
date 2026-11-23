@@ -4,8 +4,8 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `ds__admissions`, `ds__sensitive_admissions` |
-| **Macro** | `admissions_dataset(is_sensitive=false)` (`macros/datasets/admissions.sql`) |
+| **Name** | `ds__admissions`, `ds__sn_<network>_admissions` |
+| **Macro** | `admissions_dataset(network=none)` (`macros/datasets/admissions.sql`) |
 | **Type** | Consumer-shaped dataset (`ds__`) |
 | **Layer** | `ds__` |
 | **Materialisation** | env-aware (view in the production bundle) |
@@ -45,7 +45,7 @@ for the same encounter, so the two legitimately disagree; see *Relationship to
 
 | Argument | Purpose |
 |---|---|
-| `is_sensitive` | Facility partition, passed straight to `encounters_core()`. `false` = non-sensitive facilities only |
+| `network` | Facility partition, passed straight to `encounters_core()`. `false` = non-sensitive facilities only |
 
 ## Output schema
 
@@ -67,7 +67,7 @@ Diagnoses: `primary_diagnoses`, `primary_diagnoses_codes`, `secondary_diagnoses`
 ## Business logic
 
 - **BL-001:** Scope and the sensitivity partition come from
-  `encounters_core(is_sensitive=..., encounter_type='admission')`, aliased back to this
+  `encounters_core(network=..., encounter_type='admission')`, aliased back to this
   dataset's own column names. `localise_timestamps` is deliberately left off — see
   BL-010.
 - **BL-002:** The history consolidation is **left**-joined from the encounter, narrowed
@@ -201,7 +201,7 @@ partition, but it does not mean what its name suggests.
 | AC-002 | An admission ungrouped throughout emits no location-group entries, so the columns are null. | BL-006 | `test_ds__admissions_location_group_null_dedup` (enc_B) |
 | AC-003 | Two consecutive locations sharing one group collapse to a single location-group entry. | BL-006 | `test_ds__admissions_location_group_null_dedup` (enc_C) |
 | AC-004 | Only `admission` encounters appear. | BL-001 | `test_ds__admissions_filters_admission_encounters_only` |
-| AC-005 | With `is_sensitive = false` no sensitive facility's admission appears, and vice versa. | BL-001 | `test_ds__admissions_sensitive_facilities` |
+| AC-005 | With `network = none` no sensitive facility's admission appears, and vice versa. | BL-001 | `test_ds__admissions_sensitive_facilities` |
 | AC-006 | `age` is the age at admission. | BL-008 | `test_ds__admissions_age_calculation` |
 | AC-007 | An encounter with a planned transfer emits the planned location's id, resolved name and start datetime. | BL-011 | `test_ds__admissions_basic_functionality` (enc_001) |
 
@@ -217,3 +217,4 @@ None outstanding.
 | 2026-09-04 | Recorded that the two history consolidations are deliberately not merged. Decided that an admission dates from **conversion**, not presentation, making the phase scope in BL-002 a decision rather than an open question. No code change. |
 | 2026-09-05 | An ungrouped move is named `(no area)` in `location_groups` (BL-006), so the three movement columns of a triple stay the same length. |
 | 2026-09-17 | Added the planned-transfer columns `planned_location_id`, `planned_location` and `planned_location_start_datetime` (BL-011, MAUI-6905), for the admissions line list report. |
+| 2026-11-24 | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

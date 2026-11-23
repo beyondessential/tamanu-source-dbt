@@ -13,7 +13,7 @@
 | **Linear issue** | [MAUI-6734](https://linear.app/bes/issue/MAUI-6734) (design spun off from the Queen of Sheba End-of-day Invoice Report) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-26 |
-| **Last updated** | 2026-10-13 |
+| **Last updated** | 2026-11-24 |
 
 The OMOP-lite `COST` domain — the canonical billing surface for Tamanu invoices,
 mapping the invoice / charge / payment graph onto OMOP CDM v5.4 Standardized
@@ -279,4 +279,4 @@ implementation to reconcile.
 | 2026-07-26 | Maui team | Initial draft — OMOP `COST` design spun off from MAUI-6734; then implemented: `int__encounter_invoice_amounts` extraction, `ds__encounter_invoices` refactor, `clinical__cost` model + tests. Payment-method split and shared-arithmetic layering resolved. AC tests run green against the 2.57 replica; status → `implemented` |
 | 2026-10-02 | Maui team | Payments reach `int__encounter_invoice_amounts` through the shared `invoice_payment_amounts()` macro (`specs/dbt-model/invoice_payment_amounts.md`), with no change to `paid_by_patient` or `paid_by_payer` |
 | 2026-10-13 | Maui team | [MAUI-6911](https://linear.app/bes/issue/MAUI-6911): `int__encounter_invoice_amounts.invoice_total` is the total before item adjustments, so BL-003 adds `item_adjustment` back. `total_charge` is unchanged in value. |
-| 2026-11-22 | Maui team | `int__encounter_invoice_amounts` covers invoices at standard facilities only, so `clinical__cost` does too. |
+| 2026-11-24 | Maui team | `clinical__cost` is partitioned: it covers invoices at standard facilities, and each sensitive network has a copy covering its own (`specs/dbt-model/sensitive-facility-partition.md` BL-017). |

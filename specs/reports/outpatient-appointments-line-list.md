@@ -13,7 +13,7 @@
 | **Linear issue** | _none yet — this spec was written alongside the performance rework_ |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-09-07 |
-| **Last updated** | 2026-11-04 |
+| **Last updated** | 2026-11-24 |
 
 ## Purpose
 
@@ -46,7 +46,7 @@ and the two share upstream models but not their shape.
 
 ### Macro arguments (report and dataset)
 
-`is_sensitive` — `false` (standard) / `true` (sensitive); selects the facility partition
+`network` — `none` (standard) / a sensitive network's code; selects the facility partition
 (BL-045).
 
 `appointment_filter` — the dataset macro's early-filter argument (BL-046). `none` for the
@@ -151,7 +151,7 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
   `order by` is the window's own `(logged_at_utc, record_updated_at_utc, changelog_id)`, so `distinct on`
   selects the row where `row_number() = 1`; and at that row
   `first_value(updated_by_user_id)` is `updated_by_user_id`.
-- **BL-045:** Facility scope is the `is_sensitive` partition plus the optional `facilityId`
+- **BL-045:** Facility scope is the `network` partition plus the optional `facilityId`
   parameter, both applied in the scope CTE. Area and facility are inner joins, so an
   appointment whose `location_group_id` is null or dangling produces no row at all; the
   join to `patients` behaves the same way, so a soft-deleted or merged patient takes their
@@ -170,7 +170,7 @@ is not run by CI. Keeping a clause true to its code is a review obligation.
   `parameter()` falls through to a `var()` literal rather than a bind placeholder. Report
   callers own their filters.
 - **BL-047:** Standard and sensitive share `outpatient_appointments_line_list_report()`,
-  and the two report models are one-line calls differing only in `is_sensitive`. Before
+  and the two report models are one-line calls differing only in `network`. Before
   this, each carried its own copy of the same 45-line body — the drift risk the
   `outpatient_appointments_audit_core` header describes from experience.
 - **BL-048:** `appointmentIsRepeating` carries two kinds of value in one column: the
@@ -213,7 +213,7 @@ patients, patient_additional_data, users, reference_data ───────�
                                           │                                   └──► analytics consumers
                                           └─ report filter (BL-042) ──► outpatient_appointments_line_list_report() (BL-047)
                                                                               ├──► outpatient-appointments-line-list
-                                                                              └──► sensitive-outpatient-appointments-line-list
+                                                                              └──► sensitive-<network>-outpatient-appointments-line-list
 ```
 
 ## Open questions
@@ -291,3 +291,4 @@ patients, patient_additional_data, users, reference_data ───────�
 | 2026-09-17 | Maui team | Added `appointmentId` as the first column and `appointmentCreatedDateTime` as the last (MAUI-6905). `created_datetime` is new in `bases/outpatient_appointments`, where `created_at` is converted from `timestamptz` to deployment-local wall clock, and is passed through the dataset's scope CTE. |
 | 2026-09-07 | Maui team | Initial spec, written alongside the performance rework: filter pushdown into the dataset's scope CTE (BL-042, BL-046), the window-free creator lookup (BL-044), the bare-column index-prunable bounds (BL-043), the shared report macro replacing two copies of the body (BL-047), and `facilityId` applied for the first time (BL-045). BL-041 records why this report keeps the house `<= toDate` form where the audit reports cast and add a day. |
 | 2026-11-10 | Maui team | [MAUI-7088](https://linear.app/bes/issue/MAUI-7088/tamanu-reports-replace-repeated-filters-with-a-multi-select): added BL-049. |
+| 2026-11-24 | Maui team | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

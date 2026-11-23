@@ -12,7 +12,7 @@
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-07-01 |
-| **Last updated** | 2026-11-20 |
+| **Last updated** | 2026-11-24 |
 
 OMOP `CARE_SITE` wrapper over Tamanu's care units. **Heterogeneous by design:** it holds
 Tamanu **departments** (the organizational care unit) and **locations** (physical
@@ -140,6 +140,10 @@ vocabulary can derive the concept downstream.
 - **BL-009:** The location grain, with its facility columns, is the view
   `ref__care_site_location`, one select over the base models with no `with` clause and no union,
   which `ref__care_site` unions in and a consumer that needs only location care sites reads directly.
+- **BL-010:** Departments, locations, location groups and facilities are read from every partition
+  the deployment has, so a care site exists whichever partition its facility is in
+  (`specs/dbt-model/sensitive-facility-partition.md` BL-019). Each stays a plain relation where no
+  sensitive network is listed, so BL-009 holds there.
 
 ## Acceptance criteria
 
@@ -156,6 +160,7 @@ vocabulary can derive the concept downstream.
 | AC-010 | A location's own facility is kept when its location group's differs | BL-008 | dbt unit test (`test_ref__care_site_location_own_facility_wins`) |
 | AC-011 | `ref__care_site` carries every `ref__care_site_location` row unchanged, alongside the department and facility rows | BL-005, BL-009 | dbt unit test (`test_ref__care_site_unions_location_care_sites`) |
 | AC-012 | `ref__care_site_location.care_site_id` is `not_null` and `unique` | BL-009 | dbt `not_null`, `unique` |
+| AC-013 | A facility in a listed sensitive network has a facility care site | BL-010 | dbt unit test (`ac_010_ref__care_site_covers_every_partition`) |
 
 ## Registry entry
 
@@ -185,3 +190,4 @@ elements (only `metric__` / `derived__` get a `metric_definitions.csv` row).
 | Date | Author | Change |
 |---|---|---|
 | 2026-11-20 | @julianam-w | Build the location grain in `ref__care_site_location`, which a consumer needing only location care sites reads, so a join on `care_site_id` is estimated as one care site per row (MAUI-7203) |
+| 2026-11-24 | Maui team | BL-010, AC-013: the care sites cover every partition, so a sensitive network's visit or enrolment resolves its care site (MAUI-7220). |

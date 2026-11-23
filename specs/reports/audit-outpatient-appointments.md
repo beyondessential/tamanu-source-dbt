@@ -13,7 +13,7 @@
 | **Linear issue** | [MAUI-6857](https://linear.app/bes/issue/MAUI-6857/audit-outpatient-appointments-report-times-out-full-change-log-scan) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-08-29 |
-| **Last updated** | 2026-11-04 |
+| **Last updated** | 2026-11-24 |
 
 ## Purpose
 
@@ -41,7 +41,7 @@ transitions that aren't cancellations (BL-023, BL-025).
 
 ### Macro argument (report and dataset)
 
-`is_sensitive` — `false` (standard) / `true` (sensitive); selects the facility partition (BL-033).
+`network` — `none` (standard) / a sensitive network's code; selects the facility partition (BL-033).
 
 ### Upstream models
 
@@ -150,7 +150,7 @@ review obligation, not an automated one (DV-007).
   `max(updated_at_sync_tick)`. The comparison is `>=`, not `>`: a sync tick is shared by
   every row in that session, so a strict comparison would permanently skip rows landing on
   the boundary tick after the previous run read it.
-- **BL-033:** Which rows appear is partitioned by `is_sensitive` on both report and dataset,
+- **BL-033:** Which rows appear is partitioned by `network` on both report and dataset,
   and the report additionally applies `facilityId`. Both are applied in the candidate filter
   as well as at the end, resolved from the facility recorded on the event and never from the
   appointment's current row, which can differ.
@@ -188,11 +188,9 @@ review obligation, not an automated one (DV-007).
 
   The joins to `patients` and `location_groups` behave the same way: a patient later
   soft-deleted or merged takes their audit trail with them (BL-028).
-- **BL-038:** The sensitive variant of the dataset is disabled unless the deployment sets
-  `has_sensitive_facility`. A permanently empty incremental table keeps a watermark of 0, so
-  every run would rescan the whole change log to emit nothing — worse than the view it
-  replaced. Gated in the macro's `config()`, not `dbt_project.yml`, because `var()` does not
-  resolve while project config is rendered.
+- **BL-038:** A sensitive network's copy of the dataset exists only where the deployment lists
+  that network, so no permanently empty incremental table rescans the whole change log on
+  every run to emit nothing.
 - **BL-037:** `bases/outpatient_appointments_change_logs` carries the change-log filters
   and no window functions, and exposes `logged_at` and `record_updated_at` in the
   deployment's local time like every other change-log base, plus the sort-only
@@ -354,3 +352,4 @@ _None._
 | 2026-09-02 | Maui team | Verified against Tamanu's source that `logged_at` is the edit time for every appointment entry: entries are authored once and copied verbatim, and the mobile exception cannot apply because appointments have no mobile representation. Retires DV-010. |
 | 2026-09-02 | Maui team | BL-029 now filters edit time rather than appointment start time, replacing a filter on `appointment_start_datetime` that neither MAUI-6183 nor MAUI-6857 stated as a requirement (MAUI-6857). The bound is `< toDate + 1 day` rather than the house `<= toDate`, because `parameter()` ignores `data_type` when compiling and `<=` would truncate to midnight outside compile only. BL-030 split — bound-side conversion to BL-039, whose candidate bounds are widened a day at each end so a non-injective round trip through the central zone cannot drop rows; facility pushdown into BL-033, which now also resolves `prev_location_group` and its id through the partition on the same equality row admission uses. AC-025 retired; AC-031 to AC-037 added. |
 | 2026-08-30 | Maui team | Initial spec, written alongside the performance rework: early appointment-id filtering (BL-030), the shared extraction macro (BL-031), the thin change-events base (BL-037), incremental materialisation keyed on `updated_at_sync_tick` (BL-032, BL-034) and its refresh limits (BL-035), and exclusion of soft-deleted appointments (BL-036). |
+| 2026-11-24 | Maui team | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

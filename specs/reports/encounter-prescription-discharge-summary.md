@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | **Name** | `encounter-prescription-discharge-summary` |
-| **Type** | Tamanu report, standard + sensitive pair in `models/reports/`, reading the existing `ds__encounter_prescriptions` / `ds__sensitive_encounter_prescriptions` datasets |
+| **Type** | Tamanu report, standard + sensitive pair in `models/reports/`, reading the existing `ds__encounter_prescriptions` / `ds__sn_<network>_encounter_prescriptions` datasets |
 | **Layer** | `ds`, `report` |
 | **Materialisation** | dataset `view`, report `view` |
 | **Status** | `implemented` |
@@ -56,7 +56,7 @@ day. Matches the grain of `medication-dispensed-summary`, not the per-day grain 
 | Reference | Why we need it |
 |---|---|
 | `ref('ds__encounter_prescriptions')` | Standard variant: prescription quantity, medication identity, facility, discharge-selection flag |
-| `ref('ds__sensitive_encounter_prescriptions')` | Sensitive variant: same, partitioned to sensitive facilities |
+| `ref('ds__sn_<network>_encounter_prescriptions')` | Sensitive variant: same, partitioned to sensitive facilities |
 
 ## Output schema
 
@@ -68,7 +68,7 @@ day. Matches the grain of `medication-dispensed-summary`, not the per-day grain 
 
 ## Business logic
 
-- **BL-001:** Source rows are `ds__encounter_prescriptions` / `ds__sensitive_encounter_prescriptions`
+- **BL-001:** Source rows are `ds__encounter_prescriptions` / `ds__sn_<network>_encounter_prescriptions`
   filtered to `is_selected_for_discharge = true` -- the pre-dispensing-module proxy for a
   prescription being sent to / dispensed by pharmacy, mirroring the source logic of
   `msf-medication-dispensed-summary-historical.sql` in `tamanu-dbt-msf`.
@@ -80,14 +80,14 @@ day. Matches the grain of `medication-dispensed-summary`, not the per-day grain 
   convention in `medication-dispensed-summary.sql`.
 - **BL-004:** Output columns and their translation keys (`encounterPrescriptionMedication`,
   `encounterPrescriptionMedicationCode`, `encounterPrescriptionQuantity`) are shared with
-  `medication-dispensed-summary` / `sensitive-medication-dispensed-summary` and
-  `prescription-line-list` / `sensitive-prescription-line-list`, since the columns mean the same
+  `medication-dispensed-summary` / `sensitive-<network>-medication-dispensed-summary` and
+  `prescription-line-list` / `sensitive-<network>-prescription-line-list`, since the columns mean the same
   thing across all of them: medication identity and a quantity.
 - **BL-005:** Grouped by `medication_id`, `medication`, `medication_code` -- one row per
   medication for the whole selected range, matching the grain and grouping of
   `medication-dispensed-summary`.
 - **BL-009:** Facility scope is the sensitive-facility partition already built into
-  `ds__sensitive_encounter_prescriptions` (facilities with a `sensitive_network_id`), not a parameter on
+  `ds__sn_<network>_encounter_prescriptions` (facilities with a `sensitive_network_id`), not a parameter on
   this report.
 - **BL-010:** `medicationId` is a multi-select: a prescription is included when its medication is one
   of the selected drugs, and every medication is included when none is selected.
@@ -127,3 +127,4 @@ _None._
 | 2026-08-25 | Maui team | Briefly changed output shape to match `msf-medication-dispensed-summary-historical` (date breakdown, distinct patient count, doses); reverted the same day once the actual requester ask was confirmed as item code, item name, and a single aggregate quantity for the period, with no date breakdown -- matching `medication-dispensed-summary`'s shape instead. Removed the now-unused `prescriptionDrug`, `prescriptionPatientCount`, `prescriptionNumberOfDoses` labels from `csv/report_translations_standard.csv`. |
 | 2026-10-15 | Maui team | MAUI-7011: every AC is now asserted by a unit test (AC-005 added for BL-004), each confirmed to fail when its clause is broken. BL-003, BL-004, BL-005 and BL-009 gained code anchors. |
 | 2026-11-10 | Maui team | MAUI-7088: the drug filter is a multi-select (BL-010, AC-006). |
+| 2026-11-24 | Maui team | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

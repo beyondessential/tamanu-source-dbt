@@ -4,8 +4,8 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `medication-administration-record-line-list` (display name "Medication administration record line list") + `sensitive-medication-administration-record-line-list` |
-| **Type** | Tamanu report, standard + sensitive pair in `models/reports/`, sharing `macros/reports/medication_administration_record_line_list.sql` and reading `ds__prescription_administrations` / `ds__sensitive_prescription_administrations` |
+| **Name** | `medication-administration-record-line-list` (display name "Medication administration record line list") + `sensitive-<network>-medication-administration-record-line-list` |
+| **Type** | Tamanu report, standard + sensitive pair in `models/reports/`, sharing `macros/reports/medication_administration_record_line_list.sql` and reading `ds__prescription_administrations` / `ds__sn_<network>_prescription_administrations` |
 | **Layer** | `report` |
 | **Materialisation** | `view` |
 | **Status** | `implemented` |
@@ -42,7 +42,7 @@ One row per prescription per medication administration record (MAR) per dose giv
 
 | Reference | Why we need it |
 |---|---|
-| `{{ ref('ds__prescription_administrations') }}` / `{{ ref('ds__sensitive_prescription_administrations') }}` | Prescription, patient, encounter and MAR detail, split by facility sensitivity |
+| `{{ ref('ds__prescription_administrations') }}` / `{{ ref('ds__sn_<network>_prescription_administrations') }}` | Prescription, patient, encounter and MAR detail, split by facility sensitivity |
 
 ## Output schema
 
@@ -83,3 +83,4 @@ Patient ID, First name, Last name, Date of birth, Sex, Medication, Prescribed da
 |---|---|---|
 | 2026-11-03 | Maui team | Initial draft |
 | 2026-11-11 | Maui team | BL-006 states the trailing-zero rule and AC-005 tests it |
+| 2026-11-24 | Maui team | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |
