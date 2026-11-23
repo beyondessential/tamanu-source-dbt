@@ -1,3 +1,7 @@
+{{ incremental_from_logs(
+    key='id',
+    table='patients'
+) }}
 {%- set columns = [
     {'expr': "fc.record_data ->> 'display_id'", 'name': 'display_id', 'is_direct_identifier': true},
     {'expr': "fc.record_data ->> 'first_name'", 'name': 'first_name', 'is_direct_identifier': true},
@@ -15,6 +19,9 @@
 with filtered_changes as (
     {{ base_history_from_log('patients') }}
         and record_id != '{{ var("test_patient") }}'
+        {%- if is_incremental() %}
+        and record_id in ({{ changed_since_last_run('patients') }})
+        {%- endif %}
 )
 
 select
@@ -27,5 +34,6 @@ select
             ,
             {{ col.expr }} as {{ col.name }}
         {%- endif -%}
-    {%- endfor %}
+    {%- endfor %},
+    fc.updated_at_sync_tick
 from filtered_changes fc
