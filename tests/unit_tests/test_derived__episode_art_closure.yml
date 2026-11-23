@@ -1,0 +1,33 @@
+unit_tests:
+  - name: test_derived__episode_art_closure
+    model: derived__episode_art
+    description: >
+      BL-011, BL-012. A period's last day on ART is its supply end plus 90 days, and it is open until
+      that day has passed by the deployment's local date.
+
+      The local date is 2026-06-30. pat_open holds 90 days from 2026-01-01, which runs out on
+      2026-04-01, so its last day on ART is 2026-06-30, today: still open, with no end date or
+      closure reason. pat_closed holds 90 days from 2025-12-31, whose last day on ART was yesterday:
+      closed as lost to follow-up, ending on that day.
+    overrides:
+      vars:
+        test_current_date: '2026-06-30'
+    given:
+      - input: ref('int__art_supply')
+        format: sql
+        rows: |
+          select 'pat_open' as subject_id, '2026-01-01'::date as supply_date, 90 as supply_days, 'fac_1' as facility_id, true as has_drug_exposure
+          union all
+          select 'pat_closed', '2025-12-31'::date, 90, 'fac_1', true
+
+      - input: ref('clinical__episode')
+        format: sql
+        rows: |
+          select null::text as episode_id, null::text as person_id, null::text as program_registry_id, null::timestamp as episode_start_datetime where false
+
+    expect:
+      format: sql
+      rows: |
+        select 'episode_art' as metric_id, null::text as variant_id, 'pat_closed:2025-12-31' as episode_id, 'pat_closed' as subject_id, null::int as episode_concept_id, null::text as episode_parent_id, 1 as episode_number, '2025-12-31'::date as episode_start_date, '2026-03-31'::date as supply_end_date, '2026-06-29'::date as last_day_on_art, '2026-06-29'::date as episode_end_date, 'Lost to follow-up' as closure_reason, false as is_reinitiation, 'fac_1' as first_supply_facility_id, 'fac_1' as last_supply_facility_id, 1 as supply_count
+        union all
+        select 'episode_art', null::text, 'pat_open:2026-01-01', 'pat_open', null::int, null::text, 1, '2026-01-01'::date, '2026-04-01'::date, '2026-06-30'::date, null::date, null::text, false, 'fac_1', 'fac_1', 1

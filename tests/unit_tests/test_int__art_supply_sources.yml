@@ -1,0 +1,60 @@
+unit_tests:
+  - name: test_int__art_supply_sources
+    model: int__art_supply
+    description: >
+      BL-001 to BL-007. A dispense of a mapped medication is ART supplied and an unmapped one is
+      not. A prescription is supply only when art_supply_exposure_types lists it, which it does not
+      by default. The days of ART dispensed on a form are supply on the submission's date, at the
+      form's facility. Two records on one day are one supply day covering the larger, a quantity of
+      0 or of 400 days is not a supply, and a client with no HIV-positive evidence has no supply.
+
+      pat_a has a 90 and a 30 day dispense on the same day at a facility, an unmapped dispense, a
+      prescription and a form answer of 30 days. pat_b has a dispense of 0 days, one of 400 days and
+      a form answer of 400 days, so none of it is supply. pat_c has a dispense but nothing that makes
+      them a client living with HIV.
+    given:
+      - input: ref('clinical__drug_exposure')
+        format: sql
+        rows: |
+          select 'x1' as drug_exposure_id, 'pat_a' as person_id, '2026-01-10'::date as drug_exposure_start_date, 'dispense' as drug_exposure_type_source_value, 90::numeric as quantity, 'visit_1' as visit_occurrence_id, 'ART1' as drug_source_value
+          union all
+          select 'x2', 'pat_a', '2026-01-10'::date, 'dispense', 30::numeric, 'visit_1', 'ART1'
+          union all
+          select 'x3', 'pat_a', '2026-02-01'::date, 'dispense', 30::numeric, 'visit_1', 'PARACETAMOL'
+          union all
+          select 'x4', 'pat_a', '2026-03-01'::date, 'prescription', 60::numeric, 'visit_1', 'ART1'
+          union all
+          select 'x5', 'pat_b', '2026-01-05'::date, 'dispense', 0::numeric, 'visit_1', 'ART1'
+          union all
+          select 'x6', 'pat_b', '2026-01-06'::date, 'dispense', 400::numeric, 'visit_1', 'ART1'
+          union all
+          select 'x7', 'pat_c', '2026-01-07'::date, 'dispense', 30::numeric, 'visit_1', 'ART1'
+
+      - input: ref('clinical__visit_occurrence')
+        format: sql
+        rows: |
+          select 'visit_1' as visit_occurrence_id, 'loc_1' as care_site_id
+
+      - input: ref('ref__care_site_location')
+        format: sql
+        rows: |
+          select 'loc_1' as care_site_id, 'fac_1' as facility_id
+
+      - input: ref('map__art_medications')
+        format: sql
+        rows: |
+          select 'ART1' as medication_code, 'Tenofovir' as medication_name
+
+      - input: ref('int__who_dak_hiv_form_answers')
+        format: sql
+        rows: |
+          select 'r1' as response_id, 'pat_a' as patient_id, 'fac_form' as facility_id, 'carevisit' as survey_code, '2026-04-01 09:00:00'::timestamp as submitted_datetime, null::text as hiv_status, null::text as hiv_test_result, 30::numeric as art_days_dispensed
+          union all
+          select 'r2', 'pat_b', 'fac_form', 'carevisit', '2026-04-02 09:00:00'::timestamp, null::text, null::text, 400::numeric
+
+    expect:
+      format: sql
+      rows: |
+        select 'pat_a' as subject_id, '2026-01-10'::date as supply_date, 90 as supply_days, 'fac_1' as facility_id, true as has_drug_exposure
+        union all
+        select 'pat_a', '2026-04-01'::date, 30, 'fac_form', false

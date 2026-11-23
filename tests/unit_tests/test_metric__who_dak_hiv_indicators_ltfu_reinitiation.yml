@@ -1,0 +1,42 @@
+unit_tests:
+  - name: test_metric__who_dak_hiv_indicators_ltfu_reinitiation
+    model: metric__who_dak_hiv_indicators
+    description: >
+      BL-052 to BL-054. who_dak_hiv_art_ltfu counts a client in the month they became lost to
+      follow-up and who_dak_hiv_art_reinitiated in the month a period on ART numbered 2 or more
+      started, each once, at the facility of the client's latest record. Neither adds an ART.4 row:
+      a client back on ART is not a new ART patient, since ART.4 reads only the ART start date.
+
+      pat_1 became lost to follow-up in May and pat_2 was re-initiated, at different facilities.
+      pat_x is flagged as both, but there is no HIV-positive evidence for them anywhere, so the
+      PLHIV gate leaves them out of both counts.
+    given:
+      - input: ref('int__who_dak_hiv_form_answers')
+        format: sql
+        rows: |
+          select 'r1' as response_id, 'pat_1' as patient_id, 'fac_001' as facility_id, 'carevisit' as survey_code, '2026-01-10 09:00:00'::timestamp as submitted_datetime, 'female' as sex, 1985 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth, null::text as hiv_status, null::text as hiv_test_result, null::text as viral_load_reason, null::text as art_stopped_reason, null::text as regimen_substitution_reason, null::text as key_population_hts_json, null::text as key_population_pmtct_json, null::date as hiv_test_date, null::date as hiv_test_result_returned_date, null::date as hiv_diagnosis_date, null::date as art_start_date, null::date as baseline_cd4_test_date, null::date as viral_load_sample_date, null::date as dsd_eligibility_assessed_date, null::date as dsd_start_date, null::date as art_stopped_date, null::date as substitution_first_line_date, null::date as substitution_second_line_date, null::date as substitution_third_line_date, null::numeric as baseline_cd4_count, null::numeric as viral_load_result, null::boolean as on_art, null::boolean as dsd_eligible, null::boolean as dsd_enrolled
+          union all
+          select 'r2', 'pat_2', 'fac_001', 'carevisit', '2026-01-10 09:00:00'::timestamp, 'female', 1985, 1, 1, null::text, null::text, null::text, null::text, null::text, null::text, null::text, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::numeric, null::numeric, null::boolean, null::boolean, null::boolean
+          union all
+          select 'r3', 'pat_x', 'fac_001', 'prep', '2026-01-10 09:00:00'::timestamp, 'female', 1985, 1, 1, null::text, null::text, null::text, null::text, null::text, null::text, null::text, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::date, null::numeric, null::numeric, null::boolean, null::boolean, null::boolean
+
+      - input: ref('int__who_dak_hiv_client_month_state')
+        format: sql
+        rows: |
+          select '2026-05-01'::date as month_start, '2026-05-31'::date as month_end, 'pat_1' as patient_id, 'fac_001' as facility_id, false as on_art, true as on_art_recorded, null::date as art_stopped_date, '2026-01-05'::date as art_start_date, null::boolean as dsd_enrolled, null::date as dsd_start_date, 4 as months_on_art, null::int as months_on_dsd, 'female' as sex, 41 as age_years, true as ltfu_in_month, false as reinitiated_in_month
+          union all
+          select '2026-05-01'::date, '2026-05-31'::date, 'pat_2', 'fac_002', false, true, null::date, '2026-01-05'::date, null::boolean, null::date, 4, null::int, 'female', 41, false, true
+          union all
+          select '2026-05-01'::date, '2026-05-31'::date, 'pat_x', 'fac_001', false, true, null::date, '2026-01-05'::date, null::boolean, null::date, 4, null::int, 'female', 41, true, true
+
+      - input: ref('int__who_dak_hiv_key_populations')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::text as key_population where false
+
+    expect:
+      format: sql
+      rows: |
+        select 'who_dak_hiv_art_ltfu' as metric_id, null::text as variant_id, 'pat_1' as subject_id, 'patient' as subject_grain, '2026-05-01'::date as period_start, '2026-05-31'::date as period_end, 'month' as period_granularity, 1::numeric as value_numeric, null::boolean as value_boolean, 'fac_001' as facility_id, 'female' as sex, 41 as age_years, null::int as months_on_dsd, null::text as key_population
+        union all
+        select 'who_dak_hiv_art_reinitiated', null::text, 'pat_2', 'patient', '2026-05-01'::date, '2026-05-31'::date, 'month', 1::numeric, null::boolean, 'fac_002', 'female', 41, null::int, null::text
