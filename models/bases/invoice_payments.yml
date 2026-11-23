@@ -29,3 +29,6 @@ models:
       - name: original_payment_id
         data_type: uuid
         description: "{{ doc('invoice_payments__original_payment_id') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

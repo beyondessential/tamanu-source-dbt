@@ -6,7 +6,8 @@
         record_created_at,
         record_updated_at,
         record_id,
-        record_data
+        record_data,
+        updated_at_sync_tick
     from {{ source(schema_name, source_name) }}
     where table_name = '{{ table_name }}'
         and record_id not in (

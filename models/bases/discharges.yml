@@ -29,3 +29,6 @@ models:
       - name: created_datetime
         data_type: timestamp
         description: "{{ doc('discharges__created_datetime') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

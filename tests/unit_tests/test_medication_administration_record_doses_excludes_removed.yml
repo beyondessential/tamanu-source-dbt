@@ -5,15 +5,18 @@ unit_tests:
       AC-006 / BL-010: the doses base keeps a live dose and excludes a dose marked removed,
       a soft-deleted dose, a dose whose MAR record is soft-deleted, and a dose of the test
       patient.
+    overrides:
+      macros:
+        is_incremental: false
     given:
       - input: source('tamanu', 'medication_administration_record_doses')
         format: sql
         rows: |
-          select 'dose_keep' as id, 'mar_1' as mar_id, 1 as dose_index, 40::numeric as dose_amount, '2026-04-02 10:00:00' as given_time, 'u_1' as given_by_user_id, 'u_1' as recorded_by_user_id, null::text as reason_for_change, null::timestamptz as deleted_at, false as is_removed
-          union all select 'dose_removed', 'mar_1', 2, 40::numeric, '2026-04-02 10:10:00', 'u_1', 'u_1', null::text, null::timestamptz, true
-          union all select 'dose_deleted', 'mar_1', 3, 40::numeric, '2026-04-02 10:20:00', 'u_1', 'u_1', null::text, '2026-04-02 11:00:00'::timestamptz, false
-          union all select 'dose_mar_deleted', 'mar_2', 1, 40::numeric, '2026-04-02 10:30:00', 'u_1', 'u_1', null::text, null::timestamptz, false
-          union all select 'dose_test_patient', 'mar_3', 1, 40::numeric, '2026-04-02 10:40:00', 'u_1', 'u_1', null::text, null::timestamptz, false
+          select 'dose_keep' as id, 'mar_1' as mar_id, 1 as dose_index, 40::numeric as dose_amount, '2026-04-02 10:00:00' as given_time, 'u_1' as given_by_user_id, 'u_1' as recorded_by_user_id, null::text as reason_for_change, null::timestamptz as deleted_at, false as is_removed, 7::bigint as updated_at_sync_tick
+          union all select 'dose_removed', 'mar_1', 2, 40::numeric, '2026-04-02 10:10:00', 'u_1', 'u_1', null::text, null::timestamptz, true, 7::bigint
+          union all select 'dose_deleted', 'mar_1', 3, 40::numeric, '2026-04-02 10:20:00', 'u_1', 'u_1', null::text, '2026-04-02 11:00:00'::timestamptz, false, 7::bigint
+          union all select 'dose_mar_deleted', 'mar_2', 1, 40::numeric, '2026-04-02 10:30:00', 'u_1', 'u_1', null::text, null::timestamptz, false, 7::bigint
+          union all select 'dose_test_patient', 'mar_3', 1, 40::numeric, '2026-04-02 10:40:00', 'u_1', 'u_1', null::text, null::timestamptz, false, 7::bigint
 
       - input: source('tamanu', 'medication_administration_records')
         format: sql
@@ -43,4 +46,4 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select 'dose_keep' as id, 'mar_1' as mar_id, 1 as dose_index, 40::numeric as dose_amount, '2026-04-02 10:00:00'::timestamp as given_datetime, 'u_1' as given_by_user_id, 'u_1' as recorded_by_user_id, null::text as reason_for_change
+        select 'dose_keep' as id, 'mar_1' as mar_id, 1 as dose_index, 40::numeric as dose_amount, '2026-04-02 10:00:00'::timestamp as given_datetime, 'u_1' as given_by_user_id, 'u_1' as recorded_by_user_id, null::text as reason_for_change, 7::bigint as updated_at_sync_tick
