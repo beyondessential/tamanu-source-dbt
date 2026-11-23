@@ -1,8 +1,13 @@
+{{ incremental_from_table(
+    key='id',
+    table='invoice_item_finalised_insurances'
+) }}
 select
     iifi.id,
     iifi.invoice_item_id,
     iifi.invoice_insurance_plan_id,
-    iifi.coverage_value_final
+    iifi.coverage_value_final,
+    iifi.updated_at_sync_tick
 from {{ source('tamanu', 'invoice_item_finalised_insurances') }} iifi
 join {{ source('tamanu', 'invoice_items') }} ii on ii.id = iifi.invoice_item_id
 join {{ source('tamanu', 'invoices') }} i on i.id = ii.invoice_id
@@ -13,3 +18,6 @@ where
     and i.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != '{{ var("test_patient") }}'
+    {%- if is_incremental() %}
+    and iifi.updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

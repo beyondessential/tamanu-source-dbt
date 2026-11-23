@@ -7,4 +7,10 @@
 -- outpatient_appointments_change_events, and the audit report and audit dataset call
 -- outpatient_appointments_change_log_events() directly. It is kept as a published reporting
 -- view for analytics consumers wanting the reconstructed change history.
-{{ outpatient_appointments_change_log_events() }}
+{{ incremental_from_logs(
+    key='appointment_id',
+    table='appointments'
+) }}
+{{ outpatient_appointments_change_log_events(
+    record_id_filter=('c.record_id in (' ~ changed_since_last_run('appointments') ~ ')') if is_incremental() else none
+) }}
