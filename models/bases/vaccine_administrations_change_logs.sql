@@ -1,3 +1,7 @@
+{{ incremental_from_logs(
+    key='id',
+    table='administered_vaccines'
+) }}
 with filtered_changes as (
     select
         av.changelog_id,
@@ -8,9 +12,13 @@ with filtered_changes as (
         av.record_updated_at at time zone '{{ var("timezone") }}' as record_updated_at,
         av.record_updated_at at time zone 'UTC' as record_updated_at_utc,
         av.record_id,
-        av.record_data
+        av.record_data,
+        av.updated_at_sync_tick
     from ({{ base_history_from_log('administered_vaccines') }}) av
     join {{ ref("encounters") }} e on e.id = av.record_data ->> 'encounter_id'
+    {%- if is_incremental() %}
+    where av.record_id in ({{ changed_since_last_run('administered_vaccines') }})
+    {%- endif %}
 )
 
 select
@@ -42,5 +50,6 @@ select
     fc.record_data ->> 'scheduled_vaccine_id' as scheduled_vaccine_id,
     fc.record_data ->> 'status' as status,
     fc.record_data ->> 'reason' as reason,
-    fc.record_data ->> 'not_given_reason_id' as not_given_reason_id
+    fc.record_data ->> 'not_given_reason_id' as not_given_reason_id,
+    fc.updated_at_sync_tick
 from filtered_changes fc
