@@ -30,7 +30,19 @@ unit_tests:
       - input: source('tamanu', 'encounters')
         format: sql
         rows: |
-          select 'enc_001' as id, 'pat_001' as patient_id, null::timestamptz as deleted_at
+          select fx.*, null::text as location_id from (
+            select 'enc_001' as id, 'pat_001' as patient_id, null::timestamptz as deleted_at
+          ) fx
+
+      - input: source('tamanu', 'locations')
+        format: sql
+        rows: |
+          select null::text as id, null::text as facility_id where false
+
+      - input: source('tamanu', 'facilities')
+        format: sql
+        rows: |
+          select null::text as id, null::text as sensitive_network_id where false
 
     expect:
       format: sql
@@ -57,6 +69,21 @@ unit_tests:
           select 'chg_002' as id, 'appointments' as table_name, 'appt_a' as record_id, '2026-04-04 15:40:00+00'::timestamptz as logged_at, '2026-04-04 15:40:00+00'::timestamptz as record_updated_at, null::timestamptz as record_deleted_at, 'usr_002' as updated_by_user_id, 200::bigint as updated_at_sync_tick, '{"patient_id":"pat_001","appointment_type_id":"appt_type_1","status":"Arrived"}'::jsonb as record_data
           union all
           select 'chg_003', 'appointments', 'appt_a', '2026-04-04 16:20:00+00'::timestamptz, '2026-04-04 16:20:00+00'::timestamptz, null::timestamptz, 'usr_003', 300, '{"patient_id":"pat_001","appointment_type_id":"appt_type_1","status":"Seen"}'::jsonb
+
+      - input: source('tamanu', 'appointments')
+        format: sql
+        rows: |
+          select null::text as id, null::text as location_group_id where false
+
+      - input: source('tamanu', 'location_groups')
+        format: sql
+        rows: |
+          select null::text as id, null::text as facility_id where false
+
+      - input: source('tamanu', 'facilities')
+        format: sql
+        rows: |
+          select null::text as id, null::text as sensitive_network_id where false
 
     expect:
       format: sql

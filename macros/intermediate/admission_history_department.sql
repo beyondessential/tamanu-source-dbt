@@ -20,7 +20,7 @@ with admission_department_log as (
             when eh.change_type is null or 'encounter_type' = any(eh.change_type) then 'admission'
             else 'transfer-in'
         end as type
-    from {{ ref('encounter_history') }} eh
+    from {{ partition_ref('encounter_history', network) }} eh
     where (eh.change_type isnull or eh.change_type && array['department', 'encounter_type'])
         and eh.encounter_type = 'admission'
 ),
@@ -91,9 +91,9 @@ select
         false
     ) as death
 from department_phases dl
-join {{ ref('encounters') }} e on e.id = dl.encounter_id
+join {{ partition_ref('encounters', network) }} e on e.id = dl.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
-join {{ ref('departments') }} d on d.id = dl.department_id
+join {{ partition_ref('departments', network) }} d on d.id = dl.department_id
 -- BL-012 (specs/reports/hospital-admissions-summaries.md): facility partition
 join {{ partition_ref('facilities', network) }} f
     on f.id = d.facility_id

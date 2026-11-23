@@ -20,7 +20,7 @@ unit_tests:
         fromDate: '2026-09-01'
         toDate: '2026-09-02'
     given:
-      - input: ref('outpatient_appointments_change_logs')
+      - input: ref('sn_example_outpatient_appointments_change_logs')
         format: sql
         rows: |
           -- creation, in the standard facility (BL-023 excludes it, but it is the lag() baseline)
@@ -47,7 +47,7 @@ unit_tests:
             200::bigint,
             '{"start_time":"2026-10-01 09:00:00","end_time":"2026-10-01 09:30:00","patient_id":"pat_001","clinician_id":"cli_001","location_group_id":"lg_sensitive","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb
 
-      - input: ref('outpatient_appointments')
+      - input: ref('sn_example_outpatient_appointments')
         format: sql
         rows: |
           select 'appt_moved'::text as id, null::date as cancelled_at_date
@@ -71,14 +71,14 @@ unit_tests:
           union all
           select 'usr_002'::text, 'Bob Admin'::text
 
-      - input: ref('location_groups')
+      - input: ref('sn_example_location_groups')
         format: sql
         rows: |
           select 'lg_standard'::text as id, 'Outpatients'::text as name, 'fac_standard'::text as facility_id
           union all
           select 'lg_sensitive'::text, 'Restricted Ward'::text, 'fac_sensitive'::text
 
-      - input: ref('sensitive_example_facilities')
+      - input: ref('sn_example_facilities')
         format: sql
         rows: |
           select 'fac_sensitive'::text as id, 'Restricted Clinic'::text as name, 'sn_001' as sensitive_network_id

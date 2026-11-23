@@ -48,19 +48,19 @@ select
     ltt.id as lab_test_type_id,
     ltt.name as lab_test_type,
     lt.completed_datetime as lab_test_completed_datetime
-from {{ ref('lab_requests') }} lr
-join {{ ref('encounters') }} e on e.id = lr.encounter_id
+from {{ partition_ref('lab_requests', network) }} lr
+join {{ partition_ref('encounters', network) }} e on e.id = lr.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
 left join {{ ref('reference_data') }} village on village.id = p.village_id
-join {{ ref('locations') }} l on l.id = e.location_id
-left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
-left join {{ ref('departments') }} d on d.id = e.department_id
-left join {{ ref('departments') }} req_dept on req_dept.id = lr.department_id
+join {{ partition_ref('locations', network) }} l on l.id = e.location_id
+left join {{ partition_ref('location_groups', network) }} lg on lg.id = l.location_group_id
+left join {{ partition_ref('departments', network) }} d on d.id = e.department_id
+left join {{ partition_ref('departments', network) }} req_dept on req_dept.id = lr.department_id
 join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
 left join {{ ref('users') }} requester on requester.id = lr.requested_by_id
 left join {{ ref('reference_data') }} category on category.id = lr.lab_test_category_id
-join {{ ref('lab_tests') }} lt on lt.lab_request_id = lr.id
+join {{ partition_ref('lab_tests', network) }} lt on lt.lab_request_id = lr.id
 join {{ ref('lab_test_types') }} ltt on ltt.id = lt.lab_test_type_id
 -- The panel this test belongs to, not the request's: from Tamanu 2.66 one request can hold
 -- several panels and individual tests. Null for a test ordered individually.

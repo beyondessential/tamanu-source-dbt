@@ -75,7 +75,7 @@ def test_network_key_lowercases_and_joins_other_characters():
 
 
 def test_partition_name_follows_each_layer():
-    assert partition_name("encounters", "HIV") == "sensitive_hiv_encounters"
+    assert partition_name("encounters", "HIV") == "sn_hiv_encounters"
     assert partition_name("ds__admissions", "HIV") == "ds__sensitive_hiv_admissions"
     assert partition_name("clinical__visit_occurrence", "HIV") == "clinical__sensitive_hiv_visit_occurrence"
     assert partition_name("admissions-line-list", "Mental Health") == "sensitive-mental-health-admissions-line-list"
@@ -88,10 +88,10 @@ def test_ac_002_generates_each_partitioned_model_for_each_network(source, tmp_pa
     written = generate(source, output, ["hiv", "mh"])
 
     assert [path.as_posix() for path in written] == [
-        "bases/sensitive/sensitive_hiv_encounters.sql",
-        "bases/sensitive/sensitive_hiv_encounters.yml",
-        "bases/sensitive/sensitive_mh_encounters.sql",
-        "bases/sensitive/sensitive_mh_encounters.yml",
+        "bases/sensitive/sn_hiv_encounters.sql",
+        "bases/sensitive/sn_hiv_encounters.yml",
+        "bases/sensitive/sn_mh_encounters.sql",
+        "bases/sensitive/sn_mh_encounters.yml",
         "datasets/sensitive/ds__sensitive_hiv_admissions.sql",
         "datasets/sensitive/ds__sensitive_mh_admissions.sql",
         "reports/config/sensitive/sensitive-hiv-admissions-line-list.json",
@@ -99,7 +99,7 @@ def test_ac_002_generates_each_partitioned_model_for_each_network(source, tmp_pa
         "reports/sql/sensitive/sensitive-hiv-admissions-line-list.sql",
         "reports/sql/sensitive/sensitive-mh-admissions-line-list.sql",
     ]
-    sql = (output / "bases/sensitive/sensitive_hiv_encounters.sql").read_text(encoding="utf-8")
+    sql = (output / "bases/sensitive/sn_hiv_encounters.sql").read_text(encoding="utf-8")
     assert MARKER in sql
     assert "{{ encounters_base(network='hiv') }}" in sql
     report = (output / "reports/sql/sensitive/sensitive-hiv-admissions-line-list.sql").read_text(encoding="utf-8")
@@ -111,12 +111,12 @@ def test_generated_properties_rename_the_model_and_its_named_tests(source, tmp_p
 
     generate(source, output, ["hiv"])
 
-    document = yaml.safe_load((output / "bases/sensitive/sensitive_hiv_encounters.yml").read_text(encoding="utf-8"))
+    document = yaml.safe_load((output / "bases/sensitive/sn_hiv_encounters.yml").read_text(encoding="utf-8"))
     (model,) = document["models"]
-    assert model["name"] == "sensitive_hiv_encounters"
+    assert model["name"] == "sn_hiv_encounters"
     assert model["columns"][0]["data_tests"] == [
-        {"not_null": {"name": "ac_001_sensitive_hiv_encounters_id_not_null"}},
-        {"unique": {"name": "ac_002_id_unique__sensitive_hiv_encounters"}},
+        {"not_null": {"name": "ac_001_sn_hiv_encounters_id_not_null"}},
+        {"unique": {"name": "ac_002_id_unique__sn_hiv_encounters"}},
         "not_null",
     ]
 
@@ -137,14 +137,14 @@ def test_generated_report_config_names_the_network(source, tmp_path):
 def test_regenerating_removes_a_dropped_network_and_keeps_other_files(source, tmp_path):
     output = tmp_path / "out" / "models"
     generate(source, output, ["hiv", "mh"])
-    hand_written = output / "bases" / "sensitive" / "sensitive_notes.sql"
+    hand_written = output / "bases" / "sensitive" / "sn_notes.sql"
     _write(hand_written, "select 1\n")
 
     generate(source, output, ["hiv"])
 
     remaining = sorted(path.name for path in output.rglob("*") if path.is_file())
     assert not [name for name in remaining if "mh" in name.replace("-", "_").split("_")]
-    assert "sensitive_hiv_encounters.sql" in remaining
+    assert "sn_hiv_encounters.sql" in remaining
     assert hand_written.exists()
 
 

@@ -38,9 +38,16 @@ unit_tests:
       - input: source('tamanu', 'patient_program_registrations')
         format: sql
         rows: |
-          select
-            'reg_001'::text as id,
-            null::timestamp as deleted_at
+          select fx.*, null::text as registering_facility_id from (
+            select
+              'reg_001'::text as id,
+              null::timestamp as deleted_at
+          ) fx
+
+      - input: source('tamanu', 'facilities')
+        format: sql
+        rows: |
+          select null::text as id, null::text as sensitive_network_id where false
 
     expect:
       format: sql

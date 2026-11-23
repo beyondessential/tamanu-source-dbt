@@ -19,7 +19,7 @@
 {%- set candidate_filter -%}
 c.discharge_id in (
     select c2.discharge_id
-    from {{ ref('discharges_change_logs') }} c2
+    from {{ partition_ref('discharges_change_logs', network) }} c2
     where c2.logged_at >= {{ candidate_window_from(from_bound) }}
         and c2.logged_at < {{ candidate_window_to(to_bound) }}
 )

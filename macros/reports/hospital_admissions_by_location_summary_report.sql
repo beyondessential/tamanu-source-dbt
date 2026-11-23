@@ -53,7 +53,7 @@ location_summary as (
     join {{ ref(episodes) }} alh
         on {{ to_user_selected_timezone('alh.start_datetime') }}::date <= (rm.month + '1 month'::interval - '1 day'::interval)
         and ({{ to_user_selected_timezone('alh.end_datetime') }}::date is null or {{ to_user_selected_timezone('alh.end_datetime') }}::date >= rm.month)
-    join {{ ref('locations') }} l on l.id = alh.location_id
+    join {{ partition_ref('locations', network) }} l on l.id = alh.location_id
     where rm.month <= current_date
     group by
         rm.month,

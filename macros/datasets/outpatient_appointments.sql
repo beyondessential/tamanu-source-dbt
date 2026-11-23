@@ -45,11 +45,11 @@ with appointments_in_scope as (
         lg.name as location_group,
         f.id as facility_id,
         f.name as facility
-    from {{ ref('outpatient_appointments') }} a
+    from {{ partition_ref('outpatient_appointments', network) }} a
     -- BL-045: area and facility are inner joins, so an appointment whose location_group_id
     -- is null or dangling produces no row at all, and the facility partition is applied
     -- here rather than left to the caller.
-    join {{ ref('location_groups') }} lg on lg.id = a.location_group_id
+    join {{ partition_ref('location_groups', network) }} lg on lg.id = a.location_group_id
     join {{ partition_ref('facilities', network) }} f on f.id = lg.facility_id
 {#- BL-042: `where` and each paren sit on their own line. A caller's predicate text may
     legally end on a `--` comment, and a same-line `)` would then be commented out and the
@@ -83,7 +83,7 @@ appointment_creators as (
     select distinct on (c.appointment_id)
         c.appointment_id,
         c.updated_by_user_id as created_by_user_id
-    from {{ ref('outpatient_appointments_change_logs') }} c
+    from {{ partition_ref('outpatient_appointments_change_logs', network) }} c
     join appointments_in_scope s on s.appointment_id = c.appointment_id
     order by c.appointment_id, c.logged_at_utc, c.record_updated_at_utc, c.changelog_id
 )

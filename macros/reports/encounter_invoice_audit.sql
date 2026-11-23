@@ -97,7 +97,7 @@ select
 from encounters_in_scope eis
 join {{ ref('patients') }} p
     on p.id = eis.patient_id
-left join {{ ref('departments') }} dp
+left join {{ partition_ref('departments', network) }} dp
     on dp.id = eis.department_id
 left join {{ ref('users') }} c
     on c.id = eis.clinician_id

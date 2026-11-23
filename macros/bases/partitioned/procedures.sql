@@ -1,0 +1,34 @@
+{#- Body of `procedures` and of its copy for each sensitive network. See
+    specs/dbt-model/sensitive-facility-partition.md for the BL clauses. -#}
+{%- macro procedures_base(network=none) -%}
+select
+    p.id,
+    p.date::date as date,
+    -- clinical__procedure_occurrence BL-006: an untimed procedure takes date's own time --
+    -- Tamanu's form saves date with the start time
+    coalesce(p.start_time, p.date)::timestamp::time as start_time,
+    p.end_time::timestamp::time as end_time,
+    p.completed as is_completed,
+    p.note,
+    p.completed_note,
+    p.encounter_id,
+    p.location_id,
+    p.procedure_type_id,
+    p.anaesthetic_id,
+    p.physician_id as clinician_id,
+    p.anaesthetist_id,
+    p.assistant_anaesthetist_id,
+    p.time_in::time as time_in,
+    p.time_out::time as time_out,
+    p.updated_at_sync_tick
+from {{ source('tamanu', 'procedures') }} p
+join {{ source('tamanu', 'encounters') }} e on e.id = p.encounter_id
+where p.deleted_at is null
+    and e.deleted_at is null
+    and e.patient_id != '{{ var("test_patient") }}'
+    -- BL-005: the row follows its encounter's partition
+    and {{ location_id_in_partition('e.location_id', network) }}
+{%- if is_incremental() %}
+    and p.updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}
+{%- endmacro %}

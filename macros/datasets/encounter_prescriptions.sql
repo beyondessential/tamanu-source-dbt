@@ -37,11 +37,11 @@ select
     pr.discontinued_by_id,
     pr.discontinuing_reason,
     pr.discontinued_datetime
-from {{ ref("encounter_prescriptions") }} ep
-join {{ ref("encounters") }} e on e.id = ep.encounter_id
+from {{ partition_ref('encounter_prescriptions', network) }} ep
+join {{ partition_ref('encounters', network) }} e on e.id = ep.encounter_id
 join {{ ref("patients") }} p on p.id = e.patient_id
-join {{ ref("prescriptions") }} pr on pr.id = ep.prescription_id
-join {{ ref("locations") }} l on l.id = e.location_id
+join {{ partition_ref('prescriptions', network) }} pr on pr.id = ep.prescription_id
+join {{ partition_ref('locations', network) }} l on l.id = e.location_id
 -- BL-009 (specs/reports/encounter-prescription-discharge-summary.md): the facility
 -- partition is applied here, so the sensitive report needs no parameter for it
 join {{ partition_ref('facilities', network) }} f 

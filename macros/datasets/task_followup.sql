@@ -18,10 +18,10 @@ with scoped_encounters as not materialized (
         lg.name as location_group_name,
         f.id as facility_id,
         f.name as facility_name
-    from {{ ref('encounters') }} e
-    join {{ ref('locations') }} l on l.id = e.location_id
+    from {{ partition_ref('encounters', network) }} e
+    join {{ partition_ref('locations', network) }} l on l.id = e.location_id
     join {{ partition_ref('facilities', network) }} f on f.id = l.facility_id
-    left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
+    left join {{ partition_ref('location_groups', network) }} lg on lg.id = l.location_group_id
 ),
 
 -- BL-003: a task carries one row per designation it is assigned to, collapsed here so the
@@ -50,13 +50,13 @@ followup_appointments as (
         a.start_datetime as appointment_datetime,
         lg.name as appointment_location_group
     from scoped_encounters ae
-    join {{ ref('outpatient_appointments') }} a
+    join {{ partition_ref('outpatient_appointments', network) }} a
         on a.patient_id = ae.patient_id
         and a.start_datetime >= coalesce(ae.end_datetime, ae.start_datetime)
         -- the appointment this encounter was created from is the visit itself, not a
         -- follow-up -- without this an open clinic encounter reports its own booking
         and a.encounter_id is distinct from ae.encounter_id
-    left join {{ ref('location_groups') }} lg on lg.id = a.location_group_id
+    left join {{ partition_ref('location_groups', network) }} lg on lg.id = a.location_group_id
     where a.status != 'Cancelled'
     order by ae.encounter_id asc, a.start_datetime asc
 ),
@@ -70,7 +70,7 @@ encounter_diagnosis_agg as (
         -- rather than falling out of both columns
         string_agg(diagnosis.name, '; ' order by ed.datetime)
         filter (where not coalesce(ed.is_primary, false)) as secondary_diagnoses
-    from {{ ref('encounter_diagnoses') }} ed
+    from {{ partition_ref('encounter_diagnoses', network) }} ed
     join {{ ref('reference_data') }} diagnosis on diagnosis.id = ed.diagnosis_id
     group by ed.encounter_id
 )
@@ -135,7 +135,7 @@ select
     case
         when exists (
                 select 1
-                from {{ ref('notes') }} n
+                from {{ partition_ref('notes', network) }} n
                 join {{ ref('user_designations') }} ud
                     on ud.user_id in (n.authored_by_id, n.on_behalf_of_id)
                 where n.record_type = 'Encounter'
@@ -148,7 +148,7 @@ select
     case when fa.encounter_id is not null then 'Yes' else 'No' end as followup_appointment_booked,
     fa.appointment_datetime as followup_appointment_datetime,
     fa.appointment_location_group as followup_appointment_location_group
-from {{ ref('tasks') }} t
+from {{ partition_ref('tasks', network) }} t
 -- BL-003: an inner join drops tasks assigned to nobody -- the register is about work handed
 -- to a designation
 join task_designation_agg tda on tda.task_id = t.id
@@ -158,7 +158,7 @@ left join {{ ref('reference_data') }} village on village.id = p.village_id
 left join {{ ref('reference_data') }} not_completed_reason
     on not_completed_reason.id = t.not_completed_reason_id
 left join {{ ref('users') }} requester on requester.id = t.requested_by_user_id
-left join {{ ref('discharges') }} d on d.encounter_id = ae.encounter_id
+left join {{ partition_ref('discharges', network) }} d on d.encounter_id = ae.encounter_id
 left join {{ ref('reference_data') }} disposition on disposition.id = d.disposition_id
 left join encounter_diagnosis_agg diagnoses on diagnoses.encounter_id = ae.encounter_id
 left join followup_appointments fa on fa.encounter_id = ae.encounter_id

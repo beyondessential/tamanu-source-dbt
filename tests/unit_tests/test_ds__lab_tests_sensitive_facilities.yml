@@ -100,14 +100,14 @@ unit_tests:
       the lab test from the sensitive facility (regardless of its test type's own
       sensitivity flag) and must exclude the test from the non-sensitive facility.
     given:
-      - input: ref('lab_requests')
+      - input: ref('sn_example_lab_requests')
         format: sql
         rows: |
           select 'lr_001' as id, 'LR001' as display_id, 'published' as status, '2024-05-15 10:00:00'::timestamp as requested_datetime, null::timestamp as published_datetime, null::text as requested_by_id, 'enc_001' as encounter_id, null::text as department_id, null::text as lab_test_category_id
           union all
           select 'lr_002', 'LR002', 'published', '2024-05-16 14:00:00'::timestamp, null::timestamp, null::text, 'enc_002', null::text, null::text
 
-      - input: ref('lab_tests')
+      - input: ref('sn_example_lab_tests')
         format: sql
         rows: |
           select 'lt_001' as id, 'lr_001' as lab_request_id, 'ltt_001' as lab_test_type_id, '2024-05-15'::date as date, 'Normal' as result, 'verified' as verification, '2024-05-15 12:00:00'::timestamp as completed_datetime
@@ -121,7 +121,7 @@ unit_tests:
           union all
           select 'ltt_002', 'HIV Test', false
 
-      - input: ref('encounters')
+      - input: ref('sn_example_encounters')
         format: sql
         rows: |
           select 'enc_001' as id, 'pat_001' as patient_id, 'loc_001' as location_id, null::text as department_id
@@ -133,25 +133,25 @@ unit_tests:
         rows: |
           select 'pat_001' as id, 'P001' as display_id, 'John' as first_name, 'Doe' as last_name, '1990-05-15'::date as date_of_birth, 'male' as sex, null::text as village_id
 
-      - input: ref('locations')
+      - input: ref('sn_example_locations')
         format: sql
         rows: |
           select 'loc_001' as id, 'Room 101' as name, 'fac_001' as facility_id, null::text as location_group_id
           union all
           select 'loc_002', 'Room 201', 'fac_002', null::text
 
-      - input: ref('sensitive_example_facilities')
+      - input: ref('sn_example_facilities')
         format: sql
         rows: |
           select 'fac_002' as id, 'Psychiatric Hospital' as name, 'sn_001' as sensitive_network_id
 
-      - input: ref('location_groups')
+      - input: ref('sn_example_location_groups')
         format: sql
         rows: |
           select null::text as id, null::text as name
           where false
 
-      - input: ref('departments')
+      - input: ref('sn_example_departments')
         format: sql
         rows: |
           select null::text as id, null::text as name

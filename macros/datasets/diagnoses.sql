@@ -26,15 +26,15 @@ select
     e.encounter_type,
     initcap(ed.certainty) as certainty,
     case when ed.is_primary = true then 'Yes' else 'No' end as is_primary
-from {{ ref('encounter_diagnoses') }} ed
+from {{ partition_ref('encounter_diagnoses', network) }} ed
 join {{ ref('reference_data') }} diagnosis on diagnosis.id = ed.diagnosis_id
-join {{ ref('encounters') }} e on e.id = ed.encounter_id
+join {{ partition_ref('encounters', network) }} e on e.id = ed.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
 left join {{ ref('patient_additional_data') }} pad on pad.patient_id = p.id
 left join {{ ref('reference_data') }} village on village.id = p.village_id
 left join {{ ref('users') }} clinician on clinician.id = e.clinician_id
-left join {{ ref('departments') }} d on d.id = e.department_id
-join {{ ref('locations') }} l on l.id = e.location_id
+left join {{ partition_ref('departments', network) }} d on d.id = e.department_id
+join {{ partition_ref('locations', network) }} l on l.id = e.location_id
 join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
 

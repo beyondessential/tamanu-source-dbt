@@ -78,10 +78,10 @@ select
     f.name as facility
 -- BL-002: the test patient is already excluded by the encounters base model, so it
 -- is not re-applied here
-from {{ ref('encounters') }} e
+from {{ partition_ref('encounters', network) }} e
 -- BL-006: location and facility are inner joins, so an encounter whose location_id
 -- is null or dangling produces no row at all
-join {{ ref('locations') }} l
+join {{ partition_ref('locations', network) }} l
     on l.id = e.location_id
 -- BL-001: facility scope partitioned by the network argument, which picks the base
 join {{ partition_ref('facilities', network) }} f

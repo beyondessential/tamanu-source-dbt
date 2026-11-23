@@ -36,7 +36,7 @@ unit_tests:
         - {id: fac_std}
 
   - name: ac_001_facilities_network_partition
-    model: sensitive_example_facilities
+    model: sn_example_facilities
     description: >
       BL-001, BL-010 (specs/dbt-model/sensitive-facility-partition.md). On the same facilities,
       the `example` network's base holds that network's live facility and nothing else. The

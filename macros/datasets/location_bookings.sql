@@ -24,11 +24,11 @@ select
     l.name as location,
     a.booking_type_id,
     bt.name as booking_type
-from {{ ref('location_bookings') }} a
+from {{ partition_ref('location_bookings', network) }} a
 join {{ ref('patients') }} p on p.id = a.patient_id
 left join {{ ref('users') }} u on u.id = a.clinician_id
-join {{ ref('locations') }} l on l.id = a.location_id
-left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
+join {{ partition_ref('locations', network) }} l on l.id = a.location_id
+left join {{ partition_ref('location_groups', network) }} lg on lg.id = l.location_group_id
 join {{ partition_ref('facilities', network) }} f on f.id = l.facility_id
 left join {{ ref('patient_additional_data') }} pd on pd.patient_id = p.id
 left join {{ ref('reference_data') }} billing on billing.id = pd.patient_billing_type_id

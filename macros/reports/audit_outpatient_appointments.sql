@@ -29,11 +29,11 @@
 {%- set candidate_filter -%}
 c.appointment_id in (
     select c2.appointment_id
-    from {{ ref('outpatient_appointments_change_logs') }} c2
+    from {{ partition_ref('outpatient_appointments_change_logs', network) }} c2
     -- BL-033: resolves the facility from the event's own location_group_id, not the
     -- appointment's current row. Mirrors the core's inner joins (BL-028), so this drops only
     -- events the core would have dropped anyway.
-    join {{ ref('location_groups') }} lg2
+    join {{ partition_ref('location_groups', network) }} lg2
         on lg2.id = c2.record_data ->> 'location_group_id'
     join {{ partition_ref('facilities', network) }} f2
         on f2.id = lg2.facility_id

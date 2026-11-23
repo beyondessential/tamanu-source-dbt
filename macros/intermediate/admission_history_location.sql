@@ -20,7 +20,7 @@ with admission_location_log as (
             when eh.change_type is null or 'encounter_type' = any(eh.change_type) then 'admission'
             else 'transfer-in'
         end as type
-    from {{ ref('encounter_history') }} eh
+    from {{ partition_ref('encounter_history', network) }} eh
     where (eh.change_type isnull or eh.change_type && array['location', 'encounter_type'])
         and eh.encounter_type = 'admission'
 ),
@@ -97,13 +97,13 @@ select
         false
     ) as death
 from location_phases ll
-join {{ ref('encounters') }} e on e.id = ll.encounter_id
+join {{ partition_ref('encounters', network) }} e on e.id = ll.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
-join {{ ref('locations') }} l on l.id = ll.location_id
+join {{ partition_ref('locations', network) }} l on l.id = ll.location_id
 -- BL-013 (specs/reports/hospital-admissions-summaries.md): left join. A location
 -- with no location_group is real and its episodes count; an inner join here dropped
 -- them from -by-area and -by-location entirely, deaths included.
-left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
+left join {{ partition_ref('location_groups', network) }} lg on lg.id = l.location_group_id
 -- BL-012 (specs/reports/hospital-admissions-summaries.md): facility partition
 join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id

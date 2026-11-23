@@ -21,11 +21,11 @@ with change_evaluation as (
             else false
         end as is_meaningful_change
     from (
-        {{ outpatient_appointments_change_history(record_id_filter=record_id_filter) }}
+        {{ outpatient_appointments_change_history(record_id_filter=record_id_filter, network=network) }}
     ) cl
     -- BL-036: restricts the audit to the population bases/outpatient_appointments defines,
     -- and supplies cancelled_at_date for BL-026 without reading the source table
-    join {{ ref('outpatient_appointments') }} a on a.id = cl.appointment_id
+    join {{ partition_ref('outpatient_appointments', network) }} a on a.id = cl.appointment_id
     where
         -- BL-026: drop appointments auto-cancelled by a schedule bulk-cancellation, keeping
         -- individual cancellations
@@ -126,13 +126,13 @@ left join {{ ref('users') }} creator on creator.id = fc.created_by_user_id
 left join {{ ref('users') }} modifier on modifier.id = fc.modified_by_user_id
 -- BL-028: patient, area and facility are inner joins, so an event whose
 -- location_group_id is null or dangling produces no row at all
-join {{ ref('location_groups') }} lg on lg.id = fc.location_group_id
+join {{ partition_ref('location_groups', network) }} lg on lg.id = fc.location_group_id
 -- BL-033: the previous area resolves through the same partition as the row, on the same
 -- equality, so neither variant names an area outside its own half. An appointment moved
 -- across the boundary keeps its row but loses the previous area's name and id.
 left join (
     select lg2.id, lg2.name
-    from {{ ref('location_groups') }} lg2
+    from {{ partition_ref('location_groups', network) }} lg2
     join {{ partition_ref('facilities', network) }} f2 on f2.id = lg2.facility_id
 ) prev_lg on prev_lg.id = fc.prev_location_group_id
 left join {{ ref('reference_data') }} apt on apt.id = fc.appointment_type_id

@@ -28,7 +28,7 @@
 {%- set candidate_filter -%}
 c.appointment_id in (
     select distinct c2.appointment_id
-    from {{ ref('outpatient_appointments_change_logs') }} c2
+    from {{ partition_ref('outpatient_appointments_change_logs', network) }} c2
     where c2.updated_at_sync_tick >= (select coalesce(max(updated_at_sync_tick), 0) from {{ this }})
 )
 {%- endset %}

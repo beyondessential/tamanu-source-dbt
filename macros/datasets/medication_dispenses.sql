@@ -18,17 +18,17 @@ select
     md.medication_id,
     m.code as medication_code,
     m.name as medication
-from {{ ref('medication_dispenses') }} md
-join {{ ref('pharmacy_order_prescriptions') }} pop
+from {{ partition_ref('medication_dispenses', network) }} md
+join {{ partition_ref('pharmacy_order_prescriptions', network) }} pop
     on pop.id = md.pharmacy_order_prescription_id
-join {{ ref('pharmacy_orders') }} po
+join {{ partition_ref('pharmacy_orders', network) }} po
     on po.id = pop.pharmacy_order_id
 -- BL-006
 join encounters_in_scope eis
     on eis.encounter_id = po.encounter_id
 -- prescription_id is not null on all pharmacy_order_prescriptions rows (enforced by source not_null test).
 -- Keeps only dispenses against a prescription the prescriptions base keeps (BL-005)
-join {{ ref('prescriptions') }} pr
+join {{ partition_ref('prescriptions', network) }} pr
     on pr.id = pop.prescription_id
 join {{ ref('reference_data') }} m
     on m.id = md.medication_id  -- BL-002

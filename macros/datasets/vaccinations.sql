@@ -4,7 +4,7 @@ with vaccine_administrations_metadata as (
     select
         id,
         max(record_updated_at) as updated_at
-    from {{ ref("vaccine_administrations_change_logs") }}
+    from {{ partition_ref('vaccine_administrations_change_logs', network) }}
     group by id
 ),
 
@@ -12,7 +12,7 @@ administered_circumstances as (
     select
         a.id,
         string_agg(rd_cir.name, '; ') as circumstance_name
-    from {{ ref("vaccine_administrations") }} a
+    from {{ partition_ref('vaccine_administrations', network) }} a
     cross join lateral unnest(a.circumstance_ids) c (unnest_circumstance_id)
     left join {{ ref("reference_data") }} rd_cir
         on rd_cir.id = c.unnest_circumstance_id
@@ -77,13 +77,13 @@ select
         when av.status = 'HISTORICAL' then u.display_name
     end as modified_by,
     vam.updated_at
-from {{ ref("vaccine_administrations") }} av
-join {{ ref("encounters") }} e on e.id = av.encounter_id
+from {{ partition_ref('vaccine_administrations', network) }} av
+join {{ partition_ref('encounters', network) }} e on e.id = av.encounter_id
 join {{ ref("patients") }} p on p.id = e.patient_id
 left join vaccine_administrations_metadata vam on vam.id = av.id
-join {{ ref("locations") }} l on l.id = av.location_id
-left join {{ ref("departments") }} d on d.id = av.department_id
-left join {{ ref("location_groups") }} lg on lg.id = l.location_group_id
+join {{ partition_ref('locations', network) }} l on l.id = av.location_id
+left join {{ partition_ref('departments', network) }} d on d.id = av.department_id
+left join {{ partition_ref('location_groups', network) }} lg on lg.id = l.location_group_id
 join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
 left join {{ ref("vaccine_schedules") }} sv on sv.id = av.scheduled_vaccine_id

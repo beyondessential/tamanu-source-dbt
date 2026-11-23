@@ -1,4 +1,4 @@
-{% macro outpatient_appointments_change_history(record_id_filter=none) %}
+{% macro outpatient_appointments_change_history(record_id_filter=none, network=none) %}
 -- BL-031: shared change-log extraction. record_id_filter narrows WHICH appointments are
 -- included, never how much of an included appointment's history is seen -- the window
 -- functions below need each appointment's full history to stay correct.
@@ -38,7 +38,7 @@ with appointment_changes as (
             partition by c.appointment_id
             order by c.logged_at_utc, c.record_updated_at_utc, c.changelog_id
         ) as change_sequence
-    from {{ ref('outpatient_appointments_change_logs') }} c
+    from {{ partition_ref('outpatient_appointments_change_logs', network) }} c
     {%- if record_id_filter %}
     where {{ record_id_filter }}
     {%- endif %}

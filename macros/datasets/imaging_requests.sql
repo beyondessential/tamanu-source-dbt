@@ -4,7 +4,7 @@ with results as (
     select
         imaging_request_id,
         min(datetime) as completed_datetime
-    from {{ ref('imaging_results') }}
+    from {{ partition_ref('imaging_results', network) }}
     group by imaging_request_id
 ),
 
@@ -19,7 +19,7 @@ imaging_request_notes as (
         n.datetime,
         n.created_datetime,
         {{ notes__revision_rank('n') }} as revision_rank
-    from {{ ref('notes') }} n
+    from {{ partition_ref('notes', network) }} n
     where n.record_type = 'ImagingRequest'
 ),
 
@@ -42,8 +42,8 @@ imaging_areas as (
             string_agg(ia.name, ', ' order by ia.name),
             n.imaging_area
         ) as imaging_area
-    from {{ ref('imaging_requests') }} ir
-    left join {{ ref('imaging_request_areas') }} ira on ira.imaging_request_id = ir.id
+    from {{ partition_ref('imaging_requests', network) }} ir
+    left join {{ partition_ref('imaging_request_areas', network) }} ira on ira.imaging_request_id = ir.id
     left join {{ ref('reference_data') }} ia on ia.id = ira.area_id
     left join imaging_area_notes n on n.imaging_request_id = ir.id
     group by ir.id, n.imaging_area
@@ -103,14 +103,14 @@ select
         when ir.reason_for_cancellation = 'patient-refused' then 'Patient refused'
         when ir.reason_for_cancellation = 'other' then 'Other'
     end as reason_for_cancellation
-from {{ ref('imaging_requests') }} ir
-join {{ ref('encounters') }} e on e.id = ir.encounter_id
+from {{ partition_ref('imaging_requests', network) }} ir
+join {{ partition_ref('encounters', network) }} e on e.id = ir.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
-join {{ ref('locations') }} l on l.id = e.location_id
-left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
+join {{ partition_ref('locations', network) }} l on l.id = e.location_id
+left join {{ partition_ref('location_groups', network) }} lg on lg.id = l.location_group_id
 join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
-left join {{ ref('departments') }} d on d.id = e.department_id
+left join {{ partition_ref('departments', network) }} d on d.id = e.department_id
 left join {{ ref('users') }} su on su.id = e.clinician_id
 left join {{ ref('users') }} ru on ru.id = ir.requested_by_id
 left join imaging_areas areas on areas.imaging_request_id = ir.id

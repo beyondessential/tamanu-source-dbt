@@ -1,0 +1,51 @@
+{#- Body of `patient_death_data` and of its copy for each sensitive network. See
+    specs/dbt-model/sensitive-facility-partition.md for the BL clauses. -#}
+{%- macro patient_death_data_base(network=none) -%}
+select
+    id,
+    manner,
+    recent_surgery as had_recent_surgery,
+    last_surgery_date::date as last_surgery_date,
+    last_surgery_reason_id,
+    external_cause_date::date as external_cause_date,
+    external_cause_location,
+    external_cause_notes,
+    was_pregnant,
+    pregnancy_contributed,
+    fetal_or_infant as was_fetal_or_infant,
+    stillborn as was_stillborn,
+    birth_weight,
+    within_day_of_birth as was_within_day_of_birth,
+    hours_survived_since_birth,
+    carrier_age,
+    carrier_pregnancy_weeks,
+    outside_health_facility as was_outside_health_facility,
+    primary_cause_time_after_onset as primary_cause_mins_after_onset,
+    primary_cause_condition_id,
+    antecedent_cause1_time_after_onset as antecedent_cause1_mins_after_onset,
+    antecedent_cause1_condition_id,
+    antecedent_cause2_time_after_onset as antecedent_cause2_mins_after_onset,
+    antecedent_cause2_condition_id,
+    antecedent_cause3_time_after_onset as antecedent_cause3_mins_after_onset,
+    antecedent_cause3_condition_id,
+    patient_id,
+    clinician_id as recorded_by_id,
+    facility_id,
+    is_final,
+    visibility_status,
+    autopsy_requested,
+    autopsy_findings_used,
+    manner_of_death_description,
+    pregnancy_moment,
+    multiple_pregnancy,
+    mother_condition_description,
+    updated_at_sync_tick
+from {{ source('tamanu', 'patient_death_data') }}
+where deleted_at is null
+    and patient_id != '{{ var("test_patient") }}'
+    -- BL-001, BL-003: the death record's facility decides its partition, standard when it names none
+    and {{ facility_id_in_partition('facility_id', network) }}
+{%- if is_incremental() %}
+    and updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}
+{%- endmacro %}

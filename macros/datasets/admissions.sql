@@ -48,7 +48,7 @@ encounter_history_consolidated as (
             order by eh.datetime
         ) as prev_location_group_id
     from admission_encounters ae
-    left join {{ ref('encounter_history') }} eh
+    left join {{ partition_ref('encounter_history', network) }} eh
         on eh.encounter_id = ae.id
         -- BL-002 (specs/dbt-model/ds__admissions.md): scopes this dataset to the
         -- admission phase. A snapshot records post-edit state, so an encounter admitted
@@ -60,11 +60,11 @@ encounter_history_consolidated as (
         and (eh.change_type is null or eh.change_type && array['encounter_type', 'examiner', 'department', 'location'])
     left join {{ ref('users') }} u
         on u.id = eh.clinician_id
-    left join {{ ref('departments') }} d
+    left join {{ partition_ref('departments', network) }} d
         on d.id = eh.department_id
-    left join {{ ref('locations') }} l
+    left join {{ partition_ref('locations', network) }} l
         on l.id = eh.location_id
-    left join {{ ref('location_groups') }} lg
+    left join {{ partition_ref('location_groups', network) }} lg
         on lg.id = l.location_group_id
 ),
 
@@ -224,7 +224,7 @@ encounter_diagnoses as (
             order by ed.datetime
         ) as secondary_diagnoses_codes
     from admission_encounters ae
-    inner join {{ ref('encounter_diagnoses') }} ed
+    inner join {{ partition_ref('encounter_diagnoses', network) }} ed
         on ed.encounter_id = ae.id
     inner join {{ ref('reference_data') }} rd
         on rd.id = ed.diagnosis_id
@@ -263,7 +263,7 @@ patient_data as (
         on village.id = p.village_id
     left join {{ ref('reference_data') }} bt
         on bt.id = ae.patient_billing_type_id
-    left join {{ ref('locations') }} planned_location
+    left join {{ partition_ref('locations', network) }} planned_location
         on planned_location.id = ae.planned_location_id
 )
 

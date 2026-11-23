@@ -5,7 +5,7 @@ unit_tests:
       BL-001 of encounters_in_scope, asserted from the sensitive side. The same two
       locations are in scope as the standard-variant tests, each with an encounter that
       would otherwise qualify, but only the sensitive facility is in the
-      `sensitive_example_facilities` stub. The sensitive variant must return the encounter at the
+      `sn_example_facilities` stub. The sensitive variant must return the encounter at the
       sensitive facility and only that one.
 
       This is the inverse of what test_encounter_invoice_audit_aggregation asserts, and
@@ -24,7 +24,7 @@ unit_tests:
         yearmonth_format: 'YYYY-MM'
         language: default
     given:
-      - input: ref('encounters')
+      - input: ref('sn_example_encounters')
         format: sql
         rows: |
           -- at the SENSITIVE facility: the only row this variant should return
@@ -33,14 +33,14 @@ unit_tests:
           -- at the NON-sensitive facility: must not appear in the sensitive variant
           select 'enc_std', '2024-01-19 09:00:00'::timestamp, '2024-01-19 17:00:00'::timestamp, 'pat_002', 'loc_001', 'dept_001', null::text, null::text, 'clinic', null::text, null::text, null::timestamp
 
-      - input: ref('locations')
+      - input: ref('sn_example_locations')
         format: sql
         rows: |
           select 'loc_001' as id, 'fac_001' as facility_id
           union all
           select 'loc_002', 'fac_002'
 
-      - input: ref('sensitive_example_facilities')
+      - input: ref('sn_example_facilities')
         format: sql
         rows: |
           select 'fac_002' as id, 'Sensitive Clinic' as name, 'sn_001' as sensitive_network_id
@@ -52,7 +52,7 @@ unit_tests:
           union all
           select 'pat_002', 'P002', 'Jane', 'Smith', '1985-06-15'::date, 'female'
 
-      - input: ref('departments')
+      - input: ref('sn_example_departments')
         format: sql
         rows: |
           select 'dept_001' as id, 'Medicine' as name

@@ -7,7 +7,7 @@ with diets as (
             rd.name, ', '
             order by rd.name
         ) as diets
-    from {{ ref('encounter_diets') }} ed
+    from {{ partition_ref('encounter_diets', network) }} ed
     join {{ ref('reference_data') }} rd
         on rd.id = ed.diet_id
     group by ed.encounter_id
@@ -53,14 +53,14 @@ select
     lg.name as location_group,
     d.diets,
     a.allergies
-from {{ ref('encounters') }} e
+from {{ partition_ref('encounters', network) }} e
 join {{ ref('patients') }} p
     on p.id = e.patient_id
-join {{ ref('locations') }} l
+join {{ partition_ref('locations', network) }} l
     on l.id = e.location_id
 join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
-left join {{ ref('location_groups') }} lg
+left join {{ partition_ref('location_groups', network) }} lg
     on lg.id = l.location_group_id
 left join diets d
     on d.encounter_id = e.id

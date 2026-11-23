@@ -33,7 +33,7 @@ invoice_finalised as (
     select
         icl.invoice_id,
         max(icl.logged_at) as finalised_at
-    from {{ ref('invoices_change_logs') }} icl
+    from {{ partition_ref('invoices_change_logs', network) }} icl
     where
         icl.status = 'finalised'
         and (icl.previous_status is null or icl.previous_status != 'finalised')
@@ -76,7 +76,7 @@ invoice_discount_pct as (
     select distinct on (invoice_id)
         invoice_id,
         percentage
-    from {{ ref('invoice_discounts') }}
+    from {{ partition_ref('invoice_discounts', network) }}
     order by invoice_id asc, applied_time desc, id asc
 ),
 
@@ -92,7 +92,7 @@ invoice_payments_agg as (
     select
         pay.invoice_id,
         sum(pay.amount) as patient_payment
-    from ({{ invoice_payment_amounts('patient') }}) pay
+    from ({{ invoice_payment_amounts('patient', network=network) }}) pay
     where not pay.is_refund
         and not pay.is_reversed
     group by pay.invoice_id
@@ -115,7 +115,7 @@ invoice_insurer_payments_agg as (
     select
         pay.invoice_id,
         sum(pay.amount) as insurer_payment
-    from ({{ invoice_payment_amounts('insurer') }}) pay
+    from ({{ invoice_payment_amounts('insurer', network=network) }}) pay
     where not pay.is_refund
         and not pay.is_reversed
     group by pay.invoice_id
@@ -149,11 +149,11 @@ select
     -- human-facing invoice number, carried for consumers (e.g. clinical__cost
     -- cost_source_value) so they need not re-join invoices
     i.display_id
-from {{ ref('invoices') }} i
+from {{ partition_ref('invoices', network) }} i
 -- facility partition on the invoice's encounter, through the same joins as the items
-join {{ ref('encounters') }} e
+join {{ partition_ref('encounters', network) }} e
     on e.id = i.encounter_id
-join {{ ref('locations') }} l
+join {{ partition_ref('locations', network) }} l
     on l.id = e.location_id
 join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
