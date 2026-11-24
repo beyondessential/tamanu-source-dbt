@@ -24,15 +24,30 @@ unit_tests:
       - input: ref('int__who_dak_hiv_form_answers')
         format: sql
         rows: |
-          select 'r1' as response_id, 'pat_stopped' as patient_id, 'fac_001' as facility_id, 'carevisit' as survey_code, '2026-01-10 09:00:00'::timestamp as submitted_datetime, true as on_art, '2026-01-05'::date as art_start_date, null::date as art_stopped_date, null::date as dsd_start_date, null::boolean as dsd_enrolled
+          select 'r1' as response_id, 'pat_stopped' as patient_id, 'fac_001' as facility_id, 'carevisit' as survey_code, '2026-01-10 09:00:00'::timestamp as submitted_datetime, true as on_art, '2026-01-05'::date as art_start_date, null::date as art_stopped_date, null::date as dsd_start_date, null::boolean as dsd_enrolled, null::text as hiv_treatment_outcome
           union all
-          select 'r2', 'pat_stopped', 'fac_001', 'carevisit', '2026-03-20 09:00:00'::timestamp, null::boolean, null::date, '2026-03-15'::date, null::date, null::boolean
+          select 'r2', 'pat_stopped', 'fac_001', 'carevisit', '2026-03-20 09:00:00'::timestamp, null::boolean, null::date, '2026-03-15'::date, null::date, null::boolean, null::text
           union all
-          select 'r3', 'pat_restarted', 'fac_001', 'carevisit', '2026-01-10 09:00:00'::timestamp, true, '2026-01-05'::date, null::date, null::date, null::boolean
+          select 'r3', 'pat_restarted', 'fac_001', 'carevisit', '2026-01-10 09:00:00'::timestamp, true, '2026-01-05'::date, null::date, null::date, null::boolean, null::text
           union all
-          select 'r4', 'pat_restarted', 'fac_001', 'carevisit', '2026-03-20 09:00:00'::timestamp, null::boolean, null::date, '2026-03-15'::date, null::date, null::boolean
+          select 'r4', 'pat_restarted', 'fac_001', 'carevisit', '2026-03-20 09:00:00'::timestamp, null::boolean, null::date, '2026-03-15'::date, null::date, null::boolean, null::text
           union all
-          select 'r5', 'pat_restarted', 'fac_001', 'carevisit', '2026-04-10 09:00:00'::timestamp, true, '2026-04-01'::date, null::date, null::date, null::boolean
+          select 'r5', 'pat_restarted', 'fac_001', 'carevisit', '2026-04-10 09:00:00'::timestamp, true, '2026-04-01'::date, null::date, null::date, null::boolean, null::text
+
+      - input: ref('derived__episode_art')
+        format: sql
+        rows: |
+          select null::text as subject_id, null::date as episode_start_date, null::date as last_day_on_art, null::text as closure_reason, null::boolean as is_reinitiation where false
+
+      - input: ref('int__art_supply')
+        format: sql
+        rows: |
+          select null::text as subject_id, null::date as supply_date, null::int as supply_days, null::text as facility_id where false
+
+      - input: ref('int__who_dak_hiv_art_lapse')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::date as art_start_date, null::date as lapse_date where false
 
       - input: ref('clinical__person')
         format: sql
@@ -44,18 +59,18 @@ unit_tests:
     expect:
       format: sql
       rows: |
-        select '2026-01-01'::date as month_start, '2026-01-31'::date as month_end, 'pat_restarted' as patient_id, 'fac_001' as facility_id, true as on_art, true as on_art_recorded, null::date as art_stopped_date, '2026-01-05'::date as art_start_date, null::boolean as dsd_enrolled, null::date as dsd_start_date, 0 as months_on_art, null::int as months_on_dsd, 'male' as sex, 41 as age_years
+        select '2026-01-01'::date as month_start, '2026-01-31'::date as month_end, 'pat_restarted' as patient_id, 'fac_001' as facility_id, true as on_art, true as on_art_recorded, null::date as art_stopped_date, '2026-01-05'::date as art_start_date, null::boolean as dsd_enrolled, null::date as dsd_start_date, 0 as months_on_art, null::int as months_on_dsd, 'male' as sex, 41 as age_years, false as ltfu_in_month, false as reinitiated_in_month
         union all
-        select '2026-01-01'::date, '2026-01-31'::date, 'pat_stopped', 'fac_001', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 0, null::int, 'male', 41
+        select '2026-01-01'::date, '2026-01-31'::date, 'pat_stopped', 'fac_001', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 0, null::int, 'male', 41, false, false
         union all
-        select '2026-02-01'::date, '2026-02-28'::date, 'pat_restarted', 'fac_001', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 1, null::int, 'male', 41
+        select '2026-02-01'::date, '2026-02-28'::date, 'pat_restarted', 'fac_001', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 1, null::int, 'male', 41, false, false
         union all
-        select '2026-02-01'::date, '2026-02-28'::date, 'pat_stopped', 'fac_001', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 1, null::int, 'male', 41
+        select '2026-02-01'::date, '2026-02-28'::date, 'pat_stopped', 'fac_001', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 1, null::int, 'male', 41, false, false
         union all
-        select '2026-03-01'::date, '2026-03-31'::date, 'pat_restarted', 'fac_001', false, true, '2026-03-15'::date, '2026-01-05'::date, null::boolean, null::date, 2, null::int, 'male', 41
+        select '2026-03-01'::date, '2026-03-31'::date, 'pat_restarted', 'fac_001', false, true, '2026-03-15'::date, '2026-01-05'::date, null::boolean, null::date, 2, null::int, 'male', 41, false, false
         union all
-        select '2026-03-01'::date, '2026-03-31'::date, 'pat_stopped', 'fac_001', false, true, '2026-03-15'::date, '2026-01-05'::date, null::boolean, null::date, 2, null::int, 'male', 41
+        select '2026-03-01'::date, '2026-03-31'::date, 'pat_stopped', 'fac_001', false, true, '2026-03-15'::date, '2026-01-05'::date, null::boolean, null::date, 2, null::int, 'male', 41, false, false
         union all
-        select '2026-04-01'::date, '2026-04-30'::date, 'pat_restarted', 'fac_001', true, true, '2026-03-15'::date, '2026-04-01'::date, null::boolean, null::date, 0, null::int, 'male', 41
+        select '2026-04-01'::date, '2026-04-30'::date, 'pat_restarted', 'fac_001', true, true, '2026-03-15'::date, '2026-04-01'::date, null::boolean, null::date, 0, null::int, 'male', 41, false, false
         union all
-        select '2026-04-01'::date, '2026-04-30'::date, 'pat_stopped', 'fac_001', false, true, '2026-03-15'::date, '2026-01-05'::date, null::boolean, null::date, 3, null::int, 'male', 41
+        select '2026-04-01'::date, '2026-04-30'::date, 'pat_stopped', 'fac_001', false, true, '2026-03-15'::date, '2026-01-05'::date, null::boolean, null::date, 3, null::int, 'male', 41, false, false
