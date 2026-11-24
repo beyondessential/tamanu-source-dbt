@@ -48,3 +48,6 @@ models:
       - name: change_sequence
         data_type: integer
         description: "{{ doc('discharges_change_logs__change_sequence') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('logs__generic__updated_at_sync_tick') }}"

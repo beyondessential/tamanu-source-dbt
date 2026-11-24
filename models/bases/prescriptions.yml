@@ -92,3 +92,6 @@ models:
       - name: discontinued_datetime
         data_type: timestamp
         description: "{{ doc('prescriptions__discontinued_date') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

@@ -1,3 +1,7 @@
+{{ incremental_from_table(
+    key='id',
+    table='administered_vaccines'
+) }}
 select
     av.id,
     av.date::timestamp as datetime,
@@ -18,9 +22,13 @@ select
     av.given_by,
     av.given_elsewhere as is_given_elsewhere,
     av.circumstance_ids,
-    av.recorder_id as recorded_by_id
+    av.recorder_id as recorded_by_id,
+    av.updated_at_sync_tick
 from {{ source('tamanu', 'administered_vaccines') }} av
 join {{ source('tamanu', 'encounters') }} e on e.id = av.encounter_id
 where av.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != '{{ var("test_patient") }}'
+    {%- if is_incremental() %}
+    and av.updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}
