@@ -9,25 +9,33 @@
 -- incremental_from_table: changes are marked by `table`'s own updated_at_sync_tick, e.g.
 --   'encounters'. source is its dbt source, 'tamanu' unless set, e.g. 'logs__tamanu'.
 -- key is the column that identifies a row (dbt's unique_key).
-{%- macro incremental_from_logs(key, table, key_type=none) -%}
-    {{- incremental_settings(key, {'from_logs': table, 'key_type': key_type}) -}}
+-- indexes lists extra indexes for the analytics table, each a list of columns, e.g.
+--   [['record_id'], ['source_record_type', 'source_record_id']]. The key and
+--   updated_at_sync_tick are always indexed. dbt creates indexes when it builds the table,
+--   so a new one appears at the next full refresh.
+{%- macro incremental_from_logs(key, table, key_type=none, indexes=[]) -%}
+    {{- incremental_settings(key, {'from_logs': table, 'key_type': key_type}, indexes) -}}
 {%- endmacro %}
 
 
-{%- macro incremental_from_table(key, table, source='tamanu') -%}
-    {{- incremental_settings(key, {'from_table': table, 'source': source}) -}}
+{%- macro incremental_from_table(key, table, source='tamanu', indexes=[]) -%}
+    {{- incremental_settings(key, {'from_table': table, 'source': source}, indexes) -}}
 {%- endmacro %}
 
 
 -- Shared by the two macros above: incremental on analytics, a view everywhere else.
-{%- macro incremental_settings(key, options) -%}
+{%- macro incremental_settings(key, options, indexes=[]) -%}
     {%- set analytics = target.name.startswith('analytics') -%}
+    {%- set table_indexes = [{'columns': [key]}, {'columns': ['updated_at_sync_tick']}] -%}
+    {%- for columns in indexes -%}
+        {%- do table_indexes.append({'columns': columns}) -%}
+    {%- endfor -%}
     {{- config(
         materialized=('incremental' if analytics else 'view'),
         incremental_strategy='delete+upsert',
         unique_key=key,
         on_schema_change='sync_all_columns',
-        indexes=([{'columns': [key]}, {'columns': ['updated_at_sync_tick']}] if analytics else []),
+        indexes=(table_indexes if analytics else []),
         incremental=options
     ) -}}
 {%- endmacro %}
