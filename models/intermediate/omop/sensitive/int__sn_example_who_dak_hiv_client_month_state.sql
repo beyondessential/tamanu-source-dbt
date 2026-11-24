@@ -25,14 +25,16 @@
 -- client who stops collecting ART is lost to follow-up once their supply has run out for longer
 -- than the allowance, and is on ART again from their next supply (BL-048). A client with no
 -- supply recorded keeps the state their forms give them until their site's supply records can be
--- expected to show them (BL-049), and a client recorded as transferred out is not on ART (BL-056).
+-- expected to show them (BL-049), and a client recorded as transferred out or dead is not on ART
+-- (BL-056).
 --
 -- Only complete months are emitted, so a partial current month cannot read as a fall in the
 -- caseload (BL-020).
 --
 -- Ephemeral, so this is inlined into its consumer and materialises nothing.
 --
--- Spec: specs/dbt-model/metric__who_dak_hiv_indicators.md, BL-018..BL-021 and BL-047..BL-057.
+-- Spec: specs/dbt-model/metric__who_dak_hiv_indicators.md, BL-018..BL-021, BL-047..BL-057, BL-061
+-- and BL-062.
 -- The numbers BL-047 onward are that spec's.
 
 with answers as (
@@ -62,16 +64,28 @@ lapses as (
     select * from {{ ref('int__who_dak_hiv_art_lapse') }}
 ),
 
--- BL-055: each recorded treatment outcome, dated on its submission's date
+-- BL-055: each recorded treatment outcome, from a form or from the client's registry status
+-- (BL-061), dated on the day it was recorded
 outcomes as (
     select
         patient_id,
         response_id,
+        submitted_datetime,
         submitted_datetime::date as outcome_date,
         hiv_treatment_outcome
     from answers
     where hiv_treatment_outcome is not null
         and submitted_datetime is not null
+
+    union all
+
+    select
+        patient_id,
+        response_id,
+        submitted_datetime,
+        submitted_datetime::date as outcome_date,
+        hiv_treatment_outcome
+    from {{ ref('int__who_dak_hiv_registry_outcomes') }}
 ),
 
 -- BL-052: the days a client becomes lost to follow-up: the day after a closed period's last day
@@ -118,9 +132,25 @@ ltfu_events as (
             where o.patient_id = c.patient_id
                 and o.outcome_date >= c.since_date
                 and o.outcome_date <= c.ltfu_date
-            order by o.outcome_date desc, o.response_id desc
+            order by o.outcome_date desc, o.submitted_datetime desc, o.response_id desc
             limit 1
         ), '') <> 'Transferred out'
+        -- BL-062: nor a client recorded as dead since the period began, however late the death was
+        -- recorded, unless they started another period on ART before the death
+        and not exists (
+            select 1
+            from outcomes o
+            where o.patient_id = c.patient_id
+                and o.hiv_treatment_outcome = 'Death (documented)'
+                and o.outcome_date >= c.since_date
+                and not exists (
+                    select 1
+                    from episodes e
+                    where e.subject_id = c.patient_id
+                        and e.episode_start_date >= c.ltfu_date
+                        and e.episode_start_date <= o.outcome_date
+                )
+        )
 ),
 
 -- BL-020: the reporting spine, first submission month to the last complete month.
@@ -203,7 +233,8 @@ state_events as (
     from answers
     where art_stopped_date is not null
     union all
-    -- BL-055: the treatment outcome, which a recorded transfer out acts on (BL-056)
+    -- BL-055: a form's treatment outcome, so the submission that recorded it counts as contact
+    -- (BL-021). The outcome itself is read from outcomes, which also holds the registry's (BL-061)
     select
         patient_id,
         submitted_datetime,
@@ -272,15 +303,13 @@ pivoted as (
         max(case when s.attribute = 'art_start_date' then s.value end)::date as art_start_date,
         max(case when s.attribute = 'dsd_enrolled' then s.value end) = 'true' as dsd_enrolled,
         max(case when s.attribute = 'dsd_start_date' then s.value end)::date as dsd_start_date,
-        max(case when s.attribute = 'art_stopped_date' then s.value end)::date as art_stopped_date,
-        max(case when s.attribute = 'hiv_treatment_outcome' then s.value end) as hiv_treatment_outcome,
-        max(case when s.attribute = 'hiv_treatment_outcome' then s.submitted_datetime end)::date as outcome_date
+        max(case when s.attribute = 'art_stopped_date' then s.value end)::date as art_stopped_date
     from state_as_at s
     group by s.month_start, s.month_end, s.patient_id
 ),
 
--- BL-048..BL-050, BL-056: what each client's supply, lapse date and recorded outcome say at the
--- month end, beside what their forms last said
+-- BL-048..BL-050, BL-056: what each client's supply, lapse date and latest recorded outcome say
+-- at the month end, beside what their forms last said
 with_supply as (
     select
         p.*,
@@ -302,18 +331,18 @@ with_supply as (
         cov.episode_start_date as period_start_date,
         coalesce(fs.first_supply_date <= p.month_end, false) as has_supply,
         l.lapse_date,
-        -- BL-056: recorded as transferred out, and not supplied ART since
+        -- BL-056: recorded as transferred out or dead, and not supplied ART since
         case
-            when p.hiv_treatment_outcome = 'Transferred out'
+            when lo.hiv_treatment_outcome in ('Transferred out', 'Death (documented)')
                 then not exists (
                         select 1
                         from episodes e
                         where e.subject_id = p.patient_id
-                            and e.episode_start_date > p.outcome_date
+                            and e.episode_start_date > lo.outcome_date
                             and e.episode_start_date <= p.month_end
                     )
             else false
-        end as is_transferred_out
+        end as is_out_of_care
     from pivoted p
     left join episodes cov
         on cov.subject_id = p.patient_id
@@ -321,6 +350,17 @@ with_supply as (
         and cov.last_day_on_art >= p.month_end
     left join first_supply fs on fs.subject_id = p.patient_id
     left join lapses l on l.patient_id = p.patient_id
+    -- BL-055: the client's latest recorded outcome on or before the month end
+    left join lateral (
+        select
+            o.hiv_treatment_outcome,
+            o.outcome_date
+        from outcomes o
+        where o.patient_id = p.patient_id
+            and o.outcome_date <= p.month_end
+        order by o.outcome_date desc, o.submitted_datetime desc, o.response_id desc
+        limit 1
+    ) lo on true
 )
 
 select
@@ -333,7 +373,7 @@ select
     -- unless a recorded stop dated after the period began, and after any ART start the forms
     -- record, ends it (BL-026). BL-049: a client with
     -- no supply recorded keeps the state their forms give them until their lapse date.
-    -- BL-056: a client recorded as transferred out is not on ART
+    -- BL-056: a client recorded as transferred out or dead is not on ART
     (
         case
             when p.has_supply
@@ -347,7 +387,7 @@ select
                     )
             else p.on_art_by_form and (p.lapse_date is null or p.month_end <= p.lapse_date)
         end
-        and not p.is_transferred_out
+        and not p.is_out_of_care
     ) as on_art,
 
     p.on_art as on_art_recorded,
