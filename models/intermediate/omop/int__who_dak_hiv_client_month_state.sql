@@ -151,6 +151,23 @@ ltfu_events as (
         )
 ),
 
+-- BL-052: the months each client became lost to follow-up in
+ltfu_months as (
+    select distinct
+        patient_id,
+        date_trunc('month', ltfu_date)::date as month_start
+    from ltfu_events
+),
+
+-- BL-053: the months each client started a period on ART numbered 2 or more in
+reinitiation_months as (
+    select distinct
+        subject_id as patient_id,
+        date_trunc('month', episode_start_date)::date as month_start
+    from episodes
+    where is_reinitiation
+),
+
 -- BL-020: the reporting spine, first submission month to the last complete month.
 --
 -- The horizon is a var so a backfill can be reproduced and a unit test can assert a fixed set of
@@ -412,21 +429,12 @@ select
     {{ age_years('p.month_end', 'per') }} as age_years,
 
     -- BL-052: the client became lost to follow-up in the month
-    exists(
-        select 1
-        from ltfu_events le
-        where le.patient_id = p.patient_id
-            and le.ltfu_date between p.month_start and p.month_end
-    ) as ltfu_in_month,
+    lm.patient_id is not null as ltfu_in_month,
     -- BL-053: a period on ART numbered 2 or more started in the month
-    exists(
-        select 1
-        from episodes e
-        where e.subject_id = p.patient_id
-            and e.is_reinitiation
-            and e.episode_start_date between p.month_start and p.month_end
-    ) as reinitiated_in_month
+    rm.patient_id is not null as reinitiated_in_month
 
 from with_supply p
 left join latest_contact c on c.month_start = p.month_start and c.patient_id = p.patient_id
+left join ltfu_months lm on lm.month_start = p.month_start and lm.patient_id = p.patient_id
+left join reinitiation_months rm on rm.month_start = p.month_start and rm.patient_id = p.patient_id
 join {{ ref('clinical__person') }} per on per.person_id = p.patient_id

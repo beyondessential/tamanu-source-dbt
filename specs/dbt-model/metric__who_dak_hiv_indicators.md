@@ -306,6 +306,7 @@ the Global Fund or PEPFAR reads the same counts via Annex C's crosswalk.
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-11-25 | Maui team | The month state works out each client's lost to follow-up and re-initiation months once, rather than once per client month, with no change to its output (BL-052, BL-053, MAUI-7225). |
 | 2026-11-24 | Maui team | A death or transfer out recorded through the registry's clinical status is a treatment outcome; a recorded death ends on ART and is never counted lost to follow-up, however late it is recorded (BL-055, BL-056, BL-061, BL-062, MAUI-7225). |
 | 2026-11-23 | Maui team | On-ART state, loss to follow-up and re-initiation come from ART supply through `derived__episode_art`; a recorded transfer out ends it; adds `who_dak_hiv_art_ltfu` and `who_dak_hiv_art_reinitiated`, and ART.2 formed by the consumer (MAUI-7225). |
 | 2026-11-19 | Maui team | Answers reach their DAK elements through the generated question map `map__who_dak_hiv_questions` (MAUI-7199). |
