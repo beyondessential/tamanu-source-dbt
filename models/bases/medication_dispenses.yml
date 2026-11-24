@@ -36,3 +36,6 @@ models:
       - name: route
         data_type: character varying(255)
         description: "{{ doc('medication_dispenses__route') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"
