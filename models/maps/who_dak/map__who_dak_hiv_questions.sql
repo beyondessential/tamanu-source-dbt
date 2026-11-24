@@ -62,6 +62,8 @@ from (
     ('program-whodakhiv-carevisit', 'whodakhiv-d-de459', null, 'HIV.D.DE459', null),
     ('program-whodakhiv-carevisit', 'whodakhiv-d-de46', null, 'HIV.D.DE46', null),
     ('program-whodakhiv-carevisit', 'whodakhiv-d-de460', null, 'HIV.D.DE460', null),
+    ('program-whodakhiv-carevisit', 'whodakhiv-d-de461', null, 'HIV.D.DE461', null),
+    ('program-whodakhiv-carevisit', 'whodakhiv-d-de462', null, 'HIV.D.DE462', null),
     ('program-whodakhiv-carevisit', 'whodakhiv-d-de465', null, 'HIV.D.DE465', null),
     ('program-whodakhiv-carevisit', 'whodakhiv-d-de466', null, 'HIV.D.DE466', null),
     ('program-whodakhiv-carevisit', 'whodakhiv-d-de481', null, 'HIV.D.DE481', null),
