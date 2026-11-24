@@ -48,7 +48,8 @@ overlap or adjoin.
   is counted when it is active, or inactive with a deactivation date, and a registration recorded in
   error, or deactivated with no date, is never counted.
 - **BL-002:** A condition era lies within a counted registration, from the day the registration
-  started up to the day before it was deactivated, and has no end while the registration is active.
+  started up to the day before it was deactivated or, if earlier, the date of death, which is the last
+  day counted, and has no end while the registration is active and the patient is alive.
 - **BL-003:** A patient holds a condition on a day unless the record in force that day is disproven or
   recorded in error, the record in force being the latest one dated on or before the day that was not
   deleted on or before it.
@@ -74,6 +75,7 @@ registration.
 | AC-006 | The end date is the last day of membership and is empty for an entry not ended | BL-006 |
 | AC-007 | No two entries of a patient in a cohort overlap or adjoin | BL-005 |
 | AC-008 | There is one row per cohort, patient and start date | Grain |
+| AC-009 | An era ends on the date of death, so the date of death is the last day counted, and a patient who died before registering has none, one deactivated before dying keeps the earlier end, and one who died on the day of registering has that one day | BL-002 |
 
 ## Implementations
 
@@ -86,3 +88,4 @@ registration.
 | Date | Author | Change |
 |---|---|---|
 | 2026-11-10 | Maui team | Initial draft |
+| 2026-11-24 | Maui team | A patient's membership ends on their date of death ([MAUI-7226](https://linear.app/bes/issue/MAUI-7226)) |
