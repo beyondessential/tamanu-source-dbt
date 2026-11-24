@@ -4,16 +4,16 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `metric__who_dak_hiv_indicators` (16 registered indicators) |
+| **Name** | `metric__who_dak_hiv_indicators` (18 registered indicators) |
 | **Type** | dbt model (canonical definitions) |
 | **Layer** | `metrics` (D5 wide format, per-subject grain) |
 | **Materialisation** | env-aware — `table` on `analytics*`, `view` everywhere else |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Repo** | `tamanu-source-dbt` |
-| **Linear issue** | [MAUI-7199](https://linear.app/bes/issue/MAUI-7199) |
+| **Linear issue** | [MAUI-7199](https://linear.app/bes/issue/MAUI-7199), [MAUI-7225](https://linear.app/bes/issue/MAUI-7225) |
 | **Created** | 2026-08-24 |
-| **Last updated** | 2026-11-19 |
+| **Last updated** | 2026-11-23 |
 
 ## Purpose
 
@@ -22,8 +22,9 @@ forms are generated from Web Annex A with a question map naming the DAK data ele
 question collects, which makes Web Annex C's indicator definitions, written in terms of those
 elements, computable without a local interpretation layer.
 
-Sixteen counts are implemented, covering nine Annex C indicators: those whose numerator and
-denominator can both be read from the data elements those forms collect. Each count is registered
+Eighteen counts are implemented, covering ten Annex C indicators: those whose numerator and
+denominator can both be read from the data elements those forms collect, and the ART supply that
+`derived__episode_art` assembles from them and from medication dispensing. Each count is registered
 separately, so a rate is formed by the consumer from a numerator and its denominator. Annex C's
 `Ref no.` is on every registry row, which is what the DAK's GAM 2023, Global Fund 2023 and
 PEPFAR MER 2.6.1 crosswalk sheets key on — so an indicator here resolves to the line those
@@ -39,6 +40,9 @@ reports ask for.
 | DSD.3 | DSD ART coverage | `who_dak_hiv_dsd_enrolled` | `who_dak_hiv_dsd_eligible` |
 | ART.1 | People living with HIV on ART | `who_dak_hiv_art_on_art` | a population estimate, not Tamanu's |
 | ART.1 | …by key population | `who_dak_hiv_art_on_art_key_population` | — |
+| ART.2 | Total attrition from ART | formed by the consumer from ART.1 and ART.4 (BL-054) | ART.1 at the previous period end plus ART.4 in the period |
+| ART.2 | …lost to follow-up | `who_dak_hiv_art_ltfu` | — |
+| — | Re-initiated on ART | `who_dak_hiv_art_reinitiated` | a count |
 | ART.9 | ARV toxicity prevalence | `who_dak_hiv_art_toxicity` | `who_dak_hiv_art_on_art` |
 | DSD.4 | Retention in DSD ART models | `who_dak_hiv_dsd_retained` | `who_dak_hiv_dsd_retention_eligible` |
 
@@ -68,7 +72,7 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
 
 ## Business logic
 
-- **BL-001:** Each output row's `metric_id` is one of the sixteen registered in
+- **BL-001:** Each output row's `metric_id` is one of the eighteen registered in
   `documentations/metrics/who_dak_hiv.yml`; the registry row carries the definition and this
   model is its implementation.
 - **BL-002:** The DAK data elements are read from `who-dak-hiv` form submissions, identified by
@@ -155,10 +159,11 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
 - **BL-026:** A recorded ART stop ends the on-ART state from the month the stop is dated,
   whether or not the form that recorded it also answered "On ART" — otherwise a client whose
   treatment stopped stays in ART.1 for ever and the cascade's headline number only grows. A
-  later ART start date supersedes an earlier stop: that client is on a second course, and the
-  old stop says nothing about it. The state is read from the dated stop rather than from the
-  recording form's submission, so a stop entered late still takes effect in the month treatment
-  ended — the same rule `ART.4` uses for an initiation.
+  later ART start date, or an ART period starting after the stop (BL-048), supersedes an earlier
+  stop: that client is on a second course, and the old stop says nothing about it. The state is
+  read from the dated stop rather than from the recording form's submission, so a stop entered
+  late still takes effect in the month treatment ended — the same rule `ART.4` uses for an
+  initiation.
 - **BL-027:** The spine's horizon is the last complete month, overridable through the
   `who_dak_hiv_spine_end` var so a backfill can be reproduced and a test can assert a fixed set
   of months.
@@ -176,6 +181,45 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
   never completed carries no submission datetime, and Postgres sorts NULLs first under `desc`,
   so an abandoned submission would outrank every real one and discard every later correction.
 
+### ART supply, loss to follow-up and re-initiation
+
+- **BL-047:** `int__who_dak_hiv_form_answers` reads HIV.D.DE462 (Number of days of medications
+  dispensed) as `art_days_dispensed`, the ART supplied at that visit, which `derived__episode_art`
+  reads as a supply record.
+- **BL-048:** A client with an ART supply record on or before a month end is on ART at that month
+  end when one of their `derived__episode_art` periods has started by then and has not passed its
+  last day on ART, unless a recorded ART stop dated after that period's start and after any ART
+  start date, and on or before the month end, ends it.
+- **BL-049:** A client with no ART supply record by a month end keeps the state BL-018 and BL-026
+  give them until their lapse date, and is not on ART at a month end after it.
+- **BL-050:** A client's lapse date is the later of their site's first ART supply in Tamanu and
+  their ART start date, plus the `art_unrecorded_supply_days` var (default 90), plus the
+  `art_ltfu_days` var (default 90).
+- **BL-051:** A client's site is the facility of the submission that recorded their ART start, and
+  its first ART supply in Tamanu is the date the `art_supply_start_dates` var gives for it, else the
+  earliest drug-exposure supply record in `int__art_supply` at that facility. A client whose site
+  has neither has no lapse date.
+- **BL-052:** `who_dak_hiv_art_ltfu` counts a client in the month they become lost to follow-up:
+  the day after the last day on ART of an ART period that has ended, or the day after the lapse
+  date of a client with no ART supply recorded by it, at the facility of the client's latest record
+  (BL-021), a supply being a record.
+- **BL-053:** `who_dak_hiv_art_reinitiated` counts a client in the month an ART period numbered 2
+  or more starts, at the facility of the client's latest record (BL-021). It has no Annex C
+  reference.
+- **BL-054:** ART.4 reads only the ART start date, so a re-initiation is never a new ART patient.
+  ART.2 is formed by the consumer: ART.1 at the previous period's end plus ART.4 within the period,
+  less ART.1 at the period's end, over ART.1 at the previous period's end plus ART.4 within the
+  period. `who_dak_hiv_art_ltfu` is its lost-to-follow-up disaggregation.
+- **BL-055:** `int__who_dak_hiv_form_answers` reads HIV.H.DE41 (HIV treatment outcome) as
+  `hiv_treatment_outcome`, dated on its submission's date.
+- **BL-056:** A client whose latest treatment outcome on or before a month end is `Transferred out`
+  is not on ART at that month end, unless an ART period starts after that outcome's date.
+- **BL-057:** `who_dak_hiv_art_ltfu` does not count a client whose ART stop is dated after their
+  period began, or after their ART start for a client with no supply recorded, and on or before the
+  day they became lost to follow-up, nor one whose latest treatment outcome dated in that span is
+  `Transferred out`. A recorded `Lost to follow-up` outcome is not read, since loss to follow-up
+  comes from ART supply (BL-048 to BL-050).
+
 ## Acceptance criteria
 
 | ID | Criterion | Implements | Test |
@@ -184,7 +228,7 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
 | AC-002 | `period_end > period_start` | BL-005 | `dbt_expectations.expect_column_pair_values_A_to_be_greater_than_B` |
 | AC-003 | `period_start` is a month start and `period_end` its month end | BL-005 | `dbt_utils.expression_is_true` |
 | AC-004 | `period_start <= period_end` on every row | BL-005 | `dbt_utils.expression_is_true` |
-| AC-005 | `metric_id` is not null and is one of the eleven | BL-001 | `not_null`, `accepted_values` |
+| AC-005 | `metric_id` is not null and is one of the eighteen | BL-001 | `not_null`, `accepted_values` |
 | AC-006 | `metric_id` appears in `metric_definitions` | BL-001 | `relationships`, severity error |
 | AC-007 | `subject_id` is not null | BL-005 | `not_null` |
 | AC-008 | `subject_grain` is `patient` or `test` | BL-010 | `not_null`, `accepted_values` |
@@ -204,6 +248,11 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
 | AC-022 | A positive result with no results-returned date is in neither HTS numerator nor its denominator | BL-028 | unit test `..._hts_grain` |
 | AC-023 | A DSD.3 numerator row exists only where the same client has a denominator row in the same month | BL-014 | unit test `..._dsd_coverage` |
 | AC-024 | An answer fills its element's column through the question map, and a question answered on a survey the map does not list it under is not read | BL-002 | unit test `test_int__who_dak_hiv_form_answers_question_map` |
+| AC-037 | A care visit's HIV.D.DE462 answer fills `art_days_dispensed` as a number, and a follow-up's HIV.H.DE41 answer fills `hiv_treatment_outcome` | BL-047, BL-055 | unit test `test_int__who_dak_hiv_form_answers_question_map` |
+| AC-038 | A client supplied ART is on ART at a month end inside their period and not at the first month end after its last day on ART; they are on ART again once period 2 starts; a recorded death inside a period ends it from that month and the client is not then counted lost to follow-up | BL-026, BL-048, BL-057 | unit test `test_int__who_dak_hiv_client_month_state_art_supply` |
+| AC-039 | A client with an ART start date and no supply record is on ART until their lapse date and not after; one whose ART start is after their site's first supply lapses from their own start; one whose site has no supply record and no `art_supply_start_dates` entry never lapses | BL-049–BL-051 | unit tests `test_int__who_dak_hiv_client_month_state_unrecorded_supply`, `test_int__who_dak_hiv_art_lapse` |
+| AC-040 | `who_dak_hiv_art_ltfu` counts a client once, in the month after their period's last day on ART or their lapse date; `who_dak_hiv_art_reinitiated` counts them in the month period 2 starts and never for period 1; neither adds an ART.4 row | BL-052–BL-054 | unit test `test_metric__who_dak_hiv_indicators_ltfu_reinitiation` |
+| AC-041 | A client recorded `Transferred out` is not on ART from that month end and is not counted lost to follow-up when their supply lapses; a later ART period puts them back on ART; a recorded `Lost to follow-up` outcome changes nothing | BL-055–BL-057 | unit test `test_int__who_dak_hiv_client_month_state_transferred_out` |
 
 The nine unit tests carry the definitional weight. No deployment has captured these forms yet,
 so the data tests assert shape on an empty relation — a fixture is the only way to prove a
@@ -215,7 +264,9 @@ would otherwise have to take on trust.
 `int__who_dak_hiv_form_answers` (over `survey_responses`, `survey_response_answers`, `surveys`,
 `encounters`, `locations`, `program_data_elements`, `map__who_dak_hiv_questions`,
 `clinical__person`), `int__who_dak_hiv_client_month_state`,
-`int__who_dak_hiv_key_populations`, `metric_definitions`.
+`int__who_dak_hiv_key_populations`, the `who_dak_hiv_plhiv` macro, `int__who_dak_hiv_art_lapse`,
+`derived__episode_art` and `int__art_supply` (`specs/dbt-model/derived__episode_art.md`),
+`metric_definitions`.
 
 ## Consumers
 
@@ -238,5 +289,6 @@ the Global Fund or PEPFAR reads the same counts via Annex C's crosswalk.
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-11-23 | Maui team | On-ART state, loss to follow-up and re-initiation come from ART supply through `derived__episode_art`; a recorded transfer out ends it; adds `who_dak_hiv_art_ltfu` and `who_dak_hiv_art_reinitiated`, and ART.2 formed by the consumer (MAUI-7225). |
 | 2026-11-19 | Maui team | Answers reach their DAK elements through the generated question map `map__who_dak_hiv_questions` (MAUI-7199). |
 | 2026-08-24 | Maui team | Initial spec. Sixteen counts over nine Annex C indicators from the generated DAK forms, as counts with the rate left to the consumer. `int__who_dak_hiv_client_month_state` carries each client's last known state to a month end, which is what `ART.1` and `DSD.4` need; key population is a bridge feeding a separate metric of client-population pairs, because a column would make a count of people wrong. |

@@ -1,0 +1,149 @@
+unit_tests:
+  - name: test_int__who_dak_hiv_client_month_state_art_supply
+    model: int__who_dak_hiv_client_month_state
+    description: >
+      BL-048, BL-052, BL-053. A client supplied ART is on ART at a month end inside a period on ART and
+      not at the first month end after its last day on ART, where they are lost to follow-up in that
+      month. They are on ART again once a later period starts, which is a re-initiation in its month. A
+      recorded ART stop dated after the period began ends it from its month.
+      
+      pat_s has a first period from 2026-01-15 to 2026-04-30, so they are on ART at the January to April
+      month ends, lost to follow-up in May and off ART in May and June. Their second period starts on
+      2026-07-10, so they are on ART in July and August and re-initiated in July, and that supply names no
+      facility, so it does not blank the facility their forms and first supply name. pat_d is on ART in an open
+      period but their stop is dated 2026-03-20, so they are on ART in January and February only, and are
+      never lost to follow-up. pat_r is in an open period with a stop dated 2026-03-01, so they are off ART
+      in March, but their forms record a new ART start on 2026-04-01, which supersedes the stop: they are on
+      ART again from April. pat_k's period ended on 2026-04-30 but their ART stop is dated 2026-03-20, so they
+      are off ART from March and are not lost to follow-up in May. The spine ends in August.
+    overrides:
+      vars:
+        who_dak_hiv_spine_end: '2026-08-31'
+    given:
+      - input: ref('int__who_dak_hiv_form_answers')
+        format: sql
+        rows: |
+          select 'r1' as response_id, 'pat_s' as patient_id, 'fac_s' as facility_id, '2026-01-10 09:00:00'::timestamp as submitted_datetime, true as on_art, '2026-01-05'::date as art_start_date, null::date as art_stopped_date, null::date as dsd_start_date, null::boolean as dsd_enrolled, null::text as hiv_treatment_outcome
+          union all
+          select 'r2', 'pat_d', 'fac_s', '2026-01-12 09:00:00'::timestamp, true, '2026-01-05'::date, null::date, null::date, null::boolean, null::text
+          union all
+          select 'r3', 'pat_d', 'fac_s', '2026-03-25 09:00:00'::timestamp, null::boolean, null::date, '2026-03-20'::date, null::date, null::boolean, null::text
+          union all
+          select 'r10', 'pat_k', 'fac_s', '2026-01-12 09:00:00'::timestamp, true, '2026-01-05'::date, null::date, null::date, null::boolean, null::text
+          union all
+          select 'r11', 'pat_k', 'fac_s', '2026-03-25 09:00:00'::timestamp, null::boolean, null::date, '2026-03-20'::date, null::date, null::boolean, null::text
+          union all
+          select 'r7', 'pat_r', 'fac_s', '2026-01-12 09:00:00'::timestamp, true, '2026-01-05'::date, null::date, null::date, null::boolean, null::text
+          union all
+          select 'r8', 'pat_r', 'fac_s', '2026-03-05 09:00:00'::timestamp, null::boolean, null::date, '2026-03-01'::date, null::date, null::boolean, null::text
+          union all
+          select 'r9', 'pat_r', 'fac_s', '2026-04-05 09:00:00'::timestamp, true, '2026-04-01'::date, null::date, null::date, null::boolean, null::text
+
+      - input: ref('derived__episode_art')
+        format: sql
+        rows: |
+          select 'pat_s' as subject_id, '2026-01-15'::date as episode_start_date, '2026-04-30'::date as last_day_on_art, 'Lost to follow-up' as closure_reason, false as is_reinitiation
+          union all
+          select 'pat_s', '2026-07-10'::date, '2026-12-31'::date, null::text, true
+          union all
+          select 'pat_d', '2026-01-15'::date, '2026-12-31'::date, null::text, false
+          union all
+          select 'pat_r', '2026-01-15'::date, '2026-12-31'::date, null::text, false
+          union all
+          select 'pat_k', '2026-01-15'::date, '2026-04-30'::date, 'Lost to follow-up', false
+
+      - input: ref('int__art_supply')
+        format: sql
+        rows: |
+          select 'pat_s' as subject_id, '2026-01-15'::date as supply_date, 90 as supply_days, 'fac_s' as facility_id
+          union all
+          select 'pat_s', '2026-07-10'::date, 90, null::text
+          union all
+          select 'pat_d', '2026-01-15'::date, 90, 'fac_s'
+          union all
+          select 'pat_r', '2026-01-15'::date, 90, 'fac_s'
+          union all
+          select 'pat_k', '2026-01-15'::date, 90, 'fac_s'
+
+      - input: ref('int__who_dak_hiv_art_lapse')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::date as art_start_date, null::date as lapse_date where false
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'pat_d' as person_id, 'male' as gender_source_value, 1985 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth
+          union all
+          select 'pat_k', 'male', 1985, 1, 1
+          union all
+          select 'pat_r', 'male', 1985, 1, 1
+          union all
+          select 'pat_s', 'male', 1985, 1, 1
+
+    expect:
+      format: sql
+      rows: |
+        select '2026-01-01'::date as month_start, '2026-01-31'::date as month_end, 'pat_d' as patient_id, 'fac_s' as facility_id, true as on_art, true as on_art_recorded, null::date as art_stopped_date, '2026-01-05'::date as art_start_date, null::boolean as dsd_enrolled, null::date as dsd_start_date, 0 as months_on_art, null::int as months_on_dsd, 'male' as sex, 41 as age_years, false as ltfu_in_month, false as reinitiated_in_month
+        union all
+        select '2026-01-01'::date, '2026-01-31'::date, 'pat_k', 'fac_s', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 0, null::int, 'male', 41, false, false
+        union all
+        select '2026-01-01'::date, '2026-01-31'::date, 'pat_r', 'fac_s', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 0, null::int, 'male', 41, false, false
+        union all
+        select '2026-01-01'::date, '2026-01-31'::date, 'pat_s', 'fac_s', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 0, null::int, 'male', 41, false, false
+        union all
+        select '2026-02-01'::date, '2026-02-28'::date, 'pat_d', 'fac_s', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 1, null::int, 'male', 41, false, false
+        union all
+        select '2026-02-01'::date, '2026-02-28'::date, 'pat_k', 'fac_s', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 1, null::int, 'male', 41, false, false
+        union all
+        select '2026-02-01'::date, '2026-02-28'::date, 'pat_r', 'fac_s', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 1, null::int, 'male', 41, false, false
+        union all
+        select '2026-02-01'::date, '2026-02-28'::date, 'pat_s', 'fac_s', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 1, null::int, 'male', 41, false, false
+        union all
+        select '2026-03-01'::date, '2026-03-31'::date, 'pat_d', 'fac_s', false, true, '2026-03-20'::date, '2026-01-05'::date, null::boolean, null::date, 2, null::int, 'male', 41, false, false
+        union all
+        select '2026-03-01'::date, '2026-03-31'::date, 'pat_k', 'fac_s', false, true, '2026-03-20'::date, '2026-01-05'::date, null::boolean, null::date, 2, null::int, 'male', 41, false, false
+        union all
+        select '2026-03-01'::date, '2026-03-31'::date, 'pat_r', 'fac_s', false, true, '2026-03-01'::date, '2026-01-05'::date, null::boolean, null::date, 2, null::int, 'male', 41, false, false
+        union all
+        select '2026-03-01'::date, '2026-03-31'::date, 'pat_s', 'fac_s', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 2, null::int, 'male', 41, false, false
+        union all
+        select '2026-04-01'::date, '2026-04-30'::date, 'pat_d', 'fac_s', false, true, '2026-03-20'::date, '2026-01-05'::date, null::boolean, null::date, 3, null::int, 'male', 41, false, false
+        union all
+        select '2026-04-01'::date, '2026-04-30'::date, 'pat_k', 'fac_s', false, true, '2026-03-20'::date, '2026-01-05'::date, null::boolean, null::date, 3, null::int, 'male', 41, false, false
+        union all
+        select '2026-04-01'::date, '2026-04-30'::date, 'pat_r', 'fac_s', true, true, '2026-03-01'::date, '2026-04-01'::date, null::boolean, null::date, 0, null::int, 'male', 41, false, false
+        union all
+        select '2026-04-01'::date, '2026-04-30'::date, 'pat_s', 'fac_s', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 3, null::int, 'male', 41, false, false
+        union all
+        select '2026-05-01'::date, '2026-05-31'::date, 'pat_d', 'fac_s', false, true, '2026-03-20'::date, '2026-01-05'::date, null::boolean, null::date, 4, null::int, 'male', 41, false, false
+        union all
+        select '2026-05-01'::date, '2026-05-31'::date, 'pat_k', 'fac_s', false, true, '2026-03-20'::date, '2026-01-05'::date, null::boolean, null::date, 4, null::int, 'male', 41, false, false
+        union all
+        select '2026-05-01'::date, '2026-05-31'::date, 'pat_r', 'fac_s', true, true, '2026-03-01'::date, '2026-04-01'::date, null::boolean, null::date, 1, null::int, 'male', 41, false, false
+        union all
+        select '2026-05-01'::date, '2026-05-31'::date, 'pat_s', 'fac_s', false, true, null::date, '2026-01-05'::date, null::boolean, null::date, 4, null::int, 'male', 41, true, false
+        union all
+        select '2026-06-01'::date, '2026-06-30'::date, 'pat_d', 'fac_s', false, true, '2026-03-20'::date, '2026-01-05'::date, null::boolean, null::date, 5, null::int, 'male', 41, false, false
+        union all
+        select '2026-06-01'::date, '2026-06-30'::date, 'pat_k', 'fac_s', false, true, '2026-03-20'::date, '2026-01-05'::date, null::boolean, null::date, 5, null::int, 'male', 41, false, false
+        union all
+        select '2026-06-01'::date, '2026-06-30'::date, 'pat_r', 'fac_s', true, true, '2026-03-01'::date, '2026-04-01'::date, null::boolean, null::date, 2, null::int, 'male', 41, false, false
+        union all
+        select '2026-06-01'::date, '2026-06-30'::date, 'pat_s', 'fac_s', false, true, null::date, '2026-01-05'::date, null::boolean, null::date, 5, null::int, 'male', 41, false, false
+        union all
+        select '2026-07-01'::date, '2026-07-31'::date, 'pat_d', 'fac_s', false, true, '2026-03-20'::date, '2026-01-05'::date, null::boolean, null::date, 6, null::int, 'male', 41, false, false
+        union all
+        select '2026-07-01'::date, '2026-07-31'::date, 'pat_k', 'fac_s', false, true, '2026-03-20'::date, '2026-01-05'::date, null::boolean, null::date, 6, null::int, 'male', 41, false, false
+        union all
+        select '2026-07-01'::date, '2026-07-31'::date, 'pat_r', 'fac_s', true, true, '2026-03-01'::date, '2026-04-01'::date, null::boolean, null::date, 3, null::int, 'male', 41, false, false
+        union all
+        select '2026-07-01'::date, '2026-07-31'::date, 'pat_s', 'fac_s', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 6, null::int, 'male', 41, false, true
+        union all
+        select '2026-08-01'::date, '2026-08-31'::date, 'pat_d', 'fac_s', false, true, '2026-03-20'::date, '2026-01-05'::date, null::boolean, null::date, 7, null::int, 'male', 41, false, false
+        union all
+        select '2026-08-01'::date, '2026-08-31'::date, 'pat_k', 'fac_s', false, true, '2026-03-20'::date, '2026-01-05'::date, null::boolean, null::date, 7, null::int, 'male', 41, false, false
+        union all
+        select '2026-08-01'::date, '2026-08-31'::date, 'pat_r', 'fac_s', true, true, '2026-03-01'::date, '2026-04-01'::date, null::boolean, null::date, 4, null::int, 'male', 41, false, false
+        union all
+        select '2026-08-01'::date, '2026-08-31'::date, 'pat_s', 'fac_s', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 7, null::int, 'male', 41, false, false
