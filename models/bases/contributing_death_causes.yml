@@ -23,3 +23,6 @@ models:
       - name: condition_id
         data_type: character varying
         description: "{{ doc('contributing_death_causes__condition_id') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

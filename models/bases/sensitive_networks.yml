@@ -23,3 +23,6 @@ models:
       - name: name
         data_type: text
         description: "{{ doc('sensitive_networks__name') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"
