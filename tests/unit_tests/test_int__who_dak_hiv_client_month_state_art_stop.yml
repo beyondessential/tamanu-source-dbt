@@ -49,6 +49,11 @@ unit_tests:
         rows: |
           select null::text as patient_id, null::date as art_start_date, null::date as lapse_date where false
 
+      - input: ref('int__who_dak_hiv_registry_outcomes')
+        format: sql
+        rows: |
+          select null::text as response_id, null::text as patient_id, null::timestamp as submitted_datetime, null::text as hiv_treatment_outcome where false
+
       - input: ref('clinical__person')
         format: sql
         rows: |
