@@ -1,4 +1,8 @@
 -- See specs/dbt-model/ds__prescription_administrations.md for BL-010.
+{{ incremental_from_table(
+    key='id',
+    table='medication_administration_record_doses'
+) }}
 select
     d.id,
     d.mar_id,
@@ -7,7 +11,8 @@ select
     d.given_time::timestamp as given_datetime,
     d.given_by_user_id,
     d.recorded_by_user_id,
-    d.reason_for_change
+    d.reason_for_change,
+    d.updated_at_sync_tick
 from {{ source('tamanu', 'medication_administration_record_doses') }} d
 -- every dose hangs off a MAR record and, through it, a prescription
 join {{ source('tamanu', 'medication_administration_records') }} mar on mar.id = d.mar_id
@@ -27,3 +32,6 @@ where d.deleted_at is null
             and e.deleted_at is null
             and e.patient_id = '{{ var("test_patient") }}'
     )
+    {%- if is_incremental() %}
+    and d.updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

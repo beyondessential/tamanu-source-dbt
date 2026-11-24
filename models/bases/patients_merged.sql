@@ -1,3 +1,7 @@
+{{ incremental_from_table(
+    key='id',
+    table='patients'
+) }}
 select
     id,
     display_id,
@@ -10,7 +14,11 @@ select
     date_of_birth::date as date_of_birth,
     date_of_death::timestamp as date_of_death,
     village_id,
-    (created_at at time zone '{{ var("timezone") }}')::date as registration_date
+    (created_at at time zone '{{ var("timezone") }}')::date as registration_date,
+    updated_at_sync_tick
 from {{ source('tamanu', 'patients') }}
 where id != '{{ var("test_patient") }}'
     and visibility_status = 'merged'
+    {%- if is_incremental() %}
+    and updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

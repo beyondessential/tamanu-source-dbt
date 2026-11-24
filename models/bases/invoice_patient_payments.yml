@@ -23,3 +23,6 @@ models:
       - name: cheque_number
         data_type: character varying(255)
         description: "{{ doc('invoice_patient_payments__cheque_number') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"
