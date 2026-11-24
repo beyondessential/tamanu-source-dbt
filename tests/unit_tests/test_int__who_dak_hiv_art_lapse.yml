@@ -1,0 +1,63 @@
+unit_tests:
+  - name: test_int__who_dak_hiv_art_lapse
+    model: int__who_dak_hiv_art_lapse
+    description: >
+      BL-050, BL-051. A client's lapse date is the later of their site's first ART supply in Tamanu
+      and their ART start date, plus the 90 days a held supply lasts and the 90 days of the lost to
+      follow-up allowance. A site's first supply is the date the art_supply_start_dates var gives it,
+      else its earliest drug exposure supply, and a site with neither gives its clients no lapse
+      date. A client's site is the facility of the latest submission that recorded their ART start.
+
+      fac_a has dispensed ART since 2026-01-01. fac_b has only a form-recorded supply, which does not
+      show the site recording ART in Tamanu, so pat_nosite has no lapse date. fac_cfg is given
+      2026-02-01 by the var. fac_both is given 2026-03-01 by the var but has a stray supply record
+      on 2025-12-01, and the var wins. pat_two recorded an ART start at fac_a and later another at fac_cfg,
+      so the later one decides their site.
+    overrides:
+      vars:
+        art_supply_start_dates:
+          fac_cfg: '2026-02-01'
+          fac_both: '2026-03-01'
+    given:
+      - input: ref('int__who_dak_hiv_form_answers')
+        format: sql
+        rows: |
+          select 'r1' as response_id, 'pat_early' as patient_id, 'fac_a' as facility_id, '2026-01-10 09:00:00'::timestamp as submitted_datetime, '2025-11-01'::date as art_start_date
+          union all
+          select 'r2', 'pat_late', 'fac_a', '2026-03-05 09:00:00'::timestamp, '2026-03-01'::date
+          union all
+          select 'r3', 'pat_nosite', 'fac_b', '2026-01-10 09:00:00'::timestamp, '2026-01-01'::date
+          union all
+          select 'r4', 'pat_cfg', 'fac_cfg', '2026-01-10 09:00:00'::timestamp, '2025-12-01'::date
+          union all
+          select 'r5', 'pat_two', 'fac_a', '2026-01-01 09:00:00'::timestamp, '2025-10-01'::date
+          union all
+          select 'r6', 'pat_two', 'fac_cfg', '2026-02-01 09:00:00'::timestamp, '2026-02-10'::date
+          union all
+          select 'r7', 'pat_noart', 'fac_a', '2026-01-10 09:00:00'::timestamp, null::date
+          union all
+          select 'r8', 'pat_both', 'fac_both', '2026-01-10 09:00:00'::timestamp, '2025-11-01'::date
+
+      - input: ref('int__art_supply')
+        format: sql
+        rows: |
+          select 'pat_x' as subject_id, '2026-01-01'::date as supply_date, 'fac_a' as facility_id, true as has_drug_exposure
+          union all
+          select 'pat_y', '2026-02-15'::date, 'fac_a', true
+          union all
+          select 'pat_z', '2025-06-01'::date, 'fac_b', false
+          union all
+          select 'pat_w', '2025-12-01'::date, 'fac_both', true
+
+    expect:
+      format: sql
+      rows: |
+        select 'pat_both' as patient_id, 'fac_both' as site_facility_id, '2025-11-01'::date as art_start_date, '2026-08-28'::date as lapse_date
+        union all
+        select 'pat_cfg', 'fac_cfg', '2025-12-01'::date, '2026-07-31'::date
+        union all
+        select 'pat_early', 'fac_a', '2025-11-01'::date, '2026-06-30'::date
+        union all
+        select 'pat_late', 'fac_a', '2026-03-01'::date, '2026-08-28'::date
+        union all
+        select 'pat_two', 'fac_cfg', '2026-02-10'::date, '2026-08-09'::date

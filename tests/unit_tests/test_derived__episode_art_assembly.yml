@@ -1,0 +1,52 @@
+unit_tests:
+  - name: test_derived__episode_art_assembly
+    model: derived__episode_art
+    description: >
+      BL-008 to BL-011, BL-013, BL-014, BL-016. A client's supply continues their period when it is
+      collected no later than 90 days after the supply they held ran out, and starts a new, numbered
+      period, a re-initiation, a day later. A short supply inside a long one does not shorten the
+      period. A period's parent is the client's enrolment in the registry the deployment names.
+
+      pat_cont is supplied 90 days on 2026-01-01, which runs out on 2026-04-01, and again on
+      2026-06-30, exactly 90 days later: one period. pat_split collects on 2026-07-01, 91 days after
+      it ran out: two periods, the second a re-initiation. pat_inside holds 180 days from 2026-01-01
+      and collects 30 more inside it, which leaves the period ending with the 180 days.
+
+      pat_cont is enrolled in the DAK HIV registry and pat_split only in another, so only pat_cont
+      has a parent. The local date is pinned well after every period so each is closed.
+    overrides:
+      vars:
+        test_current_date: '2027-12-31'
+    given:
+      - input: ref('int__art_supply')
+        format: sql
+        rows: |
+          select 'pat_cont' as subject_id, '2026-01-01'::date as supply_date, 90 as supply_days, 'fac_1' as facility_id, true as has_drug_exposure
+          union all
+          select 'pat_cont', '2026-06-30'::date, 30, 'fac_2', true
+          union all
+          select 'pat_split', '2026-01-01'::date, 90, 'fac_1', true
+          union all
+          select 'pat_split', '2026-07-01'::date, 30, 'fac_2', true
+          union all
+          select 'pat_inside', '2026-01-01'::date, 180, 'fac_1', true
+          union all
+          select 'pat_inside', '2026-02-01'::date, 30, 'fac_1', true
+
+      - input: ref('clinical__episode')
+        format: sql
+        rows: |
+          select 'enrol_cont' as episode_id, 'pat_cont' as person_id, 'programRegistry-who-dak-hiv' as program_registry_id, '2025-12-01 09:00:00'::timestamp as episode_start_datetime
+          union all
+          select 'enrol_split', 'pat_split', 'programRegistry-other', '2025-12-01 09:00:00'::timestamp
+
+    expect:
+      format: sql
+      rows: |
+        select 'episode_art' as metric_id, null::text as variant_id, 'pat_cont:2026-01-01' as episode_id, 'pat_cont' as subject_id, null::int as episode_concept_id, 'enrol_cont' as episode_parent_id, 1 as episode_number, '2026-01-01'::date as episode_start_date, '2026-07-30'::date as supply_end_date, '2026-10-28'::date as last_day_on_art, '2026-10-28'::date as episode_end_date, 'Lost to follow-up' as closure_reason, false as is_reinitiation, 'fac_1' as first_supply_facility_id, 'fac_2' as last_supply_facility_id, 2 as supply_count
+        union all
+        select 'episode_art', null::text, 'pat_inside:2026-01-01', 'pat_inside', null::int, null::text, 1, '2026-01-01'::date, '2026-06-30'::date, '2026-09-28'::date, '2026-09-28'::date, 'Lost to follow-up', false, 'fac_1', 'fac_1', 2
+        union all
+        select 'episode_art', null::text, 'pat_split:2026-01-01', 'pat_split', null::int, null::text, 1, '2026-01-01'::date, '2026-04-01'::date, '2026-06-30'::date, '2026-06-30'::date, 'Lost to follow-up', false, 'fac_1', 'fac_1', 1
+        union all
+        select 'episode_art', null::text, 'pat_split:2026-07-01', 'pat_split', null::int, null::text, 2, '2026-07-01'::date, '2026-07-31'::date, '2026-10-29'::date, '2026-10-29'::date, 'Lost to follow-up', true, 'fac_2', 'fac_2', 1
