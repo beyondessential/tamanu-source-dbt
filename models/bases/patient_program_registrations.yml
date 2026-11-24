@@ -47,3 +47,6 @@ models:
       - name: deactivated_datetime
         data_type: timestamp
         description: "{{ doc('patient_program_registrations__deactivated_date') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

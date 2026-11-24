@@ -1,3 +1,7 @@
+{{ incremental_from_logs(
+    key='patient_id',
+    table='patient_additional_data'
+) }}
 {%- set columns = [
     {'expr': "fc.record_data ->> 'title'", 'name': 'title', 'is_direct_identifier': false},
     {'expr': "fc.record_data ->> 'marital_status'", 'name': 'marital_status', 'is_direct_identifier': false},
@@ -40,6 +44,9 @@
 with filtered_changes as (
     {{ base_history_from_log('patient_additional_data') }}
         and record_id != '{{ var("test_patient") }}' -- noqa: ST10
+        {%- if is_incremental() %}
+        and record_id in ({{ changed_since_last_run('patient_additional_data') }})
+        {%- endif %}
 )
 
 select
@@ -52,5 +59,6 @@ select
             ,
             {{ col.expr }} as {{ col.name }}
         {%- endif -%}
-    {%- endfor %}
+    {%- endfor %},
+    fc.updated_at_sync_tick
 from filtered_changes fc
