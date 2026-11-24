@@ -1,10 +1,10 @@
 -- metric__who_dak_hiv_indicators -- D5 metric view for the WHO SMART guidelines HIV DAK
 -- indicators registered in documentations/metrics/who_dak_hiv.yml.
--- Spec: specs/dbt-model/metric__who_dak_hiv_indicators.md (BL-001..BL-028).
+-- Spec: specs/dbt-model/metric__who_dak_hiv_indicators.md (BL-001..BL-057).
 --
--- Sixteen counts over nine of Web Annex C's 140 indicators: the ones whose numerator and
--- denominator are
--- computable from the DAK's own data elements, as the generated forms collect them. Each
+-- Eighteen counts over ten of Web Annex C's 140 indicators: the ones whose numerator and
+-- denominator are computable from the DAK's own data elements, as the generated forms collect
+-- them, and from the ART a client was supplied (derived__episode_art). Each
 -- emits a count, and a rate is formed by the consumer from a numerator and its denominator --
 -- so ART.3 viral suppression is who_dak_hiv_art_viral_suppression over
 -- who_dak_hiv_art_routine_viral_load, at whatever grain the consumer groups to (BL-006).
@@ -47,17 +47,11 @@ key_populations as (
     select * from {{ ref('int__who_dak_hiv_key_populations') }}
 ),
 
--- BL-008: every ART and DSD numerator in Annex C is gated on "HIV status"='HIV-positive'.
--- The DAK carries that element on the HTS form (HIV.B.DE115), not on the care visit, so a
--- client seen only in care would fail a literal reading of the gate. A care-visit submission
--- is taken as equivalent evidence: the DAK's care and treatment process is for people living
--- with HIV, and excluding them would report zero on deployments that use the care form alone.
+-- BL-008: every ART and DSD numerator in Annex C is gated on "HIV status"='HIV-positive', which
+-- the DAK carries on the HTS form and not the care visit. A care-visit submission is taken as
+-- equivalent evidence (see the macro)
 plhiv as (
-    select distinct patient_id
-    from answers
-    where hiv_status = 'HIV-positive'
-        or hiv_test_result = 'HIV-positive'
-        or survey_code = 'carevisit'
+    {{ who_dak_hiv_plhiv('answers') }}
 ),
 
 -- BL-009: one row per indicator per qualifying event, before the per-client reduction. The
@@ -124,6 +118,7 @@ events as (
 
     -- ART.4 new ART patients. The initiation date is the event, so a form recorded late still
     -- counts in the month treatment began (BL-011)
+    -- BL-054: ART.4 reads only the ART start date (see specs/dbt-model/metric__who_dak_hiv_indicators.md)
     select
         'who_dak_hiv_art_initiated' as metric_id,
         'patient' as subject_grain,
@@ -372,6 +367,47 @@ month_end_events as (
     join plhiv on plhiv.patient_id = cm.patient_id
     join key_populations kp on kp.patient_id = cm.patient_id
     where cm.on_art
+
+    union all
+
+    -- ART.2 clients lost to follow-up: on ART no longer, because their supply ran out for longer
+    -- than the allowance. Counted once, in the month they became lost to follow-up, at the
+    -- facility of their latest record (BL-052)
+    select
+        'who_dak_hiv_art_ltfu' as metric_id,
+        'patient' as subject_grain,
+        cm.patient_id as subject_id,
+        cm.month_start,
+        cm.month_end,
+        cm.patient_id,
+        cm.facility_id,
+        cm.sex,
+        cm.age_years,
+        null::int,
+        null::text
+    from client_months cm
+    join plhiv on plhiv.patient_id = cm.patient_id
+    where cm.ltfu_in_month
+
+    union all
+
+    -- Clients back on ART after a lapse in their supply, counted in the month the new period on
+    -- ART started. They are never new ART patients (BL-053, BL-054)
+    select
+        'who_dak_hiv_art_reinitiated' as metric_id,
+        'patient' as subject_grain,
+        cm.patient_id as subject_id,
+        cm.month_start,
+        cm.month_end,
+        cm.patient_id,
+        cm.facility_id,
+        cm.sex,
+        cm.age_years,
+        null::int,
+        null::text
+    from client_months cm
+    join plhiv on plhiv.patient_id = cm.patient_id
+    where cm.reinitiated_in_month
 ),
 
 -- BL-007: Annex C counts clients, so a client qualifying twice in a month counts once. The

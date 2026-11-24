@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: map__art_medications
+    description: >-
+      The medications that are antiretroviral therapy (ART), by their reference data code. Read
+      by derived__episode_art, which works out who is on ART and who is lost to follow-up from
+      the ART a client was supplied.
+
+      Empty by default. The medications that make up ART are deployment reference data, so a
+      deployment that supplies ART in Tamanu disables this model and defines its own of the same
+      name, one row per medication, carrying the uniqueness and not-null tests declared here.
+    config:
+      tags:
+        - reference
+      meta:
+        owner: bes-maui
+        domain: reference
+        pii: false
+        classification: internal
+    columns:
+      - name: medication_code
+        data_type: text
+        description: The medication's reference data code, as drug exposures carry it.
+        data_tests:
+          - not_null
+          - unique
+      - name: medication_name
+        data_type: text
+        description: The medication's name.
