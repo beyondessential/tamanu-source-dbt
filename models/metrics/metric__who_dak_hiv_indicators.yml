@@ -76,6 +76,8 @@ models:
                   - who_dak_hiv_dsd_retention_eligible
                   - who_dak_hiv_dsd_retained
                   - who_dak_hiv_art_on_art_key_population
+                  - who_dak_hiv_art_ltfu
+                  - who_dak_hiv_art_reinitiated
           # Definition <-> implementation link: every metric__ view asserts its ids are
           # registered in the canonical registry.
           - relationships:

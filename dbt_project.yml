@@ -39,6 +39,23 @@ vars:
   # Whether a contact's gestational age and gravida are worked out from its LMP, EDD, parity and
   # miscarriages/abortions where they are not recorded. Off here, so they read as recorded.
   who_dak_anc_calculate_gestational_age_and_gravida: false
+  # ART supply, for derived__episode_art (specs/dbt-model/derived__episode_art.md). The drug
+  # exposure types that count as ART supplied: a deployment that records ART supply as
+  # prescriptions rather than pharmacy dispenses lists 'prescription'.
+  art_supply_exposure_types:
+    - dispense
+  # Days after a supply runs out that a client is still on ART. Past them they are lost to
+  # follow-up, and a later supply starts a new period on ART.
+  art_ltfu_days: 90
+  # Days of supply a client already on ART is taken to hold before their site's first ART supply
+  # recorded in Tamanu, which is how long a supply typically lasts.
+  art_unrecorded_supply_days: 90
+  # The program registry whose enrolment is each ART period's parent in clinical__episode.
+  art_episode_registry_id: programRegistry-who-dak-hiv
+  # The date a facility started recording ART supply in Tamanu, keyed by facility id. It takes
+  # the place of the date of the facility's first supply record, which a stray early record can
+  # misstate.
+  art_supply_start_dates: {}
   test_patient: h1627394-3778-4c31-a510-9fcb88efdbf3
   supported_languages:
     - default

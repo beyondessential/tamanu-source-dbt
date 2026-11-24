@@ -7,6 +7,9 @@ unit_tests:
       visit's ART answers fill on_art and art_start_date, and an HTS visit's HIV status fills
       hiv_status. A Care visit question answered on the HTS visit is not in the map for that survey,
       so it is not read.
+
+      AC-037. A Care visit's days of medications dispensed (HIV.D.DE462) fill art_days_dispensed as a
+      number, and a follow-up's HIV treatment outcome (HIV.H.DE41) fills hiv_treatment_outcome.
     given:
       - input: ref('map__who_dak_hiv_questions')
         format: sql
@@ -18,6 +21,10 @@ unit_tests:
           select 'program-whodakhiv-carevisit', 'whodakhiv-d-de39', null, 'HIV.D.DE39', null
           union all
           select 'program-whodakhiv-htsvisit', 'whodakhiv-b-de115', null, 'HIV.B.DE115', null
+          union all
+          select 'program-whodakhiv-carevisit', 'whodakhiv-d-de462', null, 'HIV.D.DE462', null
+          union all
+          select 'program-whodakhiv-followup', 'whodakhiv-h-de41', null, 'HIV.H.DE41', null
       - input: ref('program_data_elements')
         format: sql
         rows: |
@@ -26,12 +33,18 @@ unit_tests:
           select 'pde-whodakhiv-d-de39', 'whodakhiv-d-de39'
           union all
           select 'pde-whodakhiv-b-de115', 'whodakhiv-b-de115'
+          union all
+          select 'pde-whodakhiv-d-de462', 'whodakhiv-d-de462'
+          union all
+          select 'pde-whodakhiv-h-de41', 'whodakhiv-h-de41'
       - input: ref('surveys')
         format: sql
         rows: |
           select 'program-whodakhiv-carevisit'::text as id, 'carevisit'::text as code
           union all
           select 'program-whodakhiv-htsvisit', 'htsvisit'
+          union all
+          select 'program-whodakhiv-followup', 'followup'
       - input: ref('locations')
         format: sql
         rows: |
@@ -42,6 +55,8 @@ unit_tests:
           select 'enc_1'::text as id, 'pat_1'::text as patient_id, 'loc_1'::text as location_id
           union all
           select 'enc_2', 'pat_2', 'loc_1'
+          union all
+          select 'enc_3', 'pat_1', 'loc_1'
       - input: ref('survey_responses')
         format: sql
         rows: |
@@ -50,10 +65,16 @@ unit_tests:
             '2026-03-04 09:10:00'::timestamp as end_datetime
           union all
           select 'r_2', 'program-whodakhiv-htsvisit', 'enc_2', '2026-03-05 09:10:00'::timestamp
+          union all
+          select 'r_3', 'program-whodakhiv-followup', 'enc_3', '2026-03-06 09:10:00'::timestamp
       - input: ref('survey_response_answers')
         format: sql
         rows: |
           select 'r_1'::text as response_id, 'pde-whodakhiv-d-de38'::text as data_element_id, 'Yes'::text as body
+          union all
+          select 'r_1', 'pde-whodakhiv-d-de462', '30'
+          union all
+          select 'r_3', 'pde-whodakhiv-h-de41', 'Transferred out'
           union all
           select 'r_1', 'pde-whodakhiv-d-de39', '2026-01-05'
           union all
@@ -70,5 +91,6 @@ unit_tests:
           select 'pat_2', 'male', 1985, 6, 15
     expect:
       rows:
-        - {response_id: r_1, survey_code: carevisit, on_art: true, art_start_date: '2026-01-05', hiv_status: null}
-        - {response_id: r_2, survey_code: htsvisit, on_art: null, art_start_date: null, hiv_status: Positive}
+        - {response_id: r_1, survey_code: carevisit, on_art: true, art_start_date: '2026-01-05', hiv_status: null, art_days_dispensed: 30, hiv_treatment_outcome: null}
+        - {response_id: r_2, survey_code: htsvisit, on_art: null, art_start_date: null, hiv_status: Positive, art_days_dispensed: null, hiv_treatment_outcome: null}
+        - {response_id: r_3, survey_code: followup, on_art: null, art_start_date: null, hiv_status: null, art_days_dispensed: null, hiv_treatment_outcome: Transferred out}

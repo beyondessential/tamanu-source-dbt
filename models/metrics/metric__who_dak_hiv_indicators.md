@@ -2,9 +2,9 @@
 D5 metric view for the WHO SMART guidelines HIV Digital Adaptation Kit indicators registered in
 documentations/metrics/who_dak_hiv.yml. One row per qualifying subject per reporting month.
 
-Web Annex C of the DAK defines 140 indicators. Sixteen counts are here, covering nine of them:
+Web Annex C of the DAK defines 140 indicators. Eighteen counts are here, covering ten of them:
 those computable from the DAK's own data elements as the generated `who-dak-hiv` forms collect
-them. Each is a **count**,
+them, and from the ART a client was supplied. Each is a **count**,
 and a rate is formed from a numerator and its denominator — HIV positivity is
 `who_dak_hiv_hts_client_positive` over `who_dak_hiv_hts_client_tested`, viral suppression is
 `who_dak_hiv_art_viral_suppression` over `who_dak_hiv_art_routine_viral_load` — at whatever
@@ -21,6 +21,8 @@ maps to the GAM, Global Fund and PEPFAR MER lines those crosswalk sheets define.
 | DSD.3 | DSD ART coverage | `who_dak_hiv_dsd_enrolled` | `who_dak_hiv_dsd_eligible` |
 | ART.1 | People living with HIV on ART | `who_dak_hiv_art_on_art` | an external population estimate |
 | ART.1 | …by key population | `who_dak_hiv_art_on_art_key_population` | — |
+| ART.2 | …lost to follow-up | `who_dak_hiv_art_ltfu` | — |
+| — | Re-initiated on ART | `who_dak_hiv_art_reinitiated` | — a count |
 | ART.9 | ARV toxicity prevalence | `who_dak_hiv_art_toxicity` | `who_dak_hiv_art_on_art` |
 | DSD.4 | Retention in DSD ART models | `who_dak_hiv_dsd_retained` | `who_dak_hiv_dsd_retention_eligible` |
 
@@ -110,7 +112,7 @@ NULL -- unused by these indicators.
 {% enddocs %}
 
 {% docs who_dak_hiv__metric_id %}
-The registered indicator id, one of the eleven in documentations/metrics/who_dak_hiv.yml. Each
+The registered indicator id, one of the eighteen in documentations/metrics/who_dak_hiv.yml. Each
 carries Annex C's own `Ref no.` in its registry row, so an id here resolves to a DAK indicator
 and through it to the GAM, Global Fund and MER lines that reference it.
 {% enddocs %}
