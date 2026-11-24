@@ -118,6 +118,7 @@ events as (
 
     -- ART.4 new ART patients. The initiation date is the event, so a form recorded late still
     -- counts in the month treatment began (BL-011)
+    -- BL-054: ART.4 reads only the ART start date (see specs/dbt-model/metric__who_dak_hiv_indicators.md)
     select
         'who_dak_hiv_art_initiated' as metric_id,
         'patient' as subject_grain,

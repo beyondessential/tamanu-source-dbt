@@ -45,6 +45,15 @@ supply as (
     select * from {{ ref('int__art_supply') }}
 ),
 
+-- the date of each client's first period on ART, so a month end is tested against one row per client
+first_supply as (
+    select
+        subject_id,
+        min(episode_start_date) as first_supply_date
+    from episodes
+    group by subject_id
+),
+
 -- BL-049: the date a client with no supply recorded lapses to lost to follow-up
 lapses as (
     select * from {{ ref('int__who_dak_hiv_art_lapse') }}
@@ -125,15 +134,6 @@ bounds as (
             (date_trunc('month', current_date) - interval '1 month')::date as last_month
         {%- endif %}
     from answers
-),
-
-months as (
-    select
-        month_start::date as month_start,
-        (month_start + interval '1 month' - interval '1 day')::date as month_end
-    from bounds
-    cross join lateral generate_series(first_month, last_month, interval '1 month') month_start
-    where first_month <= last_month
 ),
 
 -- a client's latest ART supply in each month, which is all the state needs of it. A supply with no
@@ -225,14 +225,26 @@ state_events as (
 state_as_at as (
     select distinct on (m.month_start, e.patient_id, e.attribute)
         m.month_start,
-        m.month_end,
+        (m.month_start + interval '1 month' - interval '1 day')::date as month_end,
         e.patient_id,
         e.attribute,
         e.value,
         e.facility_id,
         e.submitted_datetime
-    from months m
-    join state_events e on e.submitted_datetime < m.month_end + interval '1 day'
+    from state_events e
+    cross join bounds b
+    -- each event's own months, from the month it was recorded in to the last month of the spine,
+    -- so the join never tests an event against months before it
+    cross join
+        lateral (
+            select gs::date as month_start
+            from generate_series(
+                    greatest(b.first_month, date_trunc('month', e.submitted_datetime)::date),
+                    b.last_month,
+                    interval '1 month'
+                ) gs
+        ) m
+    where b.first_month <= b.last_month
     order by m.month_start asc, e.patient_id asc, e.attribute asc, e.submitted_datetime desc
 ),
 
@@ -285,27 +297,26 @@ with_supply as (
         -- BL-048: the period on ART the month end falls in. At most one: a period's last day on
         -- ART is before the next period's first supply
         cov.episode_start_date as period_start_date,
-        exists(
-            select 1
-            from episodes e
-            where e.subject_id = p.patient_id
-                and e.episode_start_date <= p.month_end
-        ) as has_supply,
+        coalesce(fs.first_supply_date <= p.month_end, false) as has_supply,
         l.lapse_date,
         -- BL-056: recorded as transferred out, and not supplied ART since
-        coalesce(p.hiv_treatment_outcome = 'Transferred out', false)
-        and not exists (
-            select 1
-            from episodes e
-            where e.subject_id = p.patient_id
-                and e.episode_start_date > p.outcome_date
-                and e.episode_start_date <= p.month_end
-        ) as is_transferred_out
+        case
+            when p.hiv_treatment_outcome = 'Transferred out'
+                then not exists (
+                        select 1
+                        from episodes e
+                        where e.subject_id = p.patient_id
+                            and e.episode_start_date > p.outcome_date
+                            and e.episode_start_date <= p.month_end
+                    )
+            else false
+        end as is_transferred_out
     from pivoted p
     left join episodes cov
         on cov.subject_id = p.patient_id
         and cov.episode_start_date <= p.month_end
         and cov.last_day_on_art >= p.month_end
+    left join first_supply fs on fs.subject_id = p.patient_id
     left join lapses l on l.patient_id = p.patient_id
 )
 
