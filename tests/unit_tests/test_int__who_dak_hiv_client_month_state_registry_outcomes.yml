@@ -1,0 +1,116 @@
+unit_tests:
+  - name: test_int__who_dak_hiv_client_month_state_registry_outcomes
+    model: int__who_dak_hiv_client_month_state
+    description: >
+      BL-055, BL-056, BL-061, BL-062. A death or transfer out recorded through the registry status is
+      a treatment outcome like one recorded on a form. A client recorded as transferred out or dead is
+      not on ART from the month of the recording, and a client recorded as dead is not counted as lost
+      to follow-up for a period that began before the death was recorded, however late it was
+      recorded, unless they started another period on ART before the death.
+
+      pat_dead, pat_ltfu and pat_back are supplied ART from 2026-01-10 to 2026-02-28 and then stop, so
+      all three are off ART in March. pat_ltfu becomes lost to follow-up in March. pat_dead's death is
+      recorded in the registry on 2026-05-15, after they became lost to follow-up, so they never are.
+      pat_back starts a second period on 2026-04-05 and dies on 2026-05-20: they are lost to follow-up
+      in March, on ART and re-initiated in April, and off ART in May. pat_tr is supplied throughout but
+      transferred out in the registry on 2026-03-10, so is on ART in January and February only.
+    overrides:
+      vars:
+        who_dak_hiv_spine_end: '2026-05-31'
+    given:
+      - input: ref('int__who_dak_hiv_form_answers')
+        format: sql
+        rows: |
+          select 'r1' as response_id, 'pat_back' as patient_id, 'fac_a' as facility_id, '2026-01-10 09:00:00'::timestamp as submitted_datetime, true as on_art, '2026-01-05'::date as art_start_date, null::date as art_stopped_date, null::date as dsd_start_date, null::boolean as dsd_enrolled, null::text as hiv_treatment_outcome
+          union all
+          select 'r2', 'pat_dead', 'fac_a', '2026-01-10 09:00:00'::timestamp, true, '2026-01-05'::date, null::date, null::date, null::boolean, null::text
+          union all
+          select 'r3', 'pat_ltfu', 'fac_a', '2026-01-10 09:00:00'::timestamp, true, '2026-01-05'::date, null::date, null::date, null::boolean, null::text
+          union all
+          select 'r4', 'pat_tr', 'fac_a', '2026-01-10 09:00:00'::timestamp, true, '2026-01-05'::date, null::date, null::date, null::boolean, null::text
+
+      - input: ref('int__who_dak_hiv_registry_outcomes')
+        format: sql
+        rows: |
+          select 'registry:c1' as response_id, 'pat_dead' as patient_id, '2026-05-15 10:00:00'::timestamp as submitted_datetime, 'Death (documented)' as hiv_treatment_outcome
+          union all
+          select 'registry:c2', 'pat_tr', '2026-03-10 10:00:00'::timestamp, 'Transferred out'
+          union all
+          select 'registry:c3', 'pat_back', '2026-05-20 10:00:00'::timestamp, 'Death (documented)'
+
+      - input: ref('derived__episode_art')
+        format: sql
+        rows: |
+          select 'pat_dead' as subject_id, '2026-01-10'::date as episode_start_date, '2026-02-28'::date as last_day_on_art, 'Lost to follow-up' as closure_reason, false as is_reinitiation
+          union all
+          select 'pat_ltfu', '2026-01-10'::date, '2026-02-28'::date, 'Lost to follow-up', false
+          union all
+          select 'pat_back', '2026-01-10'::date, '2026-02-28'::date, 'Lost to follow-up', false
+          union all
+          select 'pat_back', '2026-04-05'::date, '2026-12-31'::date, null::text, true
+          union all
+          select 'pat_tr', '2026-01-10'::date, '2026-12-31'::date, null::text, false
+
+      - input: ref('int__art_supply')
+        format: sql
+        rows: |
+          select null::text as subject_id, null::date as supply_date, null::int as supply_days, null::text as facility_id where false
+
+      - input: ref('int__who_dak_hiv_art_lapse')
+        format: sql
+        rows: |
+          select null::text as patient_id, null::date as art_start_date, null::date as lapse_date where false
+
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select 'pat_back' as person_id, 'male' as gender_source_value, 1985 as year_of_birth, 1 as month_of_birth, 1 as day_of_birth
+          union all
+          select 'pat_dead', 'male', 1985, 1, 1
+          union all
+          select 'pat_ltfu', 'male', 1985, 1, 1
+          union all
+          select 'pat_tr', 'male', 1985, 1, 1
+
+    expect:
+      format: sql
+      rows: |
+        select '2026-01-01'::date as month_start, '2026-01-31'::date as month_end, 'pat_back' as patient_id, 'fac_a' as facility_id, true as on_art, true as on_art_recorded, null::date as art_stopped_date, '2026-01-05'::date as art_start_date, null::boolean as dsd_enrolled, null::date as dsd_start_date, 0 as months_on_art, null::int as months_on_dsd, 'male' as sex, 41 as age_years, false as ltfu_in_month, false as reinitiated_in_month
+        union all
+        select '2026-01-01'::date, '2026-01-31'::date, 'pat_dead', 'fac_a', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 0, null::int, 'male', 41, false, false
+        union all
+        select '2026-01-01'::date, '2026-01-31'::date, 'pat_ltfu', 'fac_a', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 0, null::int, 'male', 41, false, false
+        union all
+        select '2026-01-01'::date, '2026-01-31'::date, 'pat_tr', 'fac_a', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 0, null::int, 'male', 41, false, false
+        union all
+        select '2026-02-01'::date, '2026-02-28'::date, 'pat_back', 'fac_a', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 1, null::int, 'male', 41, false, false
+        union all
+        select '2026-02-01'::date, '2026-02-28'::date, 'pat_dead', 'fac_a', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 1, null::int, 'male', 41, false, false
+        union all
+        select '2026-02-01'::date, '2026-02-28'::date, 'pat_ltfu', 'fac_a', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 1, null::int, 'male', 41, false, false
+        union all
+        select '2026-02-01'::date, '2026-02-28'::date, 'pat_tr', 'fac_a', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 1, null::int, 'male', 41, false, false
+        union all
+        select '2026-03-01'::date, '2026-03-31'::date, 'pat_back', 'fac_a', false, true, null::date, '2026-01-05'::date, null::boolean, null::date, 2, null::int, 'male', 41, true, false
+        union all
+        select '2026-03-01'::date, '2026-03-31'::date, 'pat_dead', 'fac_a', false, true, null::date, '2026-01-05'::date, null::boolean, null::date, 2, null::int, 'male', 41, false, false
+        union all
+        select '2026-03-01'::date, '2026-03-31'::date, 'pat_ltfu', 'fac_a', false, true, null::date, '2026-01-05'::date, null::boolean, null::date, 2, null::int, 'male', 41, true, false
+        union all
+        select '2026-03-01'::date, '2026-03-31'::date, 'pat_tr', 'fac_a', false, true, null::date, '2026-01-05'::date, null::boolean, null::date, 2, null::int, 'male', 41, false, false
+        union all
+        select '2026-04-01'::date, '2026-04-30'::date, 'pat_back', 'fac_a', true, true, null::date, '2026-01-05'::date, null::boolean, null::date, 3, null::int, 'male', 41, false, true
+        union all
+        select '2026-04-01'::date, '2026-04-30'::date, 'pat_dead', 'fac_a', false, true, null::date, '2026-01-05'::date, null::boolean, null::date, 3, null::int, 'male', 41, false, false
+        union all
+        select '2026-04-01'::date, '2026-04-30'::date, 'pat_ltfu', 'fac_a', false, true, null::date, '2026-01-05'::date, null::boolean, null::date, 3, null::int, 'male', 41, false, false
+        union all
+        select '2026-04-01'::date, '2026-04-30'::date, 'pat_tr', 'fac_a', false, true, null::date, '2026-01-05'::date, null::boolean, null::date, 3, null::int, 'male', 41, false, false
+        union all
+        select '2026-05-01'::date, '2026-05-31'::date, 'pat_back', 'fac_a', false, true, null::date, '2026-01-05'::date, null::boolean, null::date, 4, null::int, 'male', 41, false, false
+        union all
+        select '2026-05-01'::date, '2026-05-31'::date, 'pat_dead', 'fac_a', false, true, null::date, '2026-01-05'::date, null::boolean, null::date, 4, null::int, 'male', 41, false, false
+        union all
+        select '2026-05-01'::date, '2026-05-31'::date, 'pat_ltfu', 'fac_a', false, true, null::date, '2026-01-05'::date, null::boolean, null::date, 4, null::int, 'male', 41, false, false
+        union all
+        select '2026-05-01'::date, '2026-05-31'::date, 'pat_tr', 'fac_a', false, true, null::date, '2026-01-05'::date, null::boolean, null::date, 4, null::int, 'male', 41, false, false
