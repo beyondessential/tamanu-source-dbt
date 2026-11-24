@@ -2,8 +2,9 @@
 #
 # Web Annex C of the DAK (WHO-UCN-HHS-SIA-2023.29, IRIS handle 10665/375058) defines 140
 # indicators, HIV.IND.1 to HIV.IND.140, each with a numerator, a denominator and its
-# disaggregations. Registered here are the eleven counts computable from the DAK's own data
-# elements as the generated forms collect them; `definition_source_code` carries Annex C's
+# disaggregations. Registered here are the counts computable from the DAK's own data
+# elements as the generated forms collect them, and from the ART a client was supplied;
+# `definition_source_code` carries Annex C's
 # `Ref no.`, which is what the GAM, Global Fund and PEPFAR MER crosswalk sheets key on.
 #
 # A rate is formed from a numerator and its denominator, both registered separately, so a
@@ -436,3 +437,88 @@ metrics:
   status: approved
   spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
 
+
+- metric_id: who_dak_hiv_art_ltfu
+  kind: metric
+  name: People living with HIV lost to follow-up from ART (ART.2)
+  description: >-
+    People living with HIV who became lost to follow-up from ART during the reporting month, because the
+    ART they were supplied ran out for longer than the allowance.
+  numerator_description: >-
+    COUNT of clients who became lost to follow-up in the reporting period: the day after the last day on ART
+    of a period on ART that has ended, or the day after the lapse date of a client with no supply recorded.
+    A client recorded as transferred out, or whose ART was stopped, is not counted. Loss to follow-up is
+    worked out from ART supplied, so a recorded Lost to follow-up outcome is not read
+  denominator_description: null
+  data_source: tamanu
+  definition_source: WHO_SMART_HIV
+  definition_source_code: ART.2
+  definition_rationale: >-
+    WHO SMART guidelines HIV DAK, Web Annex C indicator HIV.IND.28 (ART.2, "Total attrition from ART"),
+    whose treatment outcome disaggregation includes lost to follow-up. Annex C's own count is the clients on
+    ART at the end of the previous period plus those who started in the period, less those on ART at the end
+    of the period, which a consumer forms from who_dak_hiv_art_on_art and who_dak_hiv_art_initiated. This
+    count is its lost to follow-up category.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: who_dak_hiv_art_reinitiated
+  kind: metric
+  name: People living with HIV re-initiated on ART
+  description: >-
+    People living with HIV back on ART after a lapse in their supply, during the reporting month.
+  numerator_description: >-
+    COUNT of clients whose period on ART numbered 2 or more started in the reporting period. A client who
+    collects ART after more than the allowance without supply is re-initiated, and a late collection within
+    it is not
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    Annex C has no indicator for clients returning to ART. The count is registered so that a client back on
+    ART is never read as a new ART patient (ART.4 counts only the ART start date) and so that returns are
+    visible beside who_dak_hiv_art_ltfu.
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__who_dak_hiv_indicators.md
+
+- metric_id: episode_art
+  kind: episode
+  name: Period on ART
+  description: >-
+    One continuous period a person living with HIV is on antiretroviral therapy, assembled from the ART
+    they were supplied. It starts at the first day they were supplied ART, continues through each supply
+    collected before the previous one ran out by more than the allowance, and ends at the last day on ART,
+    the allowance after the supply runs out, as lost to follow-up. A supply collected after that starts a
+    new, numbered period.
+  numerator_description: null
+  denominator_description: null
+  data_source: tamanu
+  definition_source: BES
+  definition_source_code: null
+  definition_rationale: >-
+    The WHO HIV DAK's on ART state is a recorded answer carried forward, so a client who stops collecting
+    ART stays on ART until a form says otherwise. Working it out from the ART supplied gives one definition
+    of on ART, lost to follow-up and re-initiated for every consumer, and the allowance is the 90 days WHO
+    uses for loss to follow-up.
+  unit: null
+  subject_grain: episode
+  disaggregations: null
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/derived__episode_art.md
