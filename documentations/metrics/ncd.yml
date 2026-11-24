@@ -1,4 +1,4 @@
-# NCD registry cohorts.
+# NCD registry cohorts and indicators.
 #
 # Part of the canonical registry of `metric__` indicators and `der__` derived elements:
 # every documentations/metrics/*.yml file is merged by metric_id.
@@ -14,7 +14,8 @@ metrics:
   description: >-
     Patients on the diabetes and hypertension registry with type 1 or type 2 diabetes. A cohort
     entry runs from registration, or from the condition record when that is later, to the day
-    before the patient was deactivated or the condition was disproven, recorded in error or deleted.
+    before the patient was deactivated or the condition was disproven, recorded in error or deleted,
+    or to the patient's date of death, whichever is earliest.
   numerator_description: null
   denominator_description: null
   data_source: tamanu
@@ -34,7 +35,8 @@ metrics:
   description: >-
     Patients on the diabetes and hypertension registry with hypertension. A cohort entry runs from
     registration, or from the condition record when that is later, to the day before the patient
-    was deactivated or the condition was disproven, recorded in error or deleted.
+    was deactivated or the condition was disproven, recorded in error or deleted, or to the patient's
+    date of death, whichever is earliest.
   numerator_description: null
   denominator_description: null
   data_source: tamanu
@@ -48,3 +50,186 @@ metrics:
   owner: bes-maui
   status: approved
   spec_path: specs/dbt-model/derived__cohort_ncd.md
+- metric_id: dli7_dm_bmi_365d
+  kind: metric
+  name: DLI 7 diabetic patients with a BMI in the past year
+  description: >-
+    Patients in the diabetes registry cohort at a quarter's evaluation date with a BMI recorded in
+    the 365 days up to it.
+  numerator_description: >-
+    Patients in cohort_ncd_diabetes at the evaluation date with a BMI recorded in the 365 days up to
+    and including it
+  denominator_description: null
+  data_source: tamanu
+  definition_source: SAMOA_MOH
+  definition_source_code: DLI 7
+  definition_rationale: >-
+    Disbursement-linked indicator 7, diabetes protocol-compliant follow-up. Annual care checks are
+    judged over the past year at each quarter end, and a visit over the past 180 days, a 90-day
+    medication supply plus 90 days' grace
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__ncd_dli7_protocol_compliance.md
+- metric_id: dli7_dm_hba1c_365d
+  kind: metric
+  name: DLI 7 diabetic patients with an HbA1c test in the past year
+  description: >-
+    Patients in the diabetes registry cohort at a quarter's evaluation date with an HbA1c test in
+    the 365 days up to it.
+  numerator_description: >-
+    Patients in cohort_ncd_diabetes at the evaluation date with an HbA1c test that was not
+    cancelled, or an HbA1c result recorded on a clinical form, in the 365 days up to and including
+    it
+  denominator_description: null
+  data_source: tamanu
+  definition_source: SAMOA_MOH
+  definition_source_code: DLI 7
+  definition_rationale: >-
+    Disbursement-linked indicator 7, diabetes protocol-compliant follow-up. Annual care checks are
+    judged over the past year at each quarter end, and a visit over the past 180 days, a 90-day
+    medication supply plus 90 days' grace
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__ncd_dli7_protocol_compliance.md
+- metric_id: dli7_dm_lost_to_follow_up
+  kind: metric
+  name: DLI 7 diabetic patients lost to follow-up
+  description: >-
+    Patients in the diabetes registry cohort at a quarter's evaluation date with no visit in the 180
+    days up to it. They stay in the denominator.
+  numerator_description: >-
+    Patients in cohort_ncd_diabetes at the evaluation date with no encounter, other than a survey
+    response, in the 180 days up to and including it
+  denominator_description: null
+  data_source: tamanu
+  definition_source: SAMOA_MOH
+  definition_source_code: DLI 7
+  definition_rationale: >-
+    Disbursement-linked indicator 7, diabetes protocol-compliant follow-up. Annual care checks are
+    judged over the past year at each quarter end, and a visit over the past 180 days, a 90-day
+    medication supply plus 90 days' grace
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__ncd_dli7_protocol_compliance.md
+- metric_id: dli7_dm_nutrition_365d
+  kind: metric
+  name: DLI 7 diabetic patients with nutrition and health education in the past year
+  description: >-
+    Patients in the diabetes registry cohort at a quarter's evaluation date with nutrition and
+    health education in the 365 days up to it.
+  numerator_description: >-
+    Patients in cohort_ncd_diabetes at the evaluation date with a dietetic assessment, a nutrition
+    note or a health behaviour check in the 365 days up to and including it
+  denominator_description: null
+  data_source: tamanu
+  definition_source: SAMOA_MOH
+  definition_source_code: DLI 7
+  definition_rationale: >-
+    Disbursement-linked indicator 7, diabetes protocol-compliant follow-up. Annual care checks are
+    judged over the past year at each quarter end, and a visit over the past 180 days, a 90-day
+    medication supply plus 90 days' grace
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__ncd_dli7_protocol_compliance.md
+- metric_id: dli7_dm_protocol_compliant
+  kind: metric
+  name: DLI 7 diabetic patients receiving protocol-compliant follow-up
+  description: >-
+    Patients in the diabetes registry cohort at a quarter's evaluation date who had a visit in the
+    180 days up to it, and an HbA1c test, a BMI, and nutrition and health education in the 365 days
+    up to it. Divided by dli7_dm_registered for the same quarter, it is the DLI 7 rate.
+  numerator_description: >-
+    Patients in cohort_ncd_diabetes at the evaluation date meeting all of dli7_dm_visit_180d,
+    dli7_dm_hba1c_365d, dli7_dm_bmi_365d and dli7_dm_nutrition_365d
+  denominator_description: null
+  data_source: tamanu
+  definition_source: SAMOA_MOH
+  definition_source_code: DLI 7
+  definition_rationale: >-
+    Disbursement-linked indicator 7, diabetes protocol-compliant follow-up. Annual care checks are
+    judged over the past year at each quarter end, and a visit over the past 180 days, a 90-day
+    medication supply plus 90 days' grace
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__ncd_dli7_protocol_compliance.md
+- metric_id: dli7_dm_registered
+  kind: metric
+  name: DLI 7 registered diabetic patients
+  description: >-
+    Patients in the diabetes registry cohort at a quarter's evaluation date: its last day, or today
+    for the current quarter. The denominator of every DLI 7 figure.
+  numerator_description: >-
+    Patients with a cohort_ncd_diabetes entry covering the evaluation date
+  denominator_description: null
+  data_source: tamanu
+  definition_source: SAMOA_MOH
+  definition_source_code: DLI 7
+  definition_rationale: >-
+    Disbursement-linked indicator 7, diabetes protocol-compliant follow-up. Annual care checks are
+    judged over the past year at each quarter end, and a visit over the past 180 days, a 90-day
+    medication supply plus 90 days' grace
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__ncd_dli7_protocol_compliance.md
+- metric_id: dli7_dm_visit_180d
+  kind: metric
+  name: DLI 7 diabetic patients with a visit in the past 180 days
+  description: >-
+    Patients in the diabetes registry cohort at a quarter's evaluation date with a visit, at any
+    facility, in the 180 days up to it.
+  numerator_description: >-
+    Patients in cohort_ncd_diabetes at the evaluation date with an encounter, other than a survey
+    response, in the 180 days up to and including it
+  denominator_description: null
+  data_source: tamanu
+  definition_source: SAMOA_MOH
+  definition_source_code: DLI 7
+  definition_rationale: >-
+    Disbursement-linked indicator 7, diabetes protocol-compliant follow-up. Annual care checks are
+    judged over the past year at each quarter end, and a visit over the past 180 days, a 90-day
+    medication supply plus 90 days' grace
+  unit: count
+  subject_grain: patient
+  disaggregations:
+  - facility_id
+  - sex
+  variant_of: null
+  owner: bes-maui
+  status: approved
+  spec_path: specs/dbt-model/metric__ncd_dli7_protocol_compliance.md
