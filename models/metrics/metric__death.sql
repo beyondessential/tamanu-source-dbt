@@ -13,7 +13,17 @@
 -- The registry carries the definition and this model is its implementation.
 -- See specs/dbt-model/metric__death.md for BL-001..BL-009.
 
-with patients as (
+-- BL-021 (see specs/dbt-model/sensitive-facility-partition.md): covers every
+-- facility, so each partitioned input is read from every partition
+with all_patient_death_data as (
+    {{ every_partition('patient_death_data') }}
+),
+
+all_encounters as (
+    {{ every_partition('encounters') }}
+),
+
+patients as (
     select * from {{ ref('patients') }}
 ),
 
@@ -26,18 +36,18 @@ reference_data as (
 ),
 
 departments as (
-    select * from {{ ref('departments') }}
+    {{ every_partition('departments') }}
 ),
 
 locations as (
-    select * from {{ ref('locations') }}
+    {{ every_partition('locations') }}
 ),
 
 -- BL-002: the latest current death record per patient, preferring a finalised one -- the
 -- same pick ds__deaths makes (its BL-010).
 death_data as (
     select distinct on (patient_id) *
-    from {{ ref('patient_death_data') }}
+    from all_patient_death_data
     where visibility_status = 'current'
     order by patient_id asc, is_final desc nulls last, id asc
 ),
@@ -51,7 +61,7 @@ encounters_with_death as (
         e.patient_id,
         e.department_id,
         e.location_id
-    from {{ ref('encounters') }} e
+    from all_encounters e
     join patients p
         on p.id = e.patient_id
         and p.date_of_death between e.start_datetime and e.end_datetime

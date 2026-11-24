@@ -1,0 +1,55 @@
+{#- Body of `vaccine_administrations_change_logs` and of its copy for each sensitive network. See
+    specs/dbt-model/sensitive-facility-partition.md for the BL clauses. -#}
+{%- macro vaccine_administrations_change_logs_base(network=none) -%}
+with filtered_changes as (
+    select
+        av.changelog_id,
+        av.logged_at at time zone '{{ var("timezone") }}' as logged_at,
+        av.logged_at at time zone 'UTC' as logged_at_utc,
+        av.updated_by_user_id,
+        av.record_created_at at time zone '{{ var("timezone") }}' as record_created_at,
+        av.record_updated_at at time zone '{{ var("timezone") }}' as record_updated_at,
+        av.record_updated_at at time zone 'UTC' as record_updated_at_utc,
+        av.record_id,
+        av.record_data,
+        av.updated_at_sync_tick
+    from ({{ base_history_from_log('administered_vaccines') }}) av
+    join {{ partition_ref('encounters', network) }} e on e.id = av.record_data ->> 'encounter_id'
+    {%- if is_incremental() %}
+    where av.record_id in ({{ changed_since_last_run('administered_vaccines') }})
+    {%- endif %}
+)
+
+select
+    fc.changelog_id,
+    fc.logged_at,
+    -- sort-only: local logged_at repeats an hour at a DST fall-back, so order history by this
+    fc.logged_at_utc,
+    fc.record_created_at,
+    fc.record_updated_at,
+    -- sort-only: local record_updated_at repeats an hour at a DST fall-back, so order history by this
+    fc.record_updated_at_utc,
+    fc.updated_by_user_id,
+    fc.record_id as id,
+    (fc.record_data ->> 'date')::timestamp as datetime,
+    fc.record_data ->> 'batch' as batch,
+    (fc.record_data ->> 'consent')::boolean as is_consented,
+    fc.record_data ->> 'disease' as disease,
+    fc.record_data ->> 'given_by' as given_by,
+    (fc.record_data ->> 'given_elsewhere')::boolean as is_given_elsewhere,
+    fc.record_data ->> 'circumstance_ids' as circumstance_ids,
+    fc.record_data ->> 'recorder_id' as recorded_by_id,
+    fc.record_data ->> 'encounter_id' as encounter_id,
+    fc.record_data ->> 'location_id' as location_id,
+    fc.record_data ->> 'department_id' as department_id,
+    fc.record_data ->> 'vaccine_name' as vaccine_name,
+    fc.record_data ->> 'vaccine_brand' as vaccine_brand,
+    fc.record_data ->> 'injection_site' as injection_site,
+    fc.record_data ->> 'consent_given_by' as consent_given_by,
+    fc.record_data ->> 'scheduled_vaccine_id' as scheduled_vaccine_id,
+    fc.record_data ->> 'status' as status,
+    fc.record_data ->> 'reason' as reason,
+    fc.record_data ->> 'not_given_reason_id' as not_given_reason_id,
+    fc.updated_at_sync_tick
+from filtered_changes fc
+{%- endmacro %}

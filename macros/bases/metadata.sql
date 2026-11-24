@@ -1,4 +1,29 @@
-{%- macro get_metadata_from_changes(table_name) -%}
+{#- network is passed by a metadata base whose records belong to an encounter. BL-008 (see
+    specs/dbt-model/sensitive-facility-partition.md): a record's metadata follows the partition
+    of the record, as it is now. Without it the base covers every record. -#}
+{%- macro get_metadata_from_changes(table_name, network=none, partitioned=false) -%}
+{%- if partitioned -%}
+    {%- if table_name == 'encounters' -%}
+        {%- set encounter_id = 'record_id' -%}
+    {%- elif table_name == 'lab_request_logs' -%}
+        {%- set encounter_id -%}
+            (
+                select mlr.encounter_id
+                from {{ source('tamanu', 'lab_request_logs') }} mlrl
+                join {{ source('tamanu', 'lab_requests') }} mlr on mlr.id = mlrl.lab_request_id
+                where mlrl.id::text = record_id
+            )
+        {%- endset -%}
+    {%- else -%}
+        {%- set encounter_id -%}
+            (
+                select mr.encounter_id
+                from {{ source('tamanu', table_name) }} mr
+                where mr.id::text = record_id
+            )
+        {%- endset -%}
+    {%- endif -%}
+{%- endif -%}
 with change_logs as (
     select
         record_id,
@@ -12,6 +37,9 @@ with change_logs as (
         max(logged_at) over (partition by record_id) as last_logged_at
     from {{ source('logs__tamanu', 'changes') }}
     where table_name = '{{ table_name }}'
+    {%- if partitioned %}
+        and {{ encounter_id_in_partition(encounter_id, network) }}
+    {%- endif %}
 )
 
 select

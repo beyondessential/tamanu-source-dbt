@@ -5,9 +5,9 @@
 | Field | Value |
 |---|---|
 | **Name** | `hospital-admissions-by-{area,department,location}-summary` (+ sensitive twins) |
-| **Macros** | `hospital_admissions_by_{area,department,location}_summary_report(is_sensitive=false)` (`macros/reports/`) |
+| **Macros** | `hospital_admissions_by_{area,department,location}_summary_report(network=none)` (`macros/reports/`) |
 | **Models** | `models/reports/sql/{standard,sensitive}/` — one thin macro call per variant |
-| **Intermediates** | `admission_history_{location,department}(is_sensitive=false)` (`macros/intermediate/`), materialised as `int__admission_history_*` and `int__sensitive_admission_history_*` |
+| **Intermediates** | `admission_history_{location,department}(network=none)` (`macros/intermediate/`), materialised as `int__admission_history_*` and `int__sn_<network>_admission_history_*` |
 | **Type** | Tamanu reports (reporting schema) |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
@@ -166,20 +166,17 @@ All three: `reportingMonth`, `facility`, the dimension name, then
   month regardless, since patient-days accrue while a stay is merely open. `-by-department`
   has no occupancy column (BL-009), so it keeps a row only where an episode started **or**
   ended in the month, and a month an episode merely spans is suppressed as empty.
-- **BL-012:** The facility scope is partitioned by `is_sensitive`, in the intermediates
-  rather than in the reports. The predicate is
-  `(f.sensitive_network_id is not null) = <argument>`, the same predicate as
-  `encounters_core`, so the two variants are disjoint and exhaustive: each facility's episodes
-  reach exactly one of them. The predicate is never null, so no `coalesce` is needed (one was
-  required while Tamanu stored a nullable `facilities.is_sensitive` flag, dropped in 2.66). The reports carry no
+- **BL-012:** The facility scope is partitioned by `network`, in the intermediates
+  rather than in the reports. The argument picks the facility base, `facilities` or
+  `sn_<network>_facilities`, the same as `encounters_core`, so the two variants are disjoint and
+  exhaustive: each facility's episodes reach exactly one of them. The reports carry no
   sensitivity logic beyond choosing which intermediate to read, and a consumer wanting
-  both figures runs both reports. The join to `facilities` exists only to resolve the
-  facility name; the predicate is what makes it a partition.
+  both figures runs both reports.
 
   The sensitive intermediates are ephemeral, so `generate_reporting_schema_script()`
   creates no `reporting` view for them. They are also tagged `restricted`
   (`dbt_project.yml`), which keeps them out of the deployed schema unless
-  `has_sensitive_facility` is set, should their materialisation change. Either way no
+  the deployment lists a sensitive network, should their materialisation change. Either way no
   episode-grain view is readable by `tamanu_reporting` on a deployment without a
   sensitive facility.
 - **BL-013:** A location with no `location_group_id` keeps its episodes. Both joins that
@@ -314,7 +311,9 @@ None outstanding.
 
 | Date | Change |
 |---|---|
+| 2026-11-22 | BL-012's partition is the facility base the intermediates read, `facilities` or `sn_<network>_facilities`, rather than a predicate on `sensitive_network_id`. Same partition. |
 | 2026-11-02 | The reports apply the `facilityId` parameter they already declared (BL-015). The reporting schema creates no view for an ephemeral model, so BL-012 rests on the intermediates being ephemeral as well as `restricted`. |
 | 2026-10-15 | Tamanu 2.66 dropped the nullable `facilities.is_sensitive`: BL-012's partition is now `(f.sensitive_network_id is not null) = <argument>`, which is never null, so the `coalesce` is gone. Same partition (MAUI-6163). |
 | 2026-09-06 | Episodes where the patient did not move are collapsed into one (BL-014), so an encounter re-typed in place no longer reads as a transfer. `transfer_in` is taken from the episode's opening row rather than aggregated over it, so a history row naming the location or department already held no longer reports a transfer nobody made; `admission` is still aggregated. BL-006's transfer identity restated as a checkable invariant. BL-014 additionally records what the collapse does to an encounter re-typed away from `admission` and back in the same place. |
 | 2026-09-04 | Retrospective spec created for the three summaries and their two intermediates. Facility sensitivity partitioned in the intermediates (BL-012), resolving DV-001, with a sensitive twin added for each report. `-by-department` average length of stay aligned to the ended-in-month basis (BL-011). Death condition changed to interval containment (BL-004), resolving DV-004. Discharges and deaths counted in the month the episode ended (BL-006), resolving DV-005, and transfers out likewise (BL-006), resolving DV-006; the death month is the encounter's end month rather than `date_of_death`, recorded as DV-007. An ungrouped location's episodes are counted under a null area (BL-013), resolving DV-002. Malformed episodes (DV-003) accepted as source-side data-entry errors, not compensated for in reporting, beyond BL-007's patient-day floor — which follows the AIHW definition and stops an inverted episode subtracting days from a month. |
+| 2026-11-24 | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

@@ -1,6 +1,6 @@
-{% macro emergency_triage_dataset(is_sensitive=false) %}
+{% macro emergency_triage_dataset(network=none) %}
 
-{%- set triage_source = 'ds__sensitive_encounters_emergency' if is_sensitive else 'ds__encounters_emergency' -%}
+{%- set triage_source = partition_name('ds__encounters_emergency', network) -%}
 
 -- BL-001: one row per triage record, which is one emergency department presentation
 -- BL-015: the sensitive variant differs only in which emergency dataset it reads
@@ -15,7 +15,7 @@ encounter_diagnoses_agg as (
     select
         ed.encounter_id,
         string_agg(distinct rd.name, ', ') as diagnoses
-    from {{ ref('encounter_diagnoses') }} ed
+    from {{ partition_ref('encounter_diagnoses', network) }} ed
     join presentations p on p.encounter_id = ed.encounter_id
     join {{ ref('reference_data') }} rd on rd.id = ed.diagnosis_id
     group by ed.encounter_id
@@ -26,9 +26,9 @@ encounter_medications_agg as (
     select
         ep.encounter_id,
         string_agg(distinct med.name, ', ') as medications
-    from {{ ref('encounter_prescriptions') }} ep
+    from {{ partition_ref('encounter_prescriptions', network) }} ep
     join presentations p on p.encounter_id = ep.encounter_id
-    join {{ ref('prescriptions') }} pr on pr.id = ep.prescription_id
+    join {{ partition_ref('prescriptions', network) }} pr on pr.id = ep.prescription_id
     join {{ ref('reference_data') }} med on med.id = pr.medication_id
     group by ep.encounter_id
 ),
@@ -71,11 +71,11 @@ presentation_details as (
         dis.disposition_id as discharge_disposition_id,
         disposition.name as discharge_disposition
     from presentations p
-    join {{ ref('encounters') }} e on e.id = p.encounter_id
-    left join {{ ref('clinical__visit_occurrence') }} vo on vo.visit_occurrence_id = p.encounter_id
+    join {{ partition_ref('encounters', network) }} e on e.id = p.encounter_id
+    left join {{ partition_ref('clinical__visit_occurrence', network) }} vo on vo.visit_occurrence_id = p.encounter_id
     left join encounter_diagnoses_agg dx on dx.encounter_id = p.encounter_id
     left join encounter_medications_agg rx on rx.encounter_id = p.encounter_id
-    left join {{ ref('discharges') }} dis on dis.encounter_id = p.encounter_id
+    left join {{ partition_ref('discharges', network) }} dis on dis.encounter_id = p.encounter_id
     left join {{ ref('reference_data') }} disposition on disposition.id = dis.disposition_id
 ),
 

@@ -12,6 +12,8 @@ unit_tests:
       every birth with no usable mother. A mother with two diabetic conditions does not fan the
       birth out. No column carries the mother's id or date of birth.
 
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     given:
       # mb_1: mother mum_1, born the day after the newborn's date in 1994, so 29 not 30; two
       #       diabetic conditions (E11.9, O24.4) -- one row, not two
@@ -39,6 +41,26 @@ unit_tests:
           select 'mb_6', null::float, 'midwife', 'single', 'normal_vaginal_delivery', null::numeric, null::integer, 'health_facility', 'fac_1', '2024-07-04'::date
           union all
           select 'mb_7', null::float, 'midwife', 'single', 'normal_vaginal_delivery', null::numeric, null::integer, 'health_facility', 'fac_1', '2024-08-01'::date
+
+      - input: ref('sn_example_patient_birth_data')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'mb_1' as patient_id, null::float as gestational_age_estimate, 'midwife' as attendant_at_birth, 'single' as birth_type, 'normal_vaginal_delivery' as birth_delivery_type, null::numeric as birth_weight, null::integer as apgar_score_five_minutes, 'health_facility' as registered_birth_place, 'fac_1' as birth_facility_id, '2024-03-09'::date as registration_date
+            union all
+            select 'mb_2', null::float, 'midwife', 'single', 'normal_vaginal_delivery', null::numeric, null::integer, 'health_facility', 'fac_1', '2024-06-01'::date
+            union all
+            select 'mb_3', null::float, 'midwife', 'single', 'normal_vaginal_delivery', null::numeric, null::integer, 'health_facility', 'fac_1', '2024-07-01'::date
+            union all
+            select 'mb_4', null::float, 'midwife', 'single', 'normal_vaginal_delivery', null::numeric, null::integer, 'health_facility', 'fac_1', '2024-07-02'::date
+            union all
+            select 'mb_5', null::float, 'midwife', 'single', 'normal_vaginal_delivery', null::numeric, null::integer, 'health_facility', 'fac_1', '2024-07-03'::date
+            union all
+            select 'mb_6', null::float, 'midwife', 'single', 'normal_vaginal_delivery', null::numeric, null::integer, 'health_facility', 'fac_1', '2024-07-04'::date
+            union all
+            select 'mb_7', null::float, 'midwife', 'single', 'normal_vaginal_delivery', null::numeric, null::integer, 'health_facility', 'fac_1', '2024-08-01'::date
+          ) fx
+          where false
 
       # Newborns and mothers are both patients. mum_gone is deliberately absent.
       - input: ref('patients')

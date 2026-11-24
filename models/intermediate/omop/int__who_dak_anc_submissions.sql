@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- int__who_dak_anc_submissions -- one row per native or mapped WHO DAK ANC form submission, with
 -- the DAK data elements it carries, cast to Annex A's types.
 -- See specs/dbt-model/metric__who_dak_anc_indicators.md for the BL clauses this model implements.
@@ -60,15 +61,15 @@
 {%- endfor %}
 
 with responses as (
-    select * from {{ ref('survey_responses') }}
+    select * from {{ partition_ref('survey_responses', network) }}
 ),
 
 encounters as (
-    select * from {{ ref('encounters') }}
+    select * from {{ partition_ref('encounters', network) }}
 ),
 
 locations as (
-    select * from {{ ref('locations') }}
+    select * from {{ partition_ref('locations', network) }}
 ),
 
 -- BL-002: (native survey, question code) -> DAK element. A question collecting several elements
@@ -142,7 +143,7 @@ anc_answers as (
         s.survey_id,
         pde.code as question_code,
         nullif(trim(a.body), '') as body
-    from {{ ref('survey_response_answers') }} a
+    from {{ partition_ref('survey_response_answers', network) }} a
     join anc_submissions s on s.response_id = a.response_id
     join {{ ref('program_data_elements') }} pde on pde.id = a.data_element_id
 ),

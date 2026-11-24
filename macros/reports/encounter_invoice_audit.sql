@@ -1,10 +1,10 @@
-{% macro encounter_invoice_audit_report(is_sensitive=false) %}
+{% macro encounter_invoice_audit_report(network=none) %}
 
 {#-
     See specs/reports/audit-encounter-invoice.md for the BL clauses this macro implements.
 
     Two of that spec's clauses are realised elsewhere: its BL-001 (test patient) and BL-017
-    (is_sensitive facility partition) are resolved by encounters_core(), whose own clauses
+    (network facility partition) are resolved by encounters_core(), whose own clauses
     live in specs/dbt-model/encounters_core.md. The predicates below are this report's own,
     and reference the `e` / `f` aliases that macro contracts on.
 -#}
@@ -23,7 +23,7 @@
 {%- endset -%}
 
 with encounters_in_scope as (
-    {{ encounters_core(is_sensitive=is_sensitive, extra_predicates=scope_filter, localise_timestamps=true) }}
+    {{ encounters_core(network=network, extra_predicates=scope_filter, localise_timestamps=true) }}
 ),
 
 invoice_data as (
@@ -54,7 +54,8 @@ invoice_data as (
         -- patient_subtotal, so an encounter whose every non-cancelled invoice
         -- has no items must still read 0 rather than blank.
         coalesce(sum(ei.patient_subtotal), 0) as patient_subtotal
-    from {{ ref('ds__encounter_invoices') }} ei
+    -- BL-017: each variant reads the invoices of its own facility partition
+    from {{ partition_ref('ds__encounter_invoices', network) }} ei
     join encounters_in_scope eis
         on eis.encounter_id = ei.encounter_id
     where ei.status != 'cancelled'
@@ -96,7 +97,7 @@ select
 from encounters_in_scope eis
 join {{ ref('patients') }} p
     on p.id = eis.patient_id
-left join {{ ref('departments') }} dp
+left join {{ partition_ref('departments', network) }} dp
     on dp.id = eis.department_id
 left join {{ ref('users') }} c
     on c.id = eis.clinician_id

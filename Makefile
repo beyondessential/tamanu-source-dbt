@@ -1,3 +1,9 @@
+# A deployment lists its sensitive networks (sensitive_networks, default none), but this repo
+# always tests the partition through its fixture network. The template passes DBT_TEST_EXCLUDE
+# to `dbt test` and lets a repo set it before the include; tamanu-source-dbt excludes nothing,
+# so it carries the var instead.
+DBT_TEST_EXCLUDE := --vars '{sensitive_networks: [example]}'
+
 include .maui/templates/dbt.mk
 
 # The helper-script unit tests need no database or credentials, so they always run.

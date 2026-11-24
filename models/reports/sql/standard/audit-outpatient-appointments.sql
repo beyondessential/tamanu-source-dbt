@@ -1,1 +1,1 @@
-{{ audit_outpatient_appointments_report(is_sensitive=false) }}
+{{ audit_outpatient_appointments_report(network=none) }}

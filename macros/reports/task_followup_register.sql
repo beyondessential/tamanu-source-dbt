@@ -1,6 +1,6 @@
-{% macro task_followup_register_report(is_sensitive=false) %}
+{% macro task_followup_register_report(network=none) %}
 
-{% set dataset = 'ds__sensitive_task_followup' if is_sensitive else 'ds__task_followup' %}
+{% set dataset = partition_name('ds__task_followup', network) %}
 
 -- Task follow-up register
 -- One row per designation-assigned task, with the outcome of the task and the patient's

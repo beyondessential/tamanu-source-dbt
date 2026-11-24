@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- clinical__visit_detail -- OMOP-lite VISIT_DETAIL domain. One row per encounter segment
 -- (BL-001): a phase within a single encounter over which the whole encounter_history
 -- snapshot -- department, location, encounter_type AND clinician -- was stable. A
@@ -12,11 +13,11 @@
 -- See specs/dbt-model/clinical__visit_detail.md for BL-001..BL-007.
 
 with encounters as (
-    select * from {{ ref('encounters') }}
+    select * from {{ partition_ref('encounters', network) }}
 ),
 
 encounter_history as (
-    select * from {{ ref('encounter_history') }}
+    select * from {{ partition_ref('encounter_history', network) }}
 ),
 
 visit_map as (

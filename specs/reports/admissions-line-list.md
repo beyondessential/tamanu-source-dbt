@@ -4,8 +4,8 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `admissions-line-list` + `sensitive-admissions-line-list` |
-| **Type** | Tamanu report, standard + sensitive pair in `models/reports/`, reading `ds__admissions` / `ds__sensitive_admissions` |
+| **Name** | `admissions-line-list` + `sensitive-<network>-admissions-line-list` |
+| **Type** | Tamanu report, standard + sensitive pair in `models/reports/`, reading `ds__admissions` / `ds__sn_<network>_admissions` |
 | **Layer** | `report` |
 | **Materialisation** | `view` |
 | **Status** | `implemented` |
@@ -54,3 +54,4 @@ plus the date range.
 | Date | Author | Change |
 |---|---|---|
 | 2026-11-10 | Maui team | Retrospective spec, written with MAUI-7088, which made the patient billing type filter a multi-select. |
+| 2026-11-24 | Maui team | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

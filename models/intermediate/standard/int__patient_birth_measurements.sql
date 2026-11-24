@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- int__patient_birth_measurements -- unpivots the wide patient_birth_data into one row per
 -- recorded birth measurement (tall shape), for the birth-data branch of clinical__measurement.
 -- Inner-joins patients (which filters deleted/test/merged patients and supplies the birth
@@ -5,7 +6,7 @@
 -- Values are kept as text here; the numeric cast happens in clinical__measurement.
 
 with patient_birth_data as (
-    select * from {{ ref('patient_birth_data') }}
+    select * from {{ partition_ref('patient_birth_data', network) }}
 ),
 
 patients as (

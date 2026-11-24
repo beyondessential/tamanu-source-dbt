@@ -1,1 +1,1 @@
-{{ encounter_invoice_audit_report(is_sensitive=false) }}
+{{ encounter_invoice_audit_report(network=none) }}

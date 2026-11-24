@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- clinical__episode -- OMOP-lite EPISODE domain. The clinical layer's first longitudinal
 -- subject: every other clinical__ table hangs off an encounter, where an enrolment spans them.
 --
@@ -14,11 +15,11 @@
 -- See specs/dbt-model/clinical__episode.md for BL-001..BL-011.
 
 with all_enrolments as (
-    select * from {{ ref('int__program_enrolments') }}
+    select * from {{ partition_ref('int__program_enrolments', network) }}
 ),
 
 status_history as (
-    select * from {{ ref('int__registration_status_history') }}
+    select * from {{ partition_ref('int__registration_status_history', network) }}
 ),
 
 -- BL-004: when the registration became inactive, for an episode closed by a status change

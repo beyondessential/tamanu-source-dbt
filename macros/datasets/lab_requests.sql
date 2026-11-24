@@ -1,4 +1,4 @@
-{% macro lab_requests_dataset(is_sensitive=false) %}
+{% macro lab_requests_dataset(network=none) %}
 
 with lab_test_data as (
     -- Lists every test on the request regardless of its own is_sensitive flag:
@@ -9,8 +9,8 @@ with lab_test_data as (
             order by ltt.name
         ) as tests,
         max(lt.completed_datetime) as completed_datetime
-    from {{ ref('lab_requests') }} lr
-    join {{ ref('lab_tests') }} lt on lt.lab_request_id = lr.id
+    from {{ partition_ref('lab_requests', network) }} lr
+    join {{ partition_ref('lab_tests', network) }} lt on lt.lab_request_id = lr.id
     join {{ ref('lab_test_types') }} ltt on ltt.id = lt.lab_test_type_id
     group by lr.id
 ),
@@ -21,7 +21,7 @@ lab_panel_data as (
     select
         ltpr.lab_request_id,
         string_agg(ltp.name, ', ' order by ltp.name) as lab_test_panels
-    from {{ ref('lab_test_panel_requests') }} ltpr
+    from {{ partition_ref('lab_test_panel_requests', network) }} ltpr
     join {{ ref('lab_test_panels') }} ltp on ltp.id = ltpr.lab_test_panel_id
     group by ltpr.lab_request_id
 )
@@ -87,20 +87,19 @@ select
         when 'other' then 'Other'
         else lr.reason_for_cancellation
     end as reason_for_cancellation
-from {{ ref('lab_requests') }} lr
+from {{ partition_ref('lab_requests', network) }} lr
 join lab_test_data lta on lta.lab_request_id = lr.id
-join {{ ref('encounters') }} e on e.id = lr.encounter_id
+join {{ partition_ref('encounters', network) }} e on e.id = lr.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
 left join {{ ref('reference_data') }} village on village.id = p.village_id
-join {{ ref('locations') }} l on l.id = e.location_id
-left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
-left join {{ ref('departments') }} d on d.id = e.department_id
-join {{ ref('facilities') }} f
+join {{ partition_ref('locations', network) }} l on l.id = e.location_id
+left join {{ partition_ref('location_groups', network) }} lg on lg.id = l.location_group_id
+left join {{ partition_ref('departments', network) }} d on d.id = e.department_id
+join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
-    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
 left join {{ ref('reference_data') }} laboratory on laboratory.id = lr.lab_test_laboratory_id
 left join {{ ref('users') }} req_clinician on req_clinician.id = lr.requested_by_id
-left join {{ ref('departments') }} req_department on req_department.id = lr.department_id
+left join {{ partition_ref('departments', network) }} req_department on req_department.id = lr.department_id
 left join {{ ref('reference_data') }} priority on priority.id = lr.lab_test_priority_id
 left join {{ ref('reference_data') }} category on category.id = lr.lab_test_category_id
 left join {{ ref('users') }} collector on collector.id = lr.collected_by_id

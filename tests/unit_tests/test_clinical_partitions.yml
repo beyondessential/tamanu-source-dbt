@@ -1,0 +1,142 @@
+# specs/dbt-model/sensitive-facility-partition.md: the OMOP layer's side of the partition. The
+# tests that mock the `example` network's models are enabled with that network listed, as CI
+# runs them.
+
+x-fixtures:
+  visit_map: &visit_map
+    input: ref('map__omop_visit_type')
+    format: sql
+    rows: |
+      select 'clinic'::text as local_code, 9202 as concept_id, 'Outpatient Visit'::text as concept_name
+  no_history: &no_history
+    format: sql
+    rows: |
+      select null::text as encounter_id, null::text as encounter_type where false
+
+unit_tests:
+  - name: ac_006_clinical__visit_occurrence_standard_partition
+    model: clinical__visit_occurrence
+    description: >
+      BL-015, BL-017: clinical__visit_occurrence reads the standard encounters base, so its
+      visits are the standard partition's.
+    given:
+      - input: ref('encounters')
+        format: sql
+        rows: |
+          select
+              'enc_std'::text as id,
+              'pat_1'::text as patient_id,
+              'clinic'::text as encounter_type,
+              '2026-01-01 08:00:00'::timestamp as start_datetime,
+              '2026-01-01 09:00:00'::timestamp as end_datetime,
+              null::text as clinician_id,
+              'loc_std'::text as location_id,
+              null::text as department_id
+      - input: ref('encounter_history')
+        <<: *no_history
+      - *visit_map
+    expect:
+      rows:
+        - {visit_occurrence_id: enc_std, care_site_id: loc_std}
+
+  - name: ac_006_clinical__visit_occurrence_network_partition
+    model: clinical__sn_example_visit_occurrence
+    description: >
+      BL-015, BL-017: the `example` network's visit occurrence reads that network's encounters
+      base and nothing from the standard one, so its visits are that network's.
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
+    given:
+      - input: ref('sn_example_encounters')
+        format: sql
+        rows: |
+          select
+              'enc_ex'::text as id,
+              'pat_1'::text as patient_id,
+              'clinic'::text as encounter_type,
+              '2026-01-01 08:00:00'::timestamp as start_datetime,
+              '2026-01-01 09:00:00'::timestamp as end_datetime,
+              null::text as clinician_id,
+              'loc_ex'::text as location_id,
+              null::text as department_id
+      - input: ref('sn_example_encounter_history')
+        <<: *no_history
+      - *visit_map
+    expect:
+      rows:
+        - {visit_occurrence_id: enc_ex, care_site_id: loc_ex}
+
+  - name: ac_010_ref__care_site_covers_every_partition
+    model: ref__care_site
+    description: >
+      BL-019: ref__care_site holds a facility care site for the standard facility and for the
+      facility in the `example` network, so a network's visit or enrolment still resolves its
+      care site.
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
+    given:
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_std' as id, 'STD' as code, 'Standard Hospital' as name, 'hospital' as type
+      - input: ref('sn_example_facilities')
+        format: sql
+        rows: |
+          select 'fac_ex' as id, 'EX' as code, 'Network Clinic' as name, 'clinic' as type
+      - input: ref('departments')
+        format: sql
+        rows: &no_departments |
+          select null::varchar as id, null::varchar as code, null::varchar as name, null::varchar as facility_id
+          where false
+      - input: ref('sn_example_departments')
+        format: sql
+        rows: *no_departments
+      - input: ref('ref__care_site_location')
+        format: sql
+        rows: |
+          select null::varchar as care_site_id, null::text as care_site_type, null::varchar as care_site_name,
+            null::varchar as care_site_source_value, null::varchar as place_of_service_source_value,
+            null::varchar as facility_id, null::varchar as facility_name where false
+    expect:
+      rows:
+        - {care_site_id: fac_std, care_site_type: facility, facility_name: Standard Hospital}
+        - {care_site_id: fac_ex, care_site_type: facility, facility_name: Network Clinic}
+
+  - name: ac_009_metric__program_registry_enrolment_network_partition
+    model: metric__sn_example_program_registry_enrolment
+    description: >
+      BL-022, BL-026: the `example` network's enrolment metric counts that network's episodes
+      and emits the same metric_id as the standard metric.
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
+    given:
+      - input: ref('clinical__sn_example_episode')
+        format: sql
+        rows: |
+          select
+              'ep_ex'::text as episode_id,
+              'pat_1'::text as person_id,
+              '2026-01-01'::date as episode_start_date,
+              '2026-01-01 08:00:00'::timestamp as episode_start_datetime,
+              null::timestamp as episode_end_datetime,
+              'hiv'::text as episode_source_value,
+              'HIV register'::text as episode_source_name,
+              null::text as clinical_status_source_value,
+              null::text as clinical_status_source_name,
+              'active'::text as registration_status,
+              null::text as episode_end_source,
+              null::text as currently_at_type,
+              null::text as currently_at_id,
+              'fac_ex'::text as care_site_id
+      - input: ref('clinical__person')
+        format: sql
+        rows: |
+          select
+              'pat_1'::text as person_id,
+              'female'::text as gender_source_value,
+              1990 as year_of_birth,
+              6 as month_of_birth,
+              1 as day_of_birth
+    expect:
+      rows:
+        - {metric_id: program_registry_enrolment, subject_id: ep_ex, facility_id: fac_ex, age_years: 35}

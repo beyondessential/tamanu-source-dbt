@@ -1,0 +1,29 @@
+{
+  "query": "replace this",
+  "name": "Sensitive example medication dispensed summary",
+  "status": "published",
+  "notes": "This report shows quantity of medication dispensed for each of the selected drugs (all drugs when none are selected) within a specified date range, based on dispense records.\n\nThis version covers facilities in the 'example' sensitive network only.",
+  "dbSchema": "reporting",
+  "queryOptions": {
+    "defaultDateRange": "30days",
+    "dataSources": [
+      "thisFacility",
+      "allFacilities"
+    ],
+    "parameters": [
+      {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
+        "parameterField": "ParameterSuggesterSelectField",
+        "label": "Drug",
+        "name": "medicationId",
+        "suggesterEndpoint": "drug",
+        "isMulti": true
+      }
+    ]
+  }
+}

@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- metric__program_registry_enrolment -- D5 metric view for the program registry enrolment
 -- indicator registered in documentations/metrics/*.yml: program_registry_enrolment.
 -- Spec: specs/dbt-model/metric__program_registry_enrolment.md (BL-001..BL-013).
@@ -13,7 +14,7 @@
 -- The registry carries the definition; this model is its implementation (BL-001).
 
 with episodes as (
-    select * from {{ ref('clinical__episode') }}
+    select * from {{ partition_ref('clinical__episode', network) }}
 ),
 
 person as (

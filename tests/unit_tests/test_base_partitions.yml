@@ -1,0 +1,327 @@
+# AC-001 (specs/dbt-model/sensitive-facility-partition.md): one pair of tests per kind of link,
+# on a representative base. Each pair runs the standard base and the `example` network's base on
+# the same rows. fac_std is standard, fac_ex is in the listed network `example`, and fac_oth is in
+# the unlisted network `other`, so a row at fac_oth belongs in neither base (BL-010). The network
+# tests are enabled with the `example` sensitive network listed, as CI runs them.
+
+x-fixtures:
+  facilities: &facilities
+    input: source('tamanu', 'facilities')
+    format: sql
+    rows: |
+      select 'fac_std'::text as id, null::text as sensitive_network_id
+      union all
+      select 'fac_ex', 'sn_example'
+      union all
+      select 'fac_oth', 'sn_other'
+  sensitive_networks: &sensitive_networks
+    input: source('tamanu', 'sensitive_networks')
+    format: sql
+    rows: |
+      select 'sn_example'::text as id, 'example'::text as code, null::timestamptz as deleted_at
+      union all
+      select 'sn_other', 'other', null::timestamptz
+  locations: &locations
+    input: source('tamanu', 'locations')
+    format: sql
+    rows: |
+      select 'loc_std'::text as id, 'fac_std'::text as facility_id
+      union all
+      select 'loc_ex', 'fac_ex'
+      union all
+      select 'loc_oth', 'fac_oth'
+      union all
+      select 'loc_dangling', 'fac_missing'
+  # enc_none has no location and enc_dangling's location resolves to no facility (BL-003)
+  encounters: &encounters
+    input: source('tamanu', 'encounters')
+    format: sql
+    rows: |
+      select
+          v.id,
+          v.location_id,
+          'pat_1'::text as patient_id,
+          null::timestamptz as deleted_at,
+          '2026-01-01 08:00:00'::text as start_date,
+          '2026-01-02 08:00:00'::text as end_date,
+          'clinic'::text as encounter_type,
+          null::text as reason_for_encounter,
+          null::text as device_id,
+          null::text as department_id,
+          null::text as examiner_id,
+          null::text as patient_billing_type_id,
+          null::text as referral_source_id,
+          null::text as planned_location_id,
+          null::text as planned_location_start_time,
+          1::bigint as updated_at_sync_tick
+      from (values
+          ('enc_std', 'loc_std'),
+          ('enc_ex', 'loc_ex'),
+          ('enc_oth', 'loc_oth'),
+          ('enc_none', null),
+          ('enc_dangling', 'loc_dangling')
+      ) v (id, location_id)
+  encounter_diagnoses: &encounter_diagnoses
+    input: source('tamanu', 'encounter_diagnoses')
+    format: sql
+    rows: |
+      select
+          v.id,
+          v.encounter_id,
+          '2026-01-01 09:00:00'::text as date,
+          true as is_primary,
+          'confirmed'::text as certainty,
+          'dx_1'::text as diagnosis_id,
+          null::text as clinician_id,
+          1::bigint as updated_at_sync_tick,
+          null::timestamptz as deleted_at
+      from (values
+          ('dx_std', 'enc_std'),
+          ('dx_ex', 'enc_ex'),
+          ('dx_oth', 'enc_oth'),
+          ('dx_none', 'enc_none')
+      ) v (id, encounter_id)
+  lab_requests: &lab_requests
+    input: source('tamanu', 'lab_requests')
+    format: sql
+    rows: |
+      select 'lr_std'::text as id, 'enc_std'::text as encounter_id, null::timestamptz as deleted_at
+      union all
+      select 'lr_ex', 'enc_ex', null::timestamptz
+      union all
+      select 'lr_oth', 'enc_oth', null::timestamptz
+  lab_tests: &lab_tests
+    input: source('tamanu', 'lab_tests')
+    format: sql
+    rows: |
+      select
+          v.id,
+          v.lab_request_id,
+          '2026-01-01'::text as date,
+          null::text as result,
+          null::text as lab_test_panel_request_id,
+          null::text as lab_test_type_id,
+          null::text as lab_test_method_id,
+          null::text as laboratory_officer,
+          null::text as completed_date,
+          null::text as verification,
+          1::bigint as updated_at_sync_tick,
+          null::timestamptz as deleted_at
+      from (values
+          ('lt_std', 'lr_std'),
+          ('lt_ex', 'lr_ex'),
+          ('lt_oth', 'lr_oth')
+      ) v (id, lab_request_id)
+  # b_home records no birth facility (BL-003)
+  patient_birth_data: &patient_birth_data
+    input: source('tamanu', 'patient_birth_data')
+    format: sql
+    rows: |
+      select
+          v.id,
+          v.id as patient_id,
+          v.birth_facility_id,
+          null::text as time_of_birth,
+          null::numeric as gestational_age_estimate,
+          null::text as attendant_at_birth,
+          null::text as name_of_attendant_at_birth,
+          null::text as birth_type,
+          null::text as birth_delivery_type,
+          null::numeric as birth_weight,
+          null::numeric as birth_length,
+          null::int as apgar_score_one_minute,
+          null::int as apgar_score_five_minutes,
+          null::int as apgar_score_ten_minutes,
+          null::text as registered_birth_place,
+          '2026-01-01 00:00:00+00'::timestamptz as created_at,
+          1::bigint as updated_at_sync_tick,
+          null::timestamptz as deleted_at
+      from (values
+          ('b_std', 'fac_std'),
+          ('b_ex', 'fac_ex'),
+          ('b_oth', 'fac_oth'),
+          ('b_home', null)
+      ) v (id, birth_facility_id)
+  # BL-007: one note per record type, the encounter-linked ones on enc_ex
+  notes: &notes
+    input: source('tamanu', 'notes')
+    format: sql
+    rows: |
+      select
+          v.id,
+          v.record_type,
+          v.record_id,
+          '2026-01-01 09:00:00'::text as date,
+          '2026-01-01 09:00:00+00'::timestamptz as created_at,
+          'note'::text as content,
+          'notetype-other'::text as note_type_id,
+          null::text as author_id,
+          null::text as on_behalf_of_id,
+          null::text as revised_by_id,
+          'current'::text as visibility_status,
+          1::bigint as updated_at_sync_tick,
+          null::timestamptz as deleted_at
+      from (values
+          ('n_enc_std', 'Encounter', 'enc_std'),
+          ('n_enc_ex', 'Encounter', 'enc_ex'),
+          ('n_enc_oth', 'Encounter', 'enc_oth'),
+          ('n_tri_ex', 'Triage', 'tri_ex'),
+          ('n_lab_ex', 'LabRequest', 'lr_ex'),
+          ('n_img_ex', 'ImagingRequest', 'ir_ex'),
+          ('n_patient', 'Patient', 'pat_1'),
+          ('n_plan', 'PatientCarePlan', 'plan_1')
+      ) v (id, record_type, record_id)
+  note_types: &note_types
+    input: source('tamanu', 'reference_data')
+    format: sql
+    rows: |
+      select 'notetype-other'::text as id, 'other'::text as code
+  triages: &triages
+    input: source('tamanu', 'triages')
+    format: sql
+    rows: |
+      select 'tri_ex'::text as id, 'enc_ex'::text as encounter_id
+  imaging_requests: &imaging_requests
+    input: source('tamanu', 'imaging_requests')
+    format: sql
+    rows: |
+      select 'ir_ex'::text as id, 'enc_ex'::text as encounter_id
+  network_test: &network_test
+    enabled: "{{ 'example' in var('sensitive_networks', []) }}"
+  not_incremental: &not_incremental
+    macros:
+      is_incremental: false
+
+unit_tests:
+  - name: ac_001_encounters_standard_partition
+    model: encounters
+    description: >
+      BL-003, BL-004: an encounter follows its current location's facility. The standard base
+      holds the one at a standard facility, the one with no location and the one whose location
+      resolves to no facility.
+    overrides: *not_incremental
+    given: [*encounters, *locations, *facilities]
+    expect:
+      rows:
+        - {id: enc_std}
+        - {id: enc_none}
+        - {id: enc_dangling}
+
+  - name: ac_001_encounters_network_partition
+    model: sn_example_encounters
+    description: >
+      BL-004, BL-010: the `example` network's base holds the encounter at that network's
+      facility, and not the one at the unlisted network's facility.
+    config: *network_test
+    overrides: *not_incremental
+    given: [*encounters, *locations, *facilities, *sensitive_networks]
+    expect:
+      rows:
+        - {id: enc_ex}
+
+  - name: ac_001_encounter_diagnoses_standard_partition
+    model: encounter_diagnoses
+    description: >
+      BL-005: a row attached to an encounter follows that encounter's partition.
+    overrides: *not_incremental
+    given: [*encounter_diagnoses, *encounters, *locations, *facilities]
+    expect:
+      rows:
+        - {id: dx_std}
+        - {id: dx_none}
+
+  - name: ac_001_encounter_diagnoses_network_partition
+    model: sn_example_encounter_diagnoses
+    description: >
+      BL-005, BL-010: the `example` network's base holds the diagnosis on that network's
+      encounter only.
+    config: *network_test
+    overrides: *not_incremental
+    given: [*encounter_diagnoses, *encounters, *locations, *facilities, *sensitive_networks]
+    expect:
+      rows:
+        - {id: dx_ex}
+
+  - name: ac_001_lab_tests_standard_partition
+    model: lab_tests
+    description: >
+      BL-005: a row attached to an encounter through a parent record, here a lab test through
+      its lab request, follows that encounter's partition.
+    overrides: *not_incremental
+    given: [*lab_tests, *lab_requests, *encounters, *locations, *facilities]
+    expect:
+      rows:
+        - {id: lt_std}
+
+  - name: ac_001_lab_tests_network_partition
+    model: sn_example_lab_tests
+    description: >
+      BL-005, BL-010: the `example` network's base holds the lab test whose request is on that
+      network's encounter only.
+    config: *network_test
+    overrides: *not_incremental
+    given: [*lab_tests, *lab_requests, *encounters, *locations, *facilities, *sensitive_networks]
+    expect:
+      rows:
+        - {id: lt_ex}
+
+  - name: ac_001_patient_birth_data_standard_partition
+    model: patient_birth_data
+    description: >
+      BL-001, BL-003: a birth follows its birth facility, and one that records no facility is
+      standard.
+    overrides: *not_incremental
+    given: [*patient_birth_data, *facilities]
+    expect:
+      rows:
+        - {patient_id: b_std}
+        - {patient_id: b_home}
+
+  - name: ac_001_patient_birth_data_network_partition
+    model: sn_example_patient_birth_data
+    description: >
+      BL-001, BL-010: the `example` network's base holds the birth at that network's facility
+      only.
+    config: *network_test
+    overrides: *not_incremental
+    given: [*patient_birth_data, *facilities, *sensitive_networks]
+    expect:
+      rows:
+        - {patient_id: b_ex}
+
+  - name: ac_001_notes_standard_partition
+    model: notes
+    description: >
+      BL-007: a note on a standard encounter is standard, and so is a note on a patient or a
+      care plan, which belongs to no encounter.
+    overrides: *not_incremental
+    given: [*notes, *note_types, *encounters, *locations, *facilities, *triages, *lab_requests, *imaging_requests]
+    expect:
+      rows:
+        - {id: n_enc_std}
+        - {id: n_patient}
+        - {id: n_plan}
+
+  - name: ac_001_notes_network_partition
+    model: sn_example_notes
+    description: >
+      BL-007, BL-010: the `example` network's base holds the notes on that network's encounter,
+      and on the triage, lab request and imaging request that belong to it.
+    config: *network_test
+    overrides: *not_incremental
+    given:
+      - *notes
+      - *note_types
+      - *encounters
+      - *locations
+      - *facilities
+      - *triages
+      - *lab_requests
+      - *imaging_requests
+      - *sensitive_networks
+    expect:
+      rows:
+        - {id: n_enc_ex}
+        - {id: n_tri_ex}
+        - {id: n_lab_ex}
+        - {id: n_img_ex}

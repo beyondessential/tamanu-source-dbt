@@ -1,4 +1,4 @@
-{% macro audit_discharge_line_list_report(is_sensitive=false) %}
+{% macro audit_discharge_line_list_report(network=none) %}
 
 -- Discharge Audit Line List
 -- One row per discharged encounter, filtered on when the discharge was recorded in
@@ -19,7 +19,7 @@
 {%- set candidate_filter -%}
 c.discharge_id in (
     select c2.discharge_id
-    from {{ ref('discharges_change_logs') }} c2
+    from {{ partition_ref('discharges_change_logs', network) }} c2
     where c2.logged_at >= {{ candidate_window_from(from_bound) }}
         and c2.logged_at < {{ candidate_window_to(to_bound) }}
 )
@@ -50,7 +50,7 @@ select
     secondary_diagnoses as "{{ translate_label('diagnosesSecondary') }}",
     secondary_diagnoses_codes as "{{ translate_label('diagnosesSecondaryCodes') }}"
 from (
-    {{ discharge_audit_dataset(is_sensitive=is_sensitive, record_id_filter=candidate_filter) }}
+    {{ discharge_audit_dataset(network=network, record_id_filter=candidate_filter) }}
 ) audit
 where
     -- BL-007: the date range filters on when the discharge was recorded, not on the

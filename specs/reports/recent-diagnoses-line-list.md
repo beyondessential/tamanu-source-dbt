@@ -4,8 +4,8 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `recent-diagnoses-line-list` + `sensitive-recent-diagnoses-line-list` |
-| **Type** | Tamanu report, standard + sensitive pair in `models/reports/`, reading `ds__diagnoses` / `ds__sensitive_diagnoses` |
+| **Name** | `recent-diagnoses-line-list` + `sensitive-<network>-recent-diagnoses-line-list` |
+| **Type** | Tamanu report, standard + sensitive pair in `models/reports/`, reading `ds__diagnoses` / `ds__sn_<network>_diagnoses` |
 | **Layer** | `report` |
 | **Materialisation** | `view` |
 | **Status** | `implemented` |
@@ -60,3 +60,4 @@ One row per recorded encounter diagnosis. Disproven and recorded-in-error diagno
 | Date | Author | Change |
 |---|---|---|
 | 2026-11-10 | Maui team | Retrospective spec, written with MAUI-7088, which replaced the five diagnosis filters with one multi-select. |
+| 2026-11-24 | Maui team | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

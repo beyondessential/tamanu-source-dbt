@@ -30,9 +30,21 @@ unit_tests:
       - input: source('tamanu', 'encounters')
         format: sql
         rows: |
-          select 'enc_001' as id, 'pat_001' as patient_id, null::timestamptz as deleted_at
-          union all
-          select 'enc_002', 'h1627394-3778-4c31-a510-9fcb88efdbf3', null::timestamptz
+          select fx.*, null::text as location_id from (
+            select 'enc_001' as id, 'pat_001' as patient_id, null::timestamptz as deleted_at
+            union all
+            select 'enc_002', 'h1627394-3778-4c31-a510-9fcb88efdbf3', null::timestamptz
+          ) fx
+
+      - input: source('tamanu', 'locations')
+        format: sql
+        rows: |
+          select null::text as id, null::text as facility_id where false
+
+      - input: source('tamanu', 'facilities')
+        format: sql
+        rows: |
+          select null::text as id, null::text as sensitive_network_id where false
 
     expect:
       format: sql

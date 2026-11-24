@@ -1,3 +1,4 @@
+{%- set network = none -%}
 select
     to_char({{ to_user_selected_timezone('ed.start_datetime') }}, '{{ var("date_format") }}') as "{{ translate_label('encounterStartDate') }}",
     to_char({{ to_user_selected_timezone('ed.start_datetime') }}, '{{ var("time_format") }}') as "{{ translate_label('encounterStartTime') }}",
@@ -7,7 +8,7 @@ select
     concat_ws(', ', ed.location_group, ed.location) as "{{ translate_label('location') }}",
     ed.diets as "{{ translate_label('encounterDiet') }}",
     ed.allergies as "{{ translate_label('patientAllergies') }}"
-from {{ ref('ds__encounter_diets') }} ed
+from {{ partition_ref('ds__encounter_diets', network) }} ed
 where
     case
         when {{ parameter('facilityId') }} is null then true

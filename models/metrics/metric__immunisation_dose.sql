@@ -14,8 +14,10 @@
 -- The registry carries the definition; this model is its implementation.
 -- See specs/dbt-model/metric__immunisation_dose.md for the BL clauses this model implements.
 
+-- BL-021 (see specs/dbt-model/sensitive-facility-partition.md): covers every
+-- facility, so each partitioned input is read from every partition
 with drug_exposure as (
-    select * from {{ ref('clinical__drug_exposure') }}
+    {{ every_partition('clinical__drug_exposure') }}
     where drug_exposure_type_source_value = 'vaccination'
 ),
 

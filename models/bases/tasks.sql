@@ -2,35 +2,4 @@
     key='id',
     table='tasks'
 ) }}
-select
-    id,
-    encounter_id,
-    name,
-    task_type,
-    status,
-    high_priority,
-    parent_task_id,
-    note,
-    request_time::timestamp as request_datetime,
-    requested_by_user_id,
-    due_time::timestamp as due_datetime,
-    end_time::timestamp as end_datetime,
-    completed_time::timestamp as completed_datetime,
-    completed_by_user_id,
-    completed_note,
-    not_completed_time::timestamp as not_completed_datetime,
-    not_completed_by_user_id,
-    not_completed_reason_id,
-    todo_time::timestamp as todo_datetime,
-    todo_by_user_id,
-    todo_note,
-    frequency_value,
-    frequency_unit,
-    duration_value,
-    duration_unit,
-    updated_at_sync_tick
-from {{ source('tamanu', 'tasks') }}
-where deleted_at is null
-{%- if is_incremental() %}
-    and updated_at_sync_tick >= {{ last_sync_tick() }}
-    {%- endif %}
+{{ tasks_base(network=none) }}

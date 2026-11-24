@@ -6,6 +6,8 @@ unit_tests:
       recorded ethnicity, and 0 where the ethnicity has no row in map__omop_ethnicity or none is
       recorded. ethnicity_concept_id is 0 on every row. pat_1's ethnicity is mapped. pat_2's is
       not. pat_3 has no additional-data record at all and is still returned (BL-005).
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     given:
       - input: ref('patients')
         format: sql
@@ -32,6 +34,14 @@ unit_tests:
         format: sql
         rows: |
           select null::text as patient_id, null::time as birth_time where false
+
+      - input: ref('sn_example_patient_birth_data')
+        format: sql
+        rows: |
+          select fx.* from (
+            select null::text as patient_id, null::time as birth_time where false
+          ) fx
+          where false
       - input: ref('map__omop_sex')
         format: sql
         rows: |
@@ -62,6 +72,8 @@ unit_tests:
     description: >-
       AC-014 (BL-010): a map that lists two concepts for one ethnicity code still gives the patient
       one row, carrying the lower concept.
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     given:
       - input: ref('patients')
         format: sql
@@ -81,6 +93,14 @@ unit_tests:
         format: sql
         rows: |
           select null::text as patient_id, null::time as birth_time where false
+
+      - input: ref('sn_example_patient_birth_data')
+        format: sql
+        rows: |
+          select fx.* from (
+            select null::text as patient_id, null::time as birth_time where false
+          ) fx
+          where false
       - input: ref('map__omop_sex')
         format: sql
         rows: |

@@ -14,6 +14,8 @@ unit_tests:
       metric__immunisation_dose, with vaccine_label and vaccine_category falling back to
       'Not recorded'.
 
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     given:
       - input: ref('clinical__observation')
         format: sql
@@ -28,6 +30,23 @@ unit_tests:
           union all
           -- a different observation type -> excluded
           select 'obs_1', '2024-06-04'::date, 'program survey'
+
+      - input: ref('clinical__sn_example_observation')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'ng_1' as observation_id, '2024-06-01'::date as observation_date, 'vaccination not given' as observation_type_source_value
+            union all
+            select 'ng_2', '2023-01-15'::date, 'vaccination not given'
+            union all
+            -- no matching int__vaccine_administration_attributes row (facility/patient did not
+            -- resolve there) -> excluded
+            select 'ng_3', '2024-06-02'::date, 'vaccination not given'
+            union all
+            -- a different observation type -> excluded
+            select 'obs_1', '2024-06-04'::date, 'program survey'
+          ) fx
+          where false
 
       - input: ref('int__vaccine_administration_attributes')
         format: sql

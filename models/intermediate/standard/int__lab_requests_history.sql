@@ -31,6 +31,8 @@ left join {{ ref('departments') }} d on d.id = coalesce(lr.department_id, e.depa
 left join {{ ref('facilities') }} f on f.id = d.facility_id
 left join {{ ref('reference_data') }} ltc on ltc.id = lr.lab_test_category_id
 where lr.status not in ('deleted', 'cancelled', 'entered-in-error')
+    -- standard facilities only: drop a row whose facility is set but is not in `facilities`
+    and (d.facility_id is null or f.id is not null)
 window
     w as (
         partition by lr.id

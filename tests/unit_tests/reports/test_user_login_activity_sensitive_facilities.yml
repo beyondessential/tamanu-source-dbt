@@ -1,0 +1,74 @@
+unit_tests:
+  - name: ac_007_user_login_activity_sensitive_facilities
+    model: user-login-activity
+    description: >
+      BL-007, BL-010 (specs/reports/user-login-activity.md). u1 is allowed at a standard and a
+      sensitive facility, u2 at the standard one only. Filtering on the sensitive facility keeps
+      u1, whose Allowed facilities names both, and drops u2. Enabled with the `example`
+      sensitive network listed, as CI runs it, because it mocks that network's bases.
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
+    overrides:
+      vars:
+        timezone: UTC
+        datetime_format: YYYY-MM-DD HH24:MI
+        fromDate: '2026-09-01'
+        toDate: '2026-09-30'
+        facilityId: fac_sen
+        roleId: ''
+        designationId: ''
+    given:
+      - input: ref('users')
+        format: sql
+        rows: |
+          select 'u1'::text as id, 'U1'::text as display_id, 'User One'::text as display_name,
+                 null::text as role, 'current'::text as visibility_status
+          union all
+          select 'u2', 'U2', 'User Two', null, 'current'
+
+      - input: ref('roles')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name where false
+
+      - input: ref('user_designations')
+        format: sql
+        rows: |
+          select null::text as user_id, null::text as designation_id where false
+
+      - input: ref('reference_data')
+        format: sql
+        rows: |
+          select null::text as id, null::text as name, null::text as type where false
+
+      - input: ref('user_facilities')
+        format: sql
+        rows: |
+          select 'u1'::text as user_id, 'fac_std'::text as facility_id
+          union all
+          select 'u2', 'fac_std'
+
+      - input: ref('sn_example_user_facilities')
+        format: sql
+        rows: |
+          select 'u1'::text as user_id, 'fac_sen'::text as facility_id
+
+      - input: ref('facilities')
+        format: sql
+        rows: |
+          select 'fac_std'::text as id, 'Alpha Clinic'::text as name
+
+      - input: ref('sn_example_facilities')
+        format: sql
+        rows: |
+          select 'fac_sen'::text as id, 'Beta Sensitive Clinic'::text as name
+
+      - input: ref('user_login_attempts')
+        format: sql
+        rows: |
+          select null::text as user_id, null::timestamp as created_at, null::text as outcome
+          where false
+
+    expect:
+      rows:
+        - {"User ID": U1, "Allowed facilities": "Alpha Clinic, Beta Sensitive Clinic"}

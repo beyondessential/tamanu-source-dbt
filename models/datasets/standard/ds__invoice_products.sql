@@ -66,10 +66,12 @@ product_available_facility_ids as (
         on ltt.id = ip.source_record_id
 ),
 
+-- standard facilities only, ids and names alike, so the two columns agree
 product_available_facilities as (
     select
         pafi.invoice_product_id,
-        string_agg(f.name, ', ' order by f.name) as available_facilities
+        string_agg(f.name, ', ' order by f.name) as available_facilities,
+        jsonb_agg(f.id order by f.name) as available_facility_ids
     from product_available_facility_ids pafi
     cross join lateral jsonb_array_elements_text(pafi.available_facility_ids) fid
     join {{ ref('facilities') }} f
@@ -84,7 +86,9 @@ select
     ip.category,
     ip.source_record_id,
     paf.available_facilities,
-    pafi.available_facility_ids,
+    -- the standard facilities in the list, or the list as recorded where it is null or empty
+    -- (available everywhere)
+    coalesce(paf.available_facility_ids, pafi.available_facility_ids) as available_facility_ids,
     ip.visibility_status,
     coalesce(ltt.external_code, ltp.external_code) as external_code
     {%- for row in price_lists %}
@@ -117,3 +121,7 @@ left join product_available_facilities paf on paf.invoice_product_id = ip.id
 left join product_available_facility_ids pafi on pafi.invoice_product_id = ip.id
 left join {{ ref('lab_test_types') }} ltt on ltt.id = ip.source_record_id
 left join {{ ref('lab_test_panels') }} ltp on ltp.id = ip.source_record_id
+-- standard facilities only: drop a product whose availability list names no standard facility
+where pafi.available_facility_ids is null
+    or jsonb_array_length(pafi.available_facility_ids) = 0
+    or paf.invoice_product_id is not null

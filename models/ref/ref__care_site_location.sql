@@ -19,7 +19,12 @@ select
     -- BL-008: the location's own facility, else its location group's facility
     coalesce(loc.facility_id, lg.facility_id) as facility_id,
     f.name as facility_name
-from {{ ref('locations') }} loc
-left join {{ ref('location_groups') }} lg on lg.id = loc.location_group_id
+-- BL-019 (see specs/dbt-model/sensitive-facility-partition.md): locations, location groups
+-- and facilities from every partition. Each stays a plain relation where no sensitive network is
+-- listed, so BL-009's folding holds there
+from {{ every_partition_relation('locations') }} loc -- noqa: ST05
+left join {{ every_partition_relation('location_groups') }} lg -- noqa: ST05
+    on lg.id = loc.location_group_id
 -- BL-003: left join so a location whose facility is missing or soft-deleted is still emitted
-left join {{ ref('facilities') }} f on f.id = coalesce(loc.facility_id, lg.facility_id)
+left join {{ every_partition_relation('facilities') }} f -- noqa: ST05
+    on f.id = coalesce(loc.facility_id, lg.facility_id)

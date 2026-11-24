@@ -3,8 +3,9 @@ Invoice financials resolved per invoice, mirroring Tamanu's in-app calculations
 (price-list selection, item discounts, insurance coverage, invoice-level
 discount, net patient payments, and the resulting patient subtotal). One row
 per invoice, carrying a status so consumers can filter (for example, exclude
-cancelled) and aggregate per encounter. Facility-agnostic — any facility or
-sensitivity scoping is applied by the consumer.
+cancelled) and aggregate per encounter. Covers the invoices of one facility partition:
+the standard dataset holds those at standard facilities, and each sensitive network's copy
+holds those at that network's facilities.
 {% enddocs %}
 
 {% docs ds__encounter_invoices__invoice_datetime %}

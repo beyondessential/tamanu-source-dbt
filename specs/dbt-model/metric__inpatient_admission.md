@@ -168,8 +168,8 @@ D5 wide format, plus the disaggregation/measure columns below. Every column is o
 - **BL-009 (facility/ward identity is Tamanu's):** the model emits `facility_id` and
   `admission_ward_id`, the Tamanu ids. Consumer-specific identifiers — a Tupaia entity code, a
   DHIS2 org unit or ward mapping — are resolved in the consumer layer.
-- **BL-010 (classification):** `pii: false`, `classification: internal`, with no
-  facility sensitivity filter, so standard and sensitive facilities alike are covered. A
+- **BL-010 (classification):** `pii: false`, `classification: internal`, covering
+  standard facilities only (`specs/dbt-model/sensitive-facility-partition.md` BL-020). A
   row carries an encounter id as its only identifier — no patient id, name, birth date or exact
   diagnosis text.
 - **BL-011 (per-admission grain):** one row per admission, `subject_id` = the encounter id,
@@ -375,7 +375,7 @@ Two rows in `documentations/metrics/inpatient.yml`, both `kind: metric`, `unit: 
 | `metric__emergency_visit` / `metric__emergency_stay` | Cover the ED side of the encounter; `is_admitted` there and `is_admitted_via_emergency` here describe the same admissions from opposite ends |
 | `int__inpatient_admission` | The shared base this metric projects |
 | `metric__inpatient_transfer` | Location changes within these admissions, one row per move after the admission segment |
-| `ds__admissions` / `ds__sensitive_admissions` | Unrelated, pre-existing Tamanu-report-layer admissions dataset (raw `encounters`, not OMOP) — not reconciled with this metric |
+| `ds__admissions` / `ds__sn_<network>_admissions` | Unrelated, pre-existing Tamanu-report-layer admissions dataset (raw `encounters`, not OMOP) — not reconciled with this metric |
 
 ## Open questions
 
@@ -397,3 +397,4 @@ Two rows in `documentations/metrics/inpatient.yml`, both `kind: metric`, `unit: 
 | 2026-11-13 | BL-027: `discharge_location_group_name`, the ward/area the patient was discharged from, added on `inpatient_separation` rows (NULL on `inpatient_admission`) so Naoero's inpatient ward cards count discharges against the ward the patient left (MAUI-7122). |
 | 2026-11-13 | Related: ward and department transfers within an admission are `metric__inpatient_transfer` (MAUI-7122). |
 | 2026-11-16 | BL-028/BL-029: `admission_location_group_id` and `discharge_location_group_id`, the raw Tamanu ids behind the BL-026/BL-027 names (NULL, not `'Not recorded'`, where in no group), so Naoero's maternity ward card can key on id instead of a renameable name (MAUI-7177). |
+| 2026-11-24 | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

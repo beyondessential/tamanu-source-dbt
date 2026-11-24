@@ -2,7 +2,7 @@ unit_tests:
   - name: test_audit_outpatient_appointments_facility_pushdown
     model: audit-outpatient-appointments
     description: >
-      AC-032 / BL-033: facilityId and is_sensitive are applied in the candidate filter as well
+      AC-032 / BL-033: facilityId and the network partition are applied in the candidate filter as well
       as at the end, resolved from the facility recorded on each event rather than the
       appointment's current row. One appointment moves from fac_a to fac_b mid-history, so the
       two disagree. With facilityId=fac_b only the fac_b event is returned, and it keeps

@@ -13,7 +13,7 @@
 | **Linear issue** | [MAUI-6980](https://linear.app/bes/issue/MAUI-6980/tupaia-user-login-activity) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-10-08 |
-| **Last updated** | 2026-10-08 |
+| **Last updated** | 2026-11-24 |
 
 ## Purpose
 
@@ -30,7 +30,7 @@ One row per activated, non-system user.
 | `users` | `id`, `display_id`, `display_name`, `role`, `visibility_status` |
 | `roles` | `id`, `name` |
 | `user_designations`, `reference_data` | designation links and names |
-| `user_facilities`, `facilities` | allowed facility links and names |
+| `user_facilities`, `facilities`, from every partition the deployment has | allowed facility links and names |
 | `user_login_attempts` | `user_id`, `created_at`, `outcome` |
 
 ## Output
@@ -52,6 +52,7 @@ Facility, role, designation, date range.
 - **BL-007:** The facility filter keeps users allowed at that facility. The Allowed facilities column still lists all of the user's facilities.
 - **BL-008:** The role and designation filters match the user's role or any of their designations. The Designations column still lists all of them, comma-separated.
 - **BL-009:** The date range sets only Number logins. It does not filter users.
+- **BL-010:** Allowed facilities names a user's facilities in every partition, standard and each sensitive network the deployment lists.
 
 ## Acceptance criteria
 
@@ -63,6 +64,7 @@ Facility, role, designation, date range.
 | AC-004 | Changing the date range changes Number logins but not the list of users | BL-009 |
 | AC-005 | Each filter narrows the rows as described | BL-007, BL-008 |
 | AC-006 | Counts per designation agree with `metric__user_login` for the same range | BL-002 |
+| AC-007 | A user allowed at a standard and a sensitive facility lists both, and the facility filter on the sensitive one keeps them (`ac_007_user_login_activity_sensitive_facilities`) | BL-007, BL-010 |
 
 ## Notes
 
@@ -77,3 +79,5 @@ Facility, role, designation, date range.
 | Date | Author | Change |
 |---|---|---|
 | 2026-10-08 | Maui team | Initial draft |
+| 2026-11-23 | Maui team | BL-010, AC-007: Allowed facilities names sensitive facilities too, so BL-007 still holds once the bases split by sensitive network (MAUI-7220). |
+| 2026-11-24 | Maui team | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

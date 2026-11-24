@@ -1,4 +1,4 @@
-{% macro outpatient_appointments_line_list_report(is_sensitive=false) %}
+{% macro outpatient_appointments_line_list_report(network=none) %}
 {#-
     Outpatient Appointments Line List.
 
@@ -95,7 +95,7 @@ select
     to_char({{ to_user_selected_timezone('created_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('appointmentCreatedDateTime') }}"
 from (
     {{ outpatient_appointments_dataset(
-        is_sensitive=is_sensitive,
+        network=network,
         appointment_filter=appointment_filter
     ) }}
 ) core

@@ -25,13 +25,22 @@ user_designations_agg as (
     group by ud.user_id
 ),
 
+-- BL-010: a user's facilities are read and named from every partition the deployment has
+all_facilities as (
+    {{ every_partition('facilities', ['id', 'name']) }}
+),
+
+all_user_facilities as (
+    {{ every_partition('user_facilities', ['user_id', 'facility_id']) }}
+),
+
 user_facilities_agg as (
     select
         uf.user_id,
         string_agg(distinct f.name, ', ' order by f.name) as facilities,
         array_agg(distinct uf.facility_id) as facility_ids
-    from {{ ref('user_facilities') }} uf
-    inner join {{ ref('facilities') }} f on f.id = uf.facility_id
+    from all_user_facilities uf
+    inner join all_facilities f on f.id = uf.facility_id
     group by uf.user_id
 ),
 

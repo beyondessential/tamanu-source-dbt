@@ -4,13 +4,23 @@
 -- AC-001: every discharged, non-sensitive encounter with a discharge record is represented,
 -- and nothing beyond that set is. The patients join belongs on this side too, or a discharge
 -- belonging to a deleted or merged patient counts here but not in the dataset.
-with expected as (
+with raw_facilities as (
+    -- the raw table, not the facilities base, so the partition is checked
+    -- independently of the base's own filter
+    select
+        id,
+        sensitive_network_id
+    from {{ source('tamanu', 'facilities') }}
+    where deleted_at is null
+),
+
+expected as (
     select count(*) as row_count
     from {{ ref('discharges') }} d
     join {{ ref('encounters') }} e on e.id = d.encounter_id
     join {{ ref('patients') }} p on p.id = e.patient_id
     join {{ ref('locations') }} l on l.id = e.location_id
-    join {{ ref('facilities') }} f on f.id = l.facility_id
+    join raw_facilities f on f.id = l.facility_id
     where f.sensitive_network_id is null
 ),
 

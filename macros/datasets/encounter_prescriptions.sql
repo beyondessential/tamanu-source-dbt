@@ -1,4 +1,4 @@
-{% macro encounter_prescriptions_dataset(is_sensitive=false) %}
+{% macro encounter_prescriptions_dataset(network=none) %}
 
 select
     ep.encounter_id,
@@ -37,16 +37,15 @@ select
     pr.discontinued_by_id,
     pr.discontinuing_reason,
     pr.discontinued_datetime
-from {{ ref("encounter_prescriptions") }} ep
-join {{ ref("encounters") }} e on e.id = ep.encounter_id
+from {{ partition_ref('encounter_prescriptions', network) }} ep
+join {{ partition_ref('encounters', network) }} e on e.id = ep.encounter_id
 join {{ ref("patients") }} p on p.id = e.patient_id
-join {{ ref("prescriptions") }} pr on pr.id = ep.prescription_id
-join {{ ref("locations") }} l on l.id = e.location_id
+join {{ partition_ref('prescriptions', network) }} pr on pr.id = ep.prescription_id
+join {{ partition_ref('locations', network) }} l on l.id = e.location_id
 -- BL-009 (specs/reports/encounter-prescription-discharge-summary.md): the facility
 -- partition is applied here, so the sensitive report needs no parameter for it
-join {{ ref("facilities") }} f 
+join {{ partition_ref('facilities', network) }} f 
     on f.id = l.facility_id
-    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
 left join {{ ref('patient_additional_data') }} pd on pd.patient_id = p.id
 left join {{ ref('reference_data') }} vil on vil.id = p.village_id
 -- prescriber_id is nullable, so this must stay a left join or prescriptions

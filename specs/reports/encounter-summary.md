@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | **Name** | `encounter-summary-by-start-date`, `encounter-summary-by-end-date` (+ sensitive twins) |
-| **Macros** | `encounter_summary_report(date_field, is_sensitive)` — presentation; `encounter_summary_core(date_field, is_sensitive)` — resolution |
+| **Macros** | `encounter_summary_report(date_field, network)` — presentation; `encounter_summary_core(date_field, network)` — resolution |
 | **Type** | Tamanu report (reporting schema) |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
@@ -35,7 +35,7 @@ Every join that could fan out is held to one row per encounter: the discharge by
 | Argument | Purpose |
 |---|---|
 | `date_field` | `start_datetime` or `end_datetime` — which date the report window filters on |
-| `is_sensitive` | Facility partition. `false` = non-sensitive facilities only |
+| `network` | Facility partition. `false` = non-sensitive facilities only |
 
 Parameters: `fromDate`, `toDate`, `facilityId`, `patientBillingTypeId`,
 `supervisingClinicianId`, `departmentId`, `locationGroupId`, `encounterTypeGroup`
@@ -285,7 +285,7 @@ not expected to agree and should not be reconciled.
 | AC-002 | The core emits `encounter_id` and `patient_id`. | BL-001 | Structural — the four report models drop both columns, so no report-level test can assert it. A caller selecting from the core is the only observer. |
 | AC-003 | No `:` bind placeholder originates in the core's projection. | BL-002 | Manual compile check. The core as a whole does carry placeholders, from its CTEs and `parameter()` filters. |
 | AC-004 | `Division` and `Sub-division` resolve to the patient's `reference_data` names. | — | `test_encounter_summary_by_start_date_date_range_basic` |
-| AC-005 | With `is_sensitive = false` no sensitive facility's encounter appears, and vice versa. | — | `test_encounter_summary_start_excludes_sensitive` (the `false` direction) and `test_encounter_summary_start_sensitive_variant` (the `true` direction). Both give the other facility's encounter an `encounter_history` row, so it reaches the partition rather than being dropped by BL-013; each fails when the partition predicate in `encounters_core` is removed. |
+| AC-005 | With `network = none` no sensitive facility's encounter appears, and vice versa. | — | `test_encounter_summary_start_excludes_sensitive` (the `false` direction) and `test_encounter_summary_start_sensitive_variant` (the `true` direction). Both give the other facility's encounter an `encounter_history` row, so it reaches the partition rather than being dropped by BL-013; each fails when the partition predicate in `encounters_core` is removed. |
 | AC-006 | An encounter whose every history row has a null actor still appears, with a null clinician. | BL-007 | `test_encounter_summary_null_actor_history` (enc_001) |
 | AC-007 | Adding the candidate bounds changes no row, for any date field, window or viewer timezone. | BL-008 | 96 scenarios (6 windows × 8 timezones × 2 date fields, including both DST transitions and the UTC+14/UTC-11 pair) compared by `except` both directions on a 300k-row fixture; zero divergences. Recorded on the PR — the compile-only branch is unreachable from dbt, so no unit test can assert it. |
 | AC-008 | An encounter whose recorded end precedes its own start is still returned by the by-end-date report. | BL-008 | `test_enc_summary_end_before_start` — verified to fail when the `start_date` arm of the disjunction is removed |
@@ -354,3 +354,4 @@ not expected to agree and should not be reconciled.
 | 2026-10-15 | MAUI-7011, from the 2.66 conformance review. BL-006 corrected: eight formatted outputs, not seven, and the procedures date is formatted but not shifted. BL-013–BL-020 record resolution and presentation rules that were tested but unwritten, with `test_encounter_summary_history_consolidation` added for the four no test asserted. AC-005 now cites the test names, and its `false`-direction fixture gives the sensitive encounter a history row so it no longer passes vacuously. OQ-005 now lists every non-deterministic ordering. The `logical__encounter_summary_by_*` checks no longer inner-join the history actor, which contradicted BL-007. Output unchanged. |
 | 2026-10-15 | MAUI-7011 follow-up. **Output changes:** `vaccinations` lists only `GIVEN` administrations (BL-024) — in the 2.66 release DB 519 of 1,057 records were `NOT_GIVEN` and read as given; and an encounter with several triages is one row (BL-021), which changes nothing where triages are already unique. BL-022 and BL-023 record existing imaging and medication behaviour. BL-014 states that soft-deleted departments and locations count as deleted, and the logical checks now drop those history rows too. BL-008's count of scope-CTE references corrected (now twelve). |
 | 2026-10-28 | BL-025/BL-026: `encounterTypeGroup` filter, classified as the visit metrics behind the Tupaia counts classify an encounter rather than by its type at discharge (MAUI-7063). BL-027: `encounter_history` read once and shared. Numbered to avoid BL-012–BL-024 and AC-016–AC-028, already used by `main`. |
+| 2026-11-24 | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

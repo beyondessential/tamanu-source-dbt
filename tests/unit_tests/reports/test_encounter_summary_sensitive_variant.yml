@@ -1,11 +1,12 @@
 unit_tests:
   - name: test_encounter_summary_start_sensitive_variant
-    model: sensitive-encounter-summary-by-start-date
+    model: sensitive-example-encounter-summary-by-start-date
     description: >
       The inverse of test_encounter_summary_start_excludes_sensitive: the sensitive
       variant must return the sensitive facility's encounter and only that one.
-      Without this, replacing (f.sensitive_network_id is not null) = {{ is_sensitive }} with a hardcoded
-      false passes every other encounter summary test, since they all run a standard variant.
+      Without this, pointing the sensitive variant at `facilities` rather than
+      `sn_example_facilities` passes every other encounter summary test, since they all run a
+      standard variant.
 
       enc_002 is given an encounter_history row on purpose. The report inner-joins
       encounter_changes, so an encounter with no history is dropped whatever its
@@ -16,7 +17,7 @@ unit_tests:
         datetime_format: YYYY-MM-DD HH24:MI
         date_format: YYYY-MM-DD
     given:
-      - input: ref('encounters')
+      - input: ref('sn_example_encounters')
         format: sql
         rows: |
           select
@@ -40,7 +41,7 @@ unit_tests:
           union all
           select 'pat_002', 'P002', 'Mark', 'Evans', '1988-11-22'::date, 'male', null::text
 
-      - input: ref('encounter_history')
+      - input: ref('sn_example_encounter_history')
         format: sql
         rows: |
           select 'eh_001' as id, 'enc_001' as encounter_id, '2024-01-10 09:00:00'::timestamp as datetime, null::text[] as change_type, 'cli_001' as updated_by_id, 'cli_001' as clinician_id, 'dept_001' as department_id, 'loc_001' as location_id, 'clinic' as encounter_type
@@ -64,33 +65,31 @@ unit_tests:
         rows: |
           select 'cli_001' as id, 'Dr. Sam Rivera' as display_name
 
-      - input: ref('departments')
+      - input: ref('sn_example_departments')
         format: sql
         rows: |
           select 'dept_001' as id, 'Outpatient Clinic' as name
           union all
           select 'dept_002', 'Psychiatry'
 
-      - input: ref('locations')
+      - input: ref('sn_example_locations')
         format: sql
         rows: |
           select 'loc_001' as id, 'Clinic Room 1' as name, 'fac_001' as facility_id, 'lg_001' as location_group_id
           union all
           select 'loc_002', 'Ward B', 'fac_002', 'lg_002'
 
-      - input: ref('location_groups')
+      - input: ref('sn_example_location_groups')
         format: sql
         rows: |
           select 'lg_001' as id, 'Outpatient Wing' as name
           union all
           select 'lg_002', 'Psychiatric Wing'
 
-      - input: ref('facilities')
+      - input: ref('sn_example_facilities')
         format: sql
         rows: |
-          select 'fac_001' as id, 'Public Hospital' as name, null::text as sensitive_network_id
-          union all
-          select 'fac_002', 'Psychiatric Hospital', 'sn_001'
+          select 'fac_002' as id, 'Psychiatric Hospital' as name, 'sn_001' as sensitive_network_id
 
       - input: ref('reference_data')
         format: sql
@@ -104,37 +103,37 @@ unit_tests:
           select null::text as patient_id, null::text as ethnicity_id, null::text as division_id, null::text as subdivision_id
           where false
 
-      - input: ref('triages')
+      - input: ref('sn_example_triages')
         format: sql
         rows: |
           select null::text as id, null::text as encounter_id, null::text as score, null::timestamp as triage_datetime, null::timestamp as closed_datetime, null::text as arrival_mode_id
           where false
 
-      - input: ref('discharges')
+      - input: ref('sn_example_discharges')
         format: sql
         rows: |
           select null::text as encounter_id, null::text as disposition_id
           where false
 
-      - input: ref('encounter_diagnoses')
+      - input: ref('sn_example_encounter_diagnoses')
         format: sql
         rows: |
           select null::text as encounter_id, null::text as diagnosis_id, null::boolean as is_primary, null::text as certainty, null::timestamp as datetime
           where false
 
-      - input: ref('encounter_prescriptions')
+      - input: ref('sn_example_encounter_prescriptions')
         format: sql
         rows: |
           select null::text as encounter_id, null::text as prescription_id
           where false
 
-      - input: ref('prescriptions')
+      - input: ref('sn_example_prescriptions')
         format: sql
         rows: |
           select null::text as id, null::boolean as is_discontinued, null::text as discontinuing_reason, null::timestamp as datetime, null::text as medication_id
           where false
 
-      - input: ref('vaccine_administrations')
+      - input: ref('sn_example_vaccine_administrations')
         format: sql
         rows: |
           select null::text as encounter_id, null::text as status, null::timestamp as datetime, null::text as scheduled_vaccine_id
@@ -146,24 +145,24 @@ unit_tests:
           select null::text as id, null::text as label, null::text as dose_label, null::text as vaccine_id
           where false
 
-      - input: ref('procedures')
+      - input: ref('sn_example_procedures')
         format: sql
         rows: |
           select null::text as encounter_id, null::date as date, null::text as procedure_type_id, null::text as location_id, null::text as note, null::text as completed_note
           where false
 
-      - input: ref('lab_requests')
+      - input: ref('sn_example_lab_requests')
         format: sql
         rows: |
           select null::text as id, null::text as encounter_id, null::timestamp as collected_datetime, null::text as status
           where false
 
-      - input: ref('lab_test_panel_requests')
+      - input: ref('sn_example_lab_test_panel_requests')
         format: sql
         rows: |
           select null::text as id, null::text as lab_test_panel_id, null::text as lab_request_id
           where false
-      - input: ref('int__lab_test_panel_attribution')
+      - input: ref('int__sn_example_lab_test_panel_attribution')
         format: sql
         rows: |
           select null::text as lab_test_id, null::text as lab_request_id, null::text as lab_test_panel_request_id, null::text as lab_test_panel_id, null::text as panel_attribution where false
@@ -174,7 +173,7 @@ unit_tests:
           select null::text as id, null::text as name
           where false
 
-      - input: ref('lab_tests')
+      - input: ref('sn_example_lab_tests')
         format: sql
         rows: |
           select null::text as id, null::text as lab_request_id, null::text as lab_test_type_id
@@ -186,19 +185,19 @@ unit_tests:
           select null::text as id, null::text as name
           where false
 
-      - input: ref('notes')
+      - input: ref('sn_example_notes')
         format: sql
         rows: |
           select null::text as id, null::timestamp as datetime, null::text as content, null::text as note_type, null::text as record_type, null::text as record_id, null::text as updated_note_id, null::timestamp as created_datetime, null::text as visibility_status
           where false
 
-      - input: ref('imaging_requests')
+      - input: ref('sn_example_imaging_requests')
         format: sql
         rows: |
           select null::text as id, null::text as encounter_id, null::text as imaging_type, null::text as status
           where false
 
-      - input: ref('imaging_request_areas')
+      - input: ref('sn_example_imaging_request_areas')
         format: sql
         rows: |
           select null::text as imaging_request_id, null::text as area_id

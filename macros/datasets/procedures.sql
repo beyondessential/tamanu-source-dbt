@@ -1,4 +1,4 @@
-{% macro procedures_dataset(is_sensitive=false) %}
+{% macro procedures_dataset(network=none) %}
 
 with filtered_procedure as (
     select
@@ -9,8 +9,8 @@ with filtered_procedure as (
             partition by pc.id
             order by eh.datetime desc
         ) as encounter_history_record
-    from {{ ref('procedures') }} pc
-    left join {{ ref('encounter_history') }} eh
+    from {{ partition_ref('procedures', network) }} pc
+    left join {{ partition_ref('encounter_history', network) }} eh
         on eh.encounter_id = pc.encounter_id
         and eh.datetime::date <= pc.date
 )
@@ -81,22 +81,20 @@ select
     pc.time_in,
     pc.time_out
 from filtered_procedure pc
-join {{ ref('encounters') }} e on e.id = pc.encounter_id
+join {{ partition_ref('encounters', network) }} e on e.id = pc.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
 join {{ ref('reference_data') }} procedure_type on procedure_type.id = pc.procedure_type_id
-join {{ ref('locations') }} procedure_location
+join {{ partition_ref('locations', network) }} procedure_location
     on procedure_location.id = pc.location_id
-left join {{ ref('location_groups') }} procedure_area
+left join {{ partition_ref('location_groups', network) }} procedure_area
     on procedure_area.id = procedure_location.location_group_id
-join {{ ref('facilities') }} procedure_facility
+join {{ partition_ref('facilities', network) }} procedure_facility
     on procedure_facility.id = procedure_location.facility_id
-    and (procedure_facility.sensitive_network_id is not null) = {{ is_sensitive }}
-join {{ ref('locations') }} encounter_location
+join {{ partition_ref('locations', network) }} encounter_location
     on encounter_location.id = e.location_id
-join {{ ref('facilities') }} encounter_facility
+join {{ partition_ref('facilities', network) }} encounter_facility
     on encounter_facility.id = encounter_location.facility_id
-    and (encounter_facility.sensitive_network_id is not null) = {{ is_sensitive }}
-join {{ ref('departments') }} encounter_department
+join {{ partition_ref('departments', network) }} encounter_department
     on encounter_department.id = coalesce(pc.department_id, e.department_id)
 left join {{ ref('patient_additional_data') }} pd on pd.patient_id = p.id
 left join {{ ref('reference_data') }} nationality on nationality.id = pd.nationality_id

@@ -4,19 +4,45 @@ unit_tests:
     description: >-
       A location becomes a care_site_type='location' row, denormalised with its parent
       facility and place-of-service concept (BL-001, BL-002, BL-003, BL-006).
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     given:
       - input: ref('locations')
         format: sql
         rows: |
           select 'loc1' as id, 'LOC1' as code, 'Room 4 Bed 2' as name, 'fac1' as facility_id, null::varchar as location_group_id
+
+      - input: ref('sn_example_locations')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'loc1' as id, 'LOC1' as code, 'Room 4 Bed 2' as name, 'fac1' as facility_id, null::varchar as location_group_id
+          ) fx
+          where false
       - input: ref('location_groups')
         format: sql
         rows: |
           select null::varchar as id, null::varchar as facility_id where false
+
+      - input: ref('sn_example_location_groups')
+        format: sql
+        rows: |
+          select fx.* from (
+            select null::varchar as id, null::varchar as facility_id where false
+          ) fx
+          where false
       - input: ref('facilities')
         format: sql
         rows: |
           select 'fac1' as id, 'FAC1' as code, 'General Hospital' as name, 'hospital' as type
+
+      - input: ref('sn_example_facilities')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'fac1' as id, 'FAC1' as code, 'General Hospital' as name, 'hospital' as type
+          ) fx
+          where false
     expect:
       format: sql
       rows: |
@@ -30,19 +56,45 @@ unit_tests:
     model: ref__care_site_location
     description: >-
       A location with no facility of its own takes its location group's facility (BL-008).
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     given:
       - input: ref('locations')
         format: sql
         rows: |
           select 'loc2' as id, 'LOC2' as code, 'Ward 3 Bed 1' as name, null::varchar as facility_id, 'lg1' as location_group_id
+
+      - input: ref('sn_example_locations')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'loc2' as id, 'LOC2' as code, 'Ward 3 Bed 1' as name, null::varchar as facility_id, 'lg1' as location_group_id
+          ) fx
+          where false
       - input: ref('location_groups')
         format: sql
         rows: |
           select 'lg1' as id, 'fac1' as facility_id
+
+      - input: ref('sn_example_location_groups')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'lg1' as id, 'fac1' as facility_id
+          ) fx
+          where false
       - input: ref('facilities')
         format: sql
         rows: |
           select 'fac1' as id, 'FAC1' as code, 'General Hospital' as name, 'hospital' as type
+
+      - input: ref('sn_example_facilities')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'fac1' as id, 'FAC1' as code, 'General Hospital' as name, 'hospital' as type
+          ) fx
+          where false
     expect:
       format: sql
       rows: |
@@ -57,20 +109,47 @@ unit_tests:
     description: >-
       A location whose own facility differs from its location group's keeps its own
       facility (BL-008).
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     given:
       - input: ref('locations')
         format: sql
         rows: |
           select 'loc3' as id, 'LOC3' as code, 'Clinic Room 1' as name, 'fac1' as facility_id, 'lg2' as location_group_id
+
+      - input: ref('sn_example_locations')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'loc3' as id, 'LOC3' as code, 'Clinic Room 1' as name, 'fac1' as facility_id, 'lg2' as location_group_id
+          ) fx
+          where false
       - input: ref('location_groups')
         format: sql
         rows: |
           select 'lg2' as id, 'fac2' as facility_id
+
+      - input: ref('sn_example_location_groups')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'lg2' as id, 'fac2' as facility_id
+          ) fx
+          where false
       - input: ref('facilities')
         format: sql
         rows: |
           select 'fac1' as id, 'FAC1' as code, 'General Hospital' as name, 'hospital' as type
           union all select 'fac2', 'FAC2', 'Health Centre', 'health_centre'
+
+      - input: ref('sn_example_facilities')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'fac1' as id, 'FAC1' as code, 'General Hospital' as name, 'hospital' as type
+            union all select 'fac2', 'FAC2', 'Health Centre', 'health_centre'
+          ) fx
+          where false
     expect:
       format: sql
       rows: |

@@ -1,1 +1,1 @@
-{{ encounter_diets_dataset(is_sensitive=false) }}
+{{ encounter_diets_dataset(network=none) }}

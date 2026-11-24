@@ -4,8 +4,8 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `lab-tests-line-list` + `sensitive-lab-tests-line-list` |
-| **Type** | Tamanu report, standard + sensitive pair in `models/reports/`, reading `ds__lab_tests` / `ds__sensitive_lab_tests` |
+| **Name** | `lab-tests-line-list` + `sensitive-<network>-lab-tests-line-list` |
+| **Type** | Tamanu report, standard + sensitive pair in `models/reports/`, reading `ds__lab_tests` / `ds__sn_<network>_lab_tests` |
 | **Layer** | `report` |
 | **Materialisation** | `view` |
 | **Status** | `implemented` |
@@ -48,3 +48,4 @@ plus the date range.
 | Date | Author | Change |
 |---|---|---|
 | 2026-11-10 | Maui team | Retrospective spec, written with MAUI-7088, which made the status filter a multi-select. |
+| 2026-11-24 | Maui team | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

@@ -1,10 +1,10 @@
-{% macro referrals_dataset(is_sensitive=false) %}
+{% macro referrals_dataset(network=none) %}
 
 with diagnoses as (
     select
         ed.encounter_id,
         string_agg(concat(d.name), '; ') as diagnoses
-    from {{ ref('encounter_diagnoses') }} ed
+    from {{ partition_ref('encounter_diagnoses', network) }} ed
     left join {{ ref('reference_data') }} d on d.id = ed.diagnosis_id
     group by ed.encounter_id
 )
@@ -22,17 +22,16 @@ select
     sr.end_datetime as referral_datetime,
     rf.status,
     d.name as department
-from {{ ref('referrals') }} rf
-join {{ ref('encounters') }} e on e.id = rf.initiating_encounter_id
-join {{ ref('locations') }} l on l.id = e.location_id
-join {{ ref('facilities') }} f
+from {{ partition_ref('referrals', network) }} rf
+join {{ partition_ref('encounters', network) }} e on e.id = rf.initiating_encounter_id
+join {{ partition_ref('locations', network) }} l on l.id = e.location_id
+join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
-    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
-join {{ ref('survey_responses') }} sr on sr.id = rf.survey_response_id
+join {{ partition_ref('survey_responses', network) }} sr on sr.id = rf.survey_response_id
 join {{ ref('surveys') }} s on s.id = sr.survey_id
 join {{ ref('patients') }} p on p.id = e.patient_id
 join {{ ref('users') }} u on u.id = e.clinician_id
-join {{ ref('departments') }} d on d.id = e.department_id
+join {{ partition_ref('departments', network) }} d on d.id = e.department_id
 left join diagnoses ed on ed.encounter_id = rf.initiating_encounter_id
 
 {% endmacro %}

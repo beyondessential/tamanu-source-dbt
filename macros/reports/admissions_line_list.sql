@@ -1,6 +1,6 @@
-{% macro admissions_line_list_report(is_sensitive=false) %}
+{% macro admissions_line_list_report(network=none) %}
 
-{% set dataset = 'ds__sensitive_admissions' if is_sensitive else 'ds__admissions' %}
+{% set dataset = partition_name('ds__admissions', network) %}
 
 select
     display_id as "{{ translate_label('patientDisplayId') }}",

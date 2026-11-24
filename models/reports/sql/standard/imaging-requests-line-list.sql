@@ -1,3 +1,4 @@
+{%- set network = none -%}
 select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
@@ -19,7 +20,7 @@ select
     status as "{{ translate_label('imagingStatus') }}",
     to_char({{ to_user_selected_timezone('completed_datetime') }}, '{{ var("datetime_format") }}') as "{{ translate_label('imagingCompletedDateTime') }}",
     reason_for_cancellation as "{{ translate_label('imagingCancellationReason') }}"
-from {{ ref('ds__imaging_requests') }}
+from {{ partition_ref('ds__imaging_requests', network) }}
 where {{ to_user_selected_timezone('requested_datetime') }}
     >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}
     and

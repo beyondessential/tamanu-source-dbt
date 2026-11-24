@@ -42,3 +42,5 @@ join {{ ref('patients') }} p on p.id = gal.patient_id
 left join {{ ref('users') }} u on u.id = gal.user_id
 left join {{ ref('facilities') }} f on f.id = gal.facility_id
 left join {{ ref('reference_data') }} village on village.id = p.village_id
+-- standard facilities only: drop a row whose facility is set but is not in `facilities`
+where gal.facility_id is null or f.id is not null

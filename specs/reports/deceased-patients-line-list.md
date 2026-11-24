@@ -13,7 +13,7 @@
 | **Linear issue** | [MAUI-6671](https://linear.app/bes/issue/MAUI-6671/update-deceased-patients-line-list-to-show-all-records), [MAUI-7187](https://linear.app/bes/issue/MAUI-7187/align-the-deceased-patients-line-list-facility-with-the-tupaia-death) (facility) |
 | **Repo** | `tamanu-source-dbt` |
 | **Created** | 2026-06-17 |
-| **Last updated** | 2026-11-17 |
+| **Last updated** | 2026-11-24 |
 
 ## Purpose
 
@@ -82,11 +82,14 @@ columns include patient identity (`display_id`, `first_name`, `last_name`,
   none and does not say the death was outside a health facility; null where
   neither applies. `place_of_death` is that facility's name, or `Died outside
   health facility` where the record says so. This matches `metric__death`
-  (its BL-004), so the report and the Tupaia death count agree.
+  (its BL-004).
 - **BL-013:** The encounter the patient died in is the one whose span covers
   the date of death, taking the latest end, then the latest start; an encounter
   without an end does not match. `department`, `location_group` and `location`
   come from it.
+- **BL-015:** A death is listed whichever partition its record, its encounter and
+  its BL-012 facility are in, and `place_of_death` names a facility in any
+  sensitive network the deployment lists.
 
 ### Report (`deceased-patients-line-list`)
 
@@ -122,6 +125,7 @@ columns include patient identity (`display_id`, `first_name`, `last_name`,
 | AC-004 | With a `fromDate` later than `1970-01-01`, every returned row has `date_of_death >= fromDate` | BL-001 | manual / integration |
 | AC-005 | When run with a `causeOfDeath` / `mannerOfDeath` / `facilityId` parameter, every returned row matches that filter | BL-003, BL-004, BL-005 | manual / integration |
 | AC-006 | `facility_id` and `place_of_death` take the death record's facility, else the encounter died in's facility unless the death was outside a health facility, and the latest-started of encounters ending together is matched | BL-012, BL-013 | dbt unit test (`ac_006_ds__deaths_facility`) |
+| AC-007 | A death whose facility is a sensitive facility is listed with that facility's id and name | BL-015 | dbt unit test (`ac_006_ds__deaths_facility`) |
 
 ## Lineage
 
@@ -131,6 +135,7 @@ patient_death_data ──┤
 encounters ──────────┼──► ds__deaths ──► deceased-patients-line-list
 locations ───────────┤
 facilities ──────────┘
+(each split base is read from every partition the deployment has)
 ```
 
 ## Open questions
@@ -147,3 +152,5 @@ _None._
 |---|---|---|
 | 2026-06-17 | Maui team | Initial retrospective spec (MAUI-6671): default the report to all time, treat the 1970-01-01 floor as unbounded, and rework `ds__deaths` to list every deceased patient (drive from `patients`, optional death form) so deaths without a `patient_death_data` record are no longer dropped |
 | 2026-11-17 | Maui team | BL-012, BL-013: facility falls back to the encounter died in, as in `metric__death`, so filtering by facility matches the Tupaia death count (MAUI-7187). New AC-006. BL-014: the report runs on all facilities only. |
+| 2026-11-23 | Maui team | BL-015, AC-007: a death at a sensitive facility is listed, as in `metric__death`, so the report and the Tupaia death count still agree once the bases split by sensitive network (MAUI-7220). |
+| 2026-11-24 | Maui team | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

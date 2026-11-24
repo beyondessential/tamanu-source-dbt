@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- int__who_dak_hiv_key_populations -- one row per DAK HIV client per key population they are
 -- recorded as belonging to (BL-022).
 --
@@ -21,7 +22,7 @@
 -- Spec: specs/dbt-model/metric__who_dak_hiv_indicators.md, BL-022.
 
 with answers as (
-    select * from {{ ref('int__who_dak_hiv_form_answers') }}
+    select * from {{ partition_ref('int__who_dak_hiv_form_answers', network) }}
 ),
 
 recorded as (

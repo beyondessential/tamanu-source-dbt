@@ -81,7 +81,8 @@ D5 wide format, plus disaggregations.
   different location groups, or only one is in a group, and `is_department_change` is true where
   the two departments differ, a NULL department counting as a value.
 - **BL-010 (classification):** the model is `classification: internal` and `pii: false`, like
-  `metric__inpatient_admission`, with no facility sensitivity filter, and a row carries the
+  `metric__inpatient_admission`, covering standard facilities only
+  (`specs/dbt-model/sensitive-facility-partition.md` BL-020), and a row carries the
   encounter and segment ids as its only identifiers.
 
 ## Acceptance criteria
@@ -136,3 +137,4 @@ is_department_change`.
 | Date | Change |
 |---|---|
 | 2026-11-13 | Created: one row per inpatient location change, resolving OQ-001 of `metric__inpatient_admission` (MAUI-7122). |
+| 2026-11-24 | BL-010: covers standard facilities only, reading the standard partition (`specs/dbt-model/sensitive-facility-partition.md` BL-020). |

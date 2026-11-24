@@ -1,4 +1,4 @@
-{% macro encounter_summary_report(date_field, is_sensitive=false) %}
+{% macro encounter_summary_report(date_field, network=none) %}
 {#-
     See specs/reports/encounter-summary.md for the BL clauses this macro implements.
 
@@ -85,7 +85,7 @@ select
         else notes
     end as "{{ translate_label('notes') }}"
 from (
-    {{ encounter_summary_core(date_field=date_field, is_sensitive=is_sensitive) }}
+    {{ encounter_summary_core(date_field=date_field, network=network) }}
 ) core
 order by {{ date_field }} desc
 

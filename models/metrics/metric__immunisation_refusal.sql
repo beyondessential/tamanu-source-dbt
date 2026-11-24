@@ -18,8 +18,10 @@
 -- The registry carries the definition; this model is its implementation.
 -- See specs/dbt-model/metric__immunisation_refusal.md for the BL clauses this model implements.
 
+-- BL-021 (see specs/dbt-model/sensitive-facility-partition.md): covers every
+-- facility, so each partitioned input is read from every partition
 with observation as (
-    select * from {{ ref('clinical__observation') }}
+    {{ every_partition('clinical__observation') }}
     where observation_type_source_value = 'vaccination not given'
 ),
 

@@ -19,8 +19,10 @@
 -- Specs: specs/dbt-model/metric__immunisation_dose.md, specs/dbt-model/metric__immunisation_refusal.md
 -- See specs/dbt-model/metric__immunisation_dose.md for the BL clauses this model implements.
 
+-- BL-014 (see specs/dbt-model/sensitive-facility-partition.md): read by metrics that cover
+-- every facility, so each partitioned input is read from every partition
 with vaccine_administrations as (
-    select * from {{ ref('vaccine_administrations') }}
+    {{ every_partition('vaccine_administrations') }}
 ),
 
 vaccine_schedules as (
@@ -28,7 +30,7 @@ vaccine_schedules as (
 ),
 
 locations as (
-    select * from {{ ref('locations') }}
+    {{ every_partition('locations') }}
 ),
 
 -- date_of_birth rebuilt once from clinical__person's parts, for all three ages below.
@@ -48,7 +50,7 @@ person as (
 ),
 
 encounters as (
-    select * from {{ ref('encounters') }}
+    {{ every_partition('encounters') }}
 ),
 
 reference_data as (
@@ -56,7 +58,7 @@ reference_data as (
 ),
 
 departments as (
-    select * from {{ ref('departments') }}
+    {{ every_partition('departments') }}
 )
 
 select

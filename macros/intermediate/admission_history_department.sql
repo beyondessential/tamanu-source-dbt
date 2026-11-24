@@ -1,18 +1,13 @@
-{% macro admission_history_department(is_sensitive=false) %}
+{% macro admission_history_department(network=none) %}
 
 {#-
     Admission episodes per department, partitioned by facility sensitivity.
 
     See specs/reports/hospital-admissions-summaries.md for the BL clauses.
 
-    BL-012: the facility scope is partitioned by is_sensitive, exhaustively and
-    disjointly, so each facility's episodes reach exactly one of the two variants. The
-    join to facilities exists only to resolve the facility name; the predicate is what
-    makes it a partition.
-
-    The predicate is exhaustive by construction: `sensitive_network_id is not null` is
-    never null, so a bare `= true` / `= false` pair puts every facility in exactly one
-    variant.
+    BL-012: the facility scope is partitioned by network, disjointly, so each facility's
+    episodes reach exactly one partition. network picks the facility base: `facilities`
+    holds the standard facilities and each listed sensitive network has a base of its own.
 -#}
 
 with admission_department_log as (
@@ -25,7 +20,7 @@ with admission_department_log as (
             when eh.change_type is null or 'encounter_type' = any(eh.change_type) then 'admission'
             else 'transfer-in'
         end as type
-    from {{ ref('encounter_history') }} eh
+    from {{ partition_ref('encounter_history', network) }} eh
     where (eh.change_type isnull or eh.change_type && array['department', 'encounter_type'])
         and eh.encounter_type = 'admission'
 ),
@@ -96,13 +91,12 @@ select
         false
     ) as death
 from department_phases dl
-join {{ ref('encounters') }} e on e.id = dl.encounter_id
+join {{ partition_ref('encounters', network) }} e on e.id = dl.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
-join {{ ref('departments') }} d on d.id = dl.department_id
+join {{ partition_ref('departments', network) }} d on d.id = dl.department_id
 -- BL-012 (specs/reports/hospital-admissions-summaries.md): facility partition
-join {{ ref('facilities') }} f
+join {{ partition_ref('facilities', network) }} f
     on f.id = d.facility_id
-    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
 window w as (
     partition by encounter_id
     order by dl.start_datetime

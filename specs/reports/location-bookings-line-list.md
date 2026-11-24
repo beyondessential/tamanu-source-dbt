@@ -4,8 +4,8 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `location-bookings-line-list` + `sensitive-location-bookings-line-list` |
-| **Type** | Tamanu report, standard + sensitive pair in `models/reports/`, reading `ds__location_bookings` / `ds__sensitive_location_bookings` |
+| **Name** | `location-bookings-line-list` + `sensitive-<network>-location-bookings-line-list` |
+| **Type** | Tamanu report, standard + sensitive pair in `models/reports/`, reading `ds__location_bookings` / `ds__sn_<network>_location_bookings` |
 | **Layer** | `report` |
 | **Materialisation** | `view` |
 | **Status** | `implemented` |
@@ -51,3 +51,4 @@ plus the date range.
 | Date | Author | Change |
 |---|---|---|
 | 2026-11-10 | Maui team | Retrospective spec, written with MAUI-7088, which made the status filter a multi-select. |
+| 2026-11-24 | Maui team | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

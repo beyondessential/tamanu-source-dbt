@@ -1,9 +1,9 @@
-{% macro hospital_admissions_by_area_summary_report(is_sensitive=false) %}
+{% macro hospital_admissions_by_area_summary_report(network=none) %}
 
 {#- BL-012 (specs/reports/hospital-admissions-summaries.md): the partition is
     carried by the intermediate, so this macro's only sensitivity-related job is
     picking which one to read. -#}
-{% set episodes = 'int__sensitive_admission_history_location' if is_sensitive else 'int__admission_history_location' %}
+{% set episodes = partition_name('int__admission_history_location', network) %}
 
 with reporting_months as (
     select month::date
@@ -18,7 +18,7 @@ area_capacity as (
     select
         l.location_group_id,
         sum(l.max_occupancy::numeric) as capacity
-    from {{ ref('locations') }} l
+    from {{ partition_ref('locations', network) }} l
     -- BL-013: an ungrouped location contributes no area capacity. Without this guard the
     -- CTE also builds a null-keyed group -- unreachable through the join below, but a trap:
     -- matching it with `is not distinct from` would sum every facility's ungrouped

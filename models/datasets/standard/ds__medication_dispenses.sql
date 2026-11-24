@@ -1,1 +1,1 @@
-{{ medication_dispenses_dataset(is_sensitive=false) }}
+{{ medication_dispenses_dataset(network=none) }}

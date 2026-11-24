@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- int__lab_test_panel_attribution -- each lab test resolved to the panel request it belongs to.
 --
 -- From Tamanu 2.66 a lab request holds any number of panel requests
@@ -10,8 +11,8 @@
 -- (getLabRequestTestAndPanelNames, packages/utils/src/labTests.ts). This model applies the same
 -- inference, so every consumer agrees with the app about which tests a panel holds.
 --
--- Grain: one row per live lab test. A test type shared by two panels on one request is two
--- tests, one per panel. No facility or sensitivity scope -- callers apply their own.
+-- Grain: one row per live lab test of one partition. A test type shared by two panels on one
+-- request is two tests, one per panel. No other facility scope -- callers apply their own.
 --
 -- A test stamped with a panel request that has since been deleted keeps that attribution, with
 -- a null lab_test_panel_id: it belongs to a panel no consumer can show.
@@ -22,7 +23,7 @@ with panel_requests_by_request as (
         count(*) as panel_request_count,
         -- only read when panel_request_count = 1, so which element is moot
         (array_agg(id))[1] as single_panel_request_id
-    from {{ ref('lab_test_panel_requests') }}
+    from {{ partition_ref('lab_test_panel_requests', network) }}
     where lab_request_id is not null
     group by lab_request_id
 ),
@@ -31,7 +32,7 @@ requests as (
     select
         lt.lab_request_id,
         bool_or(lt.lab_test_panel_request_id is not null) as has_attributed_test
-    from {{ ref('lab_tests') }} lt
+    from {{ partition_ref('lab_tests', network) }} lt
     group by lt.lab_request_id
 ),
 
@@ -51,7 +52,7 @@ resolved as (
                     then prr.single_panel_request_id
             end
         ) as lab_test_panel_request_id
-    from {{ ref('lab_tests') }} lt
+    from {{ partition_ref('lab_tests', network) }} lt
     join requests r
         on r.lab_request_id = lt.lab_request_id
     left join panel_requests_by_request prr
@@ -67,5 +68,5 @@ select
     -- pre-2.66 request's one panel request. Null: an individual test, not part of any panel.
     res.panel_attribution
 from resolved res
-left join {{ ref('lab_test_panel_requests') }} ltpr
+left join {{ partition_ref('lab_test_panel_requests', network) }} ltpr
     on ltpr.id = res.lab_test_panel_request_id

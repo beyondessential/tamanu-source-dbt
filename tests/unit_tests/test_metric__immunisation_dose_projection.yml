@@ -18,6 +18,8 @@ unit_tests:
       facility_source and is_given_elsewhere passed through. BL-015: department passes
       through, falling back to 'Not recorded' when the encounter has none.
 
+    config:
+      enabled: "{{ 'example' in var('sensitive_networks', []) }}"
     given:
       - input: ref('clinical__drug_exposure')
         format: sql
@@ -32,6 +34,23 @@ unit_tests:
           union all
           -- not a vaccination -> excluded
           select 'rx_1', '2024-06-04'::date, 'prescription'
+
+      - input: ref('clinical__sn_example_drug_exposure')
+        format: sql
+        rows: |
+          select fx.* from (
+            select 'dose_1' as drug_exposure_id, '2024-06-01'::date as drug_exposure_start_date, 'vaccination' as drug_exposure_type_source_value
+            union all
+            select 'dose_2', '2023-01-15'::date, 'vaccination'
+            union all
+            -- no matching int__vaccine_administration_attributes row (facility/patient did not
+            -- resolve there) -> excluded
+            select 'dose_3', '2024-06-02'::date, 'vaccination'
+            union all
+            -- not a vaccination -> excluded
+            select 'rx_1', '2024-06-04'::date, 'prescription'
+          ) fx
+          where false
 
       - input: ref('int__vaccine_administration_attributes')
         format: sql

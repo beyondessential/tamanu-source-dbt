@@ -64,20 +64,32 @@ unit_tests:
       - input: source('tamanu', 'encounters')
         format: sql
         rows: |
-          select
-            '00000000-0000-0000-0000-000000000111'::uuid as id,
-            '00000000-0000-0000-0000-000000001111'::text as patient_id,
-            null::timestamp as deleted_at
-          union all
-          select '00000000-0000-0000-0000-000000000222'::uuid, '00000000-0000-0000-0000-000000002222'::text, null::timestamp
-          union all
-          select '00000000-0000-0000-0000-000000000333'::uuid, 'h1627394-3778-4c31-a510-9fcb88efdbf3'::text, null::timestamp
-          union all
-          select '00000000-0000-0000-0000-000000000444'::uuid, '00000000-0000-0000-0000-000000003333'::text, null::timestamp
-          union all
-          select '00000000-0000-0000-0000-000000000555'::uuid, '00000000-0000-0000-0000-000000004444'::text, null::timestamp
-          union all
-          select '00000000-0000-0000-0000-000000000666'::uuid, '00000000-0000-0000-0000-000000005555'::text, '2025-01-20 00:00:00'::timestamp
+          select fx.*, null::text as location_id from (
+            select
+              '00000000-0000-0000-0000-000000000111'::uuid as id,
+              '00000000-0000-0000-0000-000000001111'::text as patient_id,
+              null::timestamp as deleted_at
+            union all
+            select '00000000-0000-0000-0000-000000000222'::uuid, '00000000-0000-0000-0000-000000002222'::text, null::timestamp
+            union all
+            select '00000000-0000-0000-0000-000000000333'::uuid, 'h1627394-3778-4c31-a510-9fcb88efdbf3'::text, null::timestamp
+            union all
+            select '00000000-0000-0000-0000-000000000444'::uuid, '00000000-0000-0000-0000-000000003333'::text, null::timestamp
+            union all
+            select '00000000-0000-0000-0000-000000000555'::uuid, '00000000-0000-0000-0000-000000004444'::text, null::timestamp
+            union all
+            select '00000000-0000-0000-0000-000000000666'::uuid, '00000000-0000-0000-0000-000000005555'::text, '2025-01-20 00:00:00'::timestamp
+          ) fx
+
+      - input: source('tamanu', 'locations')
+        format: sql
+        rows: |
+          select null::text as id, null::text as facility_id where false
+
+      - input: source('tamanu', 'facilities')
+        format: sql
+        rows: |
+          select null::text as id, null::text as sensitive_network_id where false
 
     expect:
       format: sql

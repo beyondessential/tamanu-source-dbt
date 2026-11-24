@@ -2,14 +2,15 @@ unit_tests:
   - name: test_int__admission_history_location_partition
     model: int__admission_history_location
     description: >
-      Pins BL-012 on the standard variant: an episode in a sensitive facility is absent.
-      The partition lives in this intermediate rather than in the three reports that read
-      it, and a report-level unit test must stub this model — which would replace the very
-      predicate under test — so the partition is asserted here instead.
+      Pins BL-012 on the standard variant: it reads `facilities`, so an episode at a facility
+      absent from that base is dropped. The partition reaches the three reports through this
+      intermediate, and a report-level unit test must stub this model, so the intermediate's
+      choice of base is asserted here instead. The bases' own split is
+      test_facilities_partition.
     overrides:
       vars:
         timezone: UTC
-    given: &partition_fixture
+    given:
       - input: ref('encounter_history')
         format: sql
         rows: |
@@ -45,8 +46,6 @@ unit_tests:
         format: sql
         rows: |
           select 'fac_std'::text as id, 'Standard Hospital'::text as name, null::text as sensitive_network_id
-          union all
-          select 'fac_sen', 'Sensitive Hospital', 'sn_001'
     expect:
       format: sql
       rows: |
@@ -68,15 +67,50 @@ unit_tests:
           false               as death
 
   - name: test_int__sensitive_admission_history_location_partition
-    model: int__sensitive_admission_history_location
+    model: int__sn_example_admission_history_location
     description: >
-      The other half of BL-012, on the same fixture: the sensitive variant carries the
-      sensitive facility's episode and nothing else. Together the two show the partition is
-      exhaustive and disjoint — each facility reaches exactly one variant.
+      The other half of BL-012: the sensitive variant reads `sn_example_facilities`, so it
+      carries the sensitive facility's episode and drops the one at a facility absent from that
+      base. A sensitive variant reading `facilities` fails here, as that input is not stubbed.
     overrides:
       vars:
         timezone: UTC
-    given: *partition_fixture
+    given:
+      - input: ref('sn_example_encounter_history')
+        format: sql
+        rows: |
+          select 'eh_std'::text as id, 'enc_std'::text as encounter_id, '2024-01-10 09:00:00'::timestamp as datetime,
+                 'loc_std'::text as location_id, null::text[] as change_type, 'admission'::text as encounter_type
+          union all
+          select 'eh_sen', 'enc_sen', '2024-01-10 09:00:00'::timestamp, 'loc_sen', null::text[], 'admission'
+      - input: ref('sn_example_encounters')
+        format: sql
+        rows: |
+          select 'enc_std'::text as id, 'pat_001'::text as patient_id,
+                 '2024-01-10 09:00:00'::timestamp as start_datetime,
+                 '2024-01-12 09:00:00'::timestamp as end_datetime
+          union all
+          select 'enc_sen', 'pat_001', '2024-01-10 09:00:00'::timestamp, '2024-01-12 09:00:00'::timestamp
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001'::text as id, null::timestamp as date_of_death
+      - input: ref('sn_example_locations')
+        format: sql
+        rows: |
+          select 'loc_std'::text as id, 'Std Room'::text as name, 'lg_std'::text as location_group_id, 'fac_std'::text as facility_id
+          union all
+          select 'loc_sen', 'Sen Room', 'lg_sen', 'fac_sen'
+      - input: ref('sn_example_location_groups')
+        format: sql
+        rows: |
+          select 'lg_std'::text as id, 'Standard Ward'::text as name
+          union all
+          select 'lg_sen', 'Sensitive Ward'
+      - input: ref('sn_example_facilities')
+        format: sql
+        rows: |
+          select 'fac_sen'::text as id, 'Sensitive Hospital'::text as name, 'sn_001'::text as sensitive_network_id
     expect:
       format: sql
       rows: |
@@ -100,14 +134,14 @@ unit_tests:
   - name: test_int__admission_history_department_partition
     model: int__admission_history_department
     description: >
-      BL-012 on the department intermediate's standard variant. The department predicate is
-      a separate line of SQL from the location one, so it needs its own assertion: without
-      this, removing it would leave the suite green while a sensitive facility's named
-      death counts returned to the standard -by-department report.
+      BL-012 on the department intermediate's standard variant. The department intermediate
+      picks its facility base in a separate line of SQL from the location one, so it needs its
+      own assertion: without this, a wrong base there would leave the suite green while a
+      sensitive facility's named death counts returned to the standard -by-department report.
     overrides:
       vars:
         timezone: UTC
-    given: &dept_fixture
+    given:
       - input: ref('encounter_history')
         format: sql
         rows: |
@@ -137,8 +171,6 @@ unit_tests:
         format: sql
         rows: |
           select 'fac_std'::text as id, 'Standard Hospital'::text as name, null::text as sensitive_network_id
-          union all
-          select 'fac_sen', 'Sensitive Hospital', 'sn_001'
     expect:
       format: sql
       rows: |
@@ -158,13 +190,42 @@ unit_tests:
           false               as death
 
   - name: test_int__sensitive_admission_history_department_partition
-    model: int__sensitive_admission_history_department
+    model: int__sn_example_admission_history_department
     description: >
-      The sensitive half for the department intermediate, on the same fixture.
+      The sensitive half for the department intermediate, reading `sn_example_facilities`.
     overrides:
       vars:
         timezone: UTC
-    given: *dept_fixture
+    given:
+      - input: ref('sn_example_encounter_history')
+        format: sql
+        rows: |
+          select 'eh_std'::text as id, 'enc_std'::text as encounter_id, '2024-01-10 09:00:00'::timestamp as datetime,
+                 'dep_std'::text as department_id, null::text[] as change_type, 'admission'::text as encounter_type
+          union all
+          select 'eh_sen', 'enc_sen', '2024-01-10 09:00:00'::timestamp, 'dep_sen', null::text[], 'admission'
+      - input: ref('sn_example_encounters')
+        format: sql
+        rows: |
+          select 'enc_std'::text as id, 'pat_001'::text as patient_id,
+                 '2024-01-10 09:00:00'::timestamp as start_datetime,
+                 '2024-01-12 09:00:00'::timestamp as end_datetime
+          union all
+          select 'enc_sen', 'pat_001', '2024-01-10 09:00:00'::timestamp, '2024-01-12 09:00:00'::timestamp
+      - input: ref('patients')
+        format: sql
+        rows: |
+          select 'pat_001'::text as id, null::timestamp as date_of_death
+      - input: ref('sn_example_departments')
+        format: sql
+        rows: |
+          select 'dep_std'::text as id, 'Std Dept'::text as name, 'fac_std'::text as facility_id
+          union all
+          select 'dep_sen', 'Sen Dept', 'fac_sen'
+      - input: ref('sn_example_facilities')
+        format: sql
+        rows: |
+          select 'fac_sen'::text as id, 'Sensitive Hospital'::text as name, 'sn_001'::text as sensitive_network_id
     expect:
       format: sql
       rows: |

@@ -1,1 +1,1 @@
-{{ location_bookings_dataset(is_sensitive=false) }}
+{{ location_bookings_dataset(network=none) }}

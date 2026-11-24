@@ -1,4 +1,4 @@
-{% macro discharges_change_history(record_id_filter=none) %}
+{% macro discharges_change_history(record_id_filter=none, network=none) %}
 -- BL-013/BL-014: shared change-log extraction (see specs/reports/audit-discharge-line-list.md).
 -- record_id_filter narrows WHICH discharges are included, never how much of an included
 -- discharge's history is seen -- change_sequence needs each discharge's full history to stay
@@ -19,7 +19,7 @@ select
         partition by c.discharge_id
         order by c.logged_at_utc, c.record_updated_at_utc, c.changelog_id
     ) as change_sequence
-from {{ ref('discharges_change_logs') }} c
+from {{ partition_ref('discharges_change_logs', network) }} c
 {%- if record_id_filter %}
 where {{ record_id_filter }}
 {%- endif %}

@@ -1,11 +1,37 @@
-with contributing_death_causes as (
+with -- BL-015 (see specs/reports/deceased-patients-line-list.md): a death is listed whichever partition
+-- its record, encounter and facility are in, so each split base is read from every partition
+all_contributing_death_causes as (
+    {{ every_partition('contributing_death_causes') }}
+),
+
+all_patient_death_data as (
+    {{ every_partition('patient_death_data') }}
+),
+
+all_encounters as (
+    {{ every_partition('encounters') }}
+),
+
+all_departments as (
+    {{ every_partition('departments') }}
+),
+
+all_locations as (
+    {{ every_partition('locations') }}
+),
+
+all_location_groups as (
+    {{ every_partition('location_groups') }}
+),
+
+contributing_death_causes as (
     select
         cdc.patient_death_data_id,
         array_agg(
             cdc.condition_id
             order by cdc.time_after_onset
         ) as other_conditions
-    from {{ ref("contributing_death_causes") }} cdc
+    from all_contributing_death_causes cdc
     group by cdc.patient_death_data_id
 ),
 
@@ -14,7 +40,7 @@ with contributing_death_causes as (
 -- defensively and prefer a finalised record when more than one current row exists
 death_data as (
     select distinct on (patient_id) *
-    from {{ ref("patient_death_data") }}
+    from all_patient_death_data
     where visibility_status = 'current'
     order by patient_id asc, is_final desc nulls last, id asc
 ),
@@ -31,11 +57,15 @@ encounters_with_death as (
         e.location_id,
         e.department_id,
         e.clinician_id
-    from {{ ref("encounters") }} e
+    from all_encounters e
     join {{ ref("patients") }} p
         on p.id = e.patient_id
         and p.date_of_death between e.start_datetime and e.end_datetime
     order by e.patient_id asc, e.end_datetime desc, e.start_datetime desc, e.id asc
+),
+
+all_facilities as (
+    {{ every_partition('facilities', ['id', 'name']) }}
 )
 
 select
@@ -149,20 +179,19 @@ left join {{ ref("reference_data") }} surgery_reason
     on surgery_reason.id = pdd.last_surgery_reason_id
 left join encounters_with_death ewd
     on ewd.patient_id = p.id
-left join {{ ref("departments") }} department
+left join all_departments department
     on department.id = ewd.department_id
-left join {{ ref("locations") }} location
+left join all_locations location
     on location.id = ewd.location_id
 -- BL-012 (see specs/reports/deceased-patients-line-list.md): the death record's facility,
 -- falling back to the facility of the encounter the patient died in unless the record says
--- the death was outside a health facility. metric__death resolves the facility the same way,
--- so the report and the Tupaia death count agree.
-left join {{ ref("facilities") }} facility
+-- the death was outside a health facility. metric__death resolves the facility the same way.
+left join all_facilities facility
     on facility.id = coalesce(
         pdd.facility_id,
         case when pdd.was_outside_health_facility is not true then location.facility_id end
     )
-left join {{ ref("location_groups") }} location_group
+left join all_location_groups location_group
     on location_group.id = location.location_group_id
 left join {{ ref("users") }} clinician
     on clinician.id = pdd.recorded_by_id

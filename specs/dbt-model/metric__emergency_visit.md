@@ -13,7 +13,7 @@
 | **Repo** | `tamanu-source-dbt` (`main`) |
 | **Linear issue** | [MAUI-6694](https://linear.app/bes/issue/MAUI-6694) / [MAUI-6787](https://linear.app/bes/issue/MAUI-6787) / [MAUI-6858](https://linear.app/bes/issue/MAUI-6858) |
 | **Created** | 2026-08-11 |
-| **Last updated** | 2026-10-12 |
+| **Last updated** | 2026-11-24 |
 
 Canonical definition for `ed_visit`: one row per ED attendance, spanning arrival in the ED
 to discharge from hospital at minute resolution.
@@ -172,8 +172,8 @@ BL-003, BL-004, BL-005, BL-007, BL-010 through BL-018, BL-020 and BL-021 are imp
 - **BL-009 (facility identity is Tamanu's):** the model emits `facility_id`, the Tamanu id.
   Consumer-specific identifiers — a Tupaia entity code, a DHIS2 org unit — are resolved in the
   consumer layer.
-- **BL-010 (classification):** `pii: false`, `classification: internal`, with no
-  facility sensitivity filter, so standard and sensitive facilities alike are covered. A row
+- **BL-010 (classification):** `pii: false`, `classification: internal`, covering
+  standard facilities only (`specs/dbt-model/sensitive-facility-partition.md` BL-020). A row
   carries an encounter id as its only identifier.
 
   `triage_score` comes from `bases/triages`, which is `classification: restricted` — but that
@@ -182,8 +182,7 @@ BL-003, BL-004, BL-005, BL-007, BL-010 through BL-018, BL-020 and BL-021 are imp
   list, not free text.
 
   **The line this sets.** Adding a column that identifies the *patient* — patient id, birth date,
-  diagnosis, exact arrival timestamp — requires revisiting the facility sensitivity filter and the
-  `meta` flags. `ds__encounters_emergency` carries such detail and is classified accordingly.
+  diagnosis, exact arrival timestamp — requires revisiting the `meta` flags. `ds__encounters_emergency` carries such detail and is classified accordingly.
 - **BL-011 (per-attendance grain):** one row per attendance, `subject_id` = the encounter id,
   `value_numeric` = literal `1` because the row *is* the attendance. The visit occurrence id is used
   rather than `visit_detail_id` because the registry's `subject_grain` is `visit` and the two are
@@ -379,3 +378,4 @@ them from configuration alone.
 | 2026-10-12 | Maui team | Added `chief_complaint`, the triage's chief complaint resolved to a name (BL-021), for an ED presenting-complaint card (MAUI-6858) |
 | 2026-09-24 | Maui team | Added `clinician`, the intake segment's own clinician resolved to a name (BL-020), so an ED dashboard can rank attendances by clinician (MAUI-6907) |
 | 2026-08-31 | Maui team | BL-003: the `clinical__visit_detail` CTE is declared `not materialized`. BL-013: the principal diagnosis is taken with `distinct on` rather than a ranked join. Together they restore a query plan that terminates on a deployment-sized encounter history |
+| 2026-11-24 | Maui team | BL-010: covers standard facilities only, reading the standard partition (`specs/dbt-model/sensitive-facility-partition.md` BL-020). |

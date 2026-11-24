@@ -1,4 +1,4 @@
-{% macro discharge_audit_dataset(is_sensitive=false, record_id_filter=none) %}
+{% macro discharge_audit_dataset(network=none, record_id_filter=none) %}
 
 -- Discharge Audit Dataset
 -- One row per discharge record, which is one row per discharged encounter.
@@ -11,7 +11,7 @@
 --
 -- BL-013: record_id_filter (on the change-log extraction's `discharge_id`) narrows the
 -- change-log read to candidate discharges, for the audit report's candidate-scoping step. Left
--- none by ds__discharge_audit / ds__sensitive_discharge_audit, which need every discharge's
+-- none by ds__discharge_audit and each sensitive network's copy of it, which need every discharge's
 -- full history.
 
 -- BL-001: the discharges base is already one row per encounter with deleted discharges,
@@ -24,7 +24,7 @@ with discharge_records as (
         d.disposition_id,
         -- BL-004: system-generated discharges are flagged, not filtered out
         coalesce(d.note like 'Automatically discharged%', false) as is_auto_discharge
-    from {{ ref('discharges') }} d
+    from {{ partition_ref('discharges', network) }} d
 ),
 
 -- BL-002: the earliest change log entry for a discharge is its insert. change_sequence is
@@ -39,7 +39,7 @@ change_log_summary as (
         count(*) - 1 as later_edit_count,
         max(cl.updated_by_user_id) filter (where cl.change_sequence = 1) as recorded_by_user_id
     from (
-        {{ discharges_change_history(record_id_filter=record_id_filter) }}
+        {{ discharges_change_history(record_id_filter=record_id_filter, network=network) }}
     ) cl
     group by cl.discharge_id
 ),
@@ -57,12 +57,11 @@ encounter_details as (
         loc.name as location_name,
         f.id as facility_id,
         f.name as facility_name
-    from {{ ref('encounters') }} e
-    join {{ ref('locations') }} loc on loc.id = e.location_id
-    join {{ ref('facilities') }} f on f.id = loc.facility_id
-        -- BL-009: the standard and sensitive variants partition on this flag
-        and (f.sensitive_network_id is not null) = {{ is_sensitive }}
-    left join {{ ref('departments') }} dept on dept.id = e.department_id
+    from {{ partition_ref('encounters', network) }} e
+    join {{ partition_ref('locations', network) }} loc on loc.id = e.location_id
+    -- BL-009: the standard and sensitive variants each read their own facility base
+    join {{ partition_ref('facilities', network) }} f on f.id = loc.facility_id
+    left join {{ partition_ref('departments', network) }} dept on dept.id = e.department_id
 ),
 
 -- BL-010: diagnoses recorded against the encounter, split primary from secondary and
@@ -103,7 +102,7 @@ encounter_diagnosis_summary as (
             '; '
             order by edx.datetime
         ) as secondary_diagnoses_codes
-    from {{ ref('encounter_diagnoses') }} edx
+    from {{ partition_ref('encounter_diagnoses', network) }} edx
     join {{ ref('reference_data') }} rd on rd.id = edx.diagnosis_id
     group by edx.encounter_id
 ),

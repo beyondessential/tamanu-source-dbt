@@ -1,3 +1,4 @@
+{%- set network = none -%}
 select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
@@ -21,7 +22,7 @@ select
     clinician as "{{ translate_label('bookingClinician') }}",
     booking_type as "{{ translate_label('bookingType') }}",
     booking_status as "{{ translate_label('bookingStatus') }}"
-from {{ ref('ds__location_bookings') }}
+from {{ partition_ref('ds__location_bookings', network) }}
 where
     case
         when {{ parameter('facilityId') }} is null then true

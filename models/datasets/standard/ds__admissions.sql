@@ -1,1 +1,1 @@
-{{ admissions_dataset(is_sensitive=false) }}
+{{ admissions_dataset(network=none) }}

@@ -1,5 +1,5 @@
 {#
-    invoice_payment_amounts(payer) -- one row per invoice payment by one payer, with the flags
+    invoice_payment_amounts(payer, network) -- one row per invoice payment by one payer, with the flags
     every consumer needs to total it its own way.
 
     See specs/dbt-model/invoice_payment_amounts.md for the BL clauses this macro implements.
@@ -11,7 +11,7 @@
     Columns: payment_id, invoice_id, payment_date, amount, is_refund, is_reversed,
     signed_amount. No invoice-status or encounter filter -- each consumer applies its own.
 #}
-{% macro invoice_payment_amounts(payer) %}
+{% macro invoice_payment_amounts(payer, network=none) %}
     {%- if payer == 'patient' -%}
         {%- set link = 'invoice_patient_payments' -%}
     {%- elif payer == 'insurer' -%}
@@ -30,7 +30,7 @@
         ipay.original_payment_id is not null as is_refund,
         -- BL-005: a payment that a refund points at
         exists (
-            select 1 from {{ ref('invoice_payments') }} reversal
+            select 1 from {{ partition_ref('invoice_payments', network) }} reversal
             where reversal.original_payment_id = ipay.id
         ) as is_reversed,
         -- BL-006: negative for a refund, so a sum over dates nets refunds on the day they were made
@@ -38,13 +38,13 @@
             when ipay.original_payment_id is not null then -ipay.amount
             else ipay.amount
         end as signed_amount
-    from {{ ref('invoice_payments') }} ipay
+    from {{ partition_ref('invoice_payments', network) }} ipay
     -- BL-001: a payment belongs to the payer whose link table carries it
     -- BL-007: no invoice-status, encounter or facility filter here
     -- BL-008: patient refunds carry their own link row, so patient signed sums net to paid
     -- BL-009: insurer reversals carry none, so an insurer total excludes is_reversed rows
     where exists (
-        select 1 from {{ ref(link) }} payer_link
+        select 1 from {{ partition_ref(link, network) }} payer_link
         where payer_link.invoice_payment_id = ipay.id
     )
 {% endmacro %}

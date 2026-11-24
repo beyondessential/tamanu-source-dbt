@@ -1,1 +1,1 @@
-{{ diagnoses_dataset(is_sensitive=false) }}
+{{ diagnoses_dataset(network=none) }}

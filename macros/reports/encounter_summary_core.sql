@@ -1,4 +1,4 @@
-{% macro encounter_summary_core(date_field, is_sensitive=false) %}
+{% macro encounter_summary_core(date_field, network=none) %}
 {#-
     Encounter summary rows: the patient, the encounter's movement history and its
     clinical aggregates, resolved and mostly unformatted.
@@ -35,7 +35,7 @@
     result exact. See the note above the filter itself.
 -#}
 
-{#- The facility scope and the is_sensitive partition come from encounters_core();
+{#- The facility scope and the network partition come from encounters_core();
     see specs/dbt-model/encounters_core.md. The predicates below are this report's own
     and reference the `e` / `f` aliases that macro contracts on (its BL-003).
 
@@ -134,7 +134,7 @@ with encounters_in_scope as (
         reason_for_encounter,
         facility
     from (
-        {{ encounters_core(is_sensitive=is_sensitive, extra_predicates=scope_filter) }}
+        {{ encounters_core(network=network, extra_predicates=scope_filter) }}
     ) scope
 ),
 
@@ -151,7 +151,7 @@ history_in_scope as (
         eh.department_id,
         eh.location_id,
         eh.encounter_type
-    from {{ ref('encounter_history') }} eh
+    from {{ partition_ref('encounter_history', network) }} eh
     join encounters_in_scope eis
         on eis.encounter_id = eh.encounter_id
 ),
@@ -188,11 +188,11 @@ encounter_history_consolidated as (
     left join {{ ref('users') }} actor
         on actor.id = eh.updated_by_id
     -- BL-014: a history row whose department or location does not resolve is dropped
-    join {{ ref('departments') }} d
+    join {{ partition_ref('departments', network) }} d
         on d.id = eh.department_id
-    join {{ ref('locations') }} l
+    join {{ partition_ref('locations', network) }} l
         on l.id = eh.location_id
-    left join {{ ref('location_groups') }} lg
+    left join {{ partition_ref('location_groups', network) }} lg
         on lg.id = l.location_group_id
 ),
 
@@ -301,7 +301,7 @@ encounter_triages as (
                 partition by t.encounter_id
                 order by t.triage_datetime, t.id
             ) as triage_rank
-        from {{ ref('triages') }} t
+        from {{ partition_ref('triages', network) }} t
         join encounters_in_scope eis
             on eis.encounter_id = t.encounter_id
     ) ranked
@@ -341,7 +341,7 @@ encounter_diagnoses as (
             '; '
             order by ed.is_primary desc, ed.datetime asc
         ) as diagnosis_codes
-    from {{ ref('encounter_diagnoses') }} ed
+    from {{ partition_ref('encounter_diagnoses', network) }} ed
     join encounters_in_scope eis
         on eis.encounter_id = ed.encounter_id
     join {{ ref('reference_data') }} d
@@ -365,10 +365,10 @@ encounter_prescriptions as (
             '' || E'\n' || ''
             order by p.datetime
         ) as medications
-    from {{ ref('encounter_prescriptions') }} ep
+    from {{ partition_ref('encounter_prescriptions', network) }} ep
     join encounters_in_scope eis
         on eis.encounter_id = ep.encounter_id
-    join {{ ref('prescriptions') }} p
+    join {{ partition_ref('prescriptions', network) }} p
         on p.id = ep.prescription_id
     join {{ ref('reference_data') }} m
         on m.id = p.medication_id
@@ -387,7 +387,7 @@ encounter_vaccinations as (
             E'\n'
             order by av.datetime
         ) as vaccinations
-    from {{ ref('vaccine_administrations') }} av
+    from {{ partition_ref('vaccine_administrations', network) }} av
     join encounters_in_scope eis
         on eis.encounter_id = av.encounter_id
     join {{ ref('vaccine_schedules') }} sv
@@ -415,12 +415,12 @@ encounter_procedures as (
             E'\n'
             order by p.date
         ) as procedures
-    from {{ ref('procedures') }} p
+    from {{ partition_ref('procedures', network) }} p
     join encounters_in_scope eis
         on eis.encounter_id = p.encounter_id
     left join {{ ref('reference_data') }} proc
         on proc.id = p.procedure_type_id
-    left join {{ ref('locations') }} loc
+    left join {{ partition_ref('locations', network) }} loc
         on loc.id = p.location_id
     group by p.encounter_id
 ),
@@ -435,10 +435,10 @@ encounter_lab_items as (
         lr.encounter_id,
         lr.collected_datetime,
         ltp.name as item
-    from {{ ref('lab_requests') }} lr
+    from {{ partition_ref('lab_requests', network) }} lr
     join encounters_in_scope eis
         on eis.encounter_id = lr.encounter_id
-    join {{ ref('lab_test_panel_requests') }} ltpr
+    join {{ partition_ref('lab_test_panel_requests', network) }} ltpr
         on ltpr.lab_request_id = lr.id
     left join {{ ref('lab_test_panels') }} ltp
         on ltp.id = ltpr.lab_test_panel_id
@@ -450,12 +450,12 @@ encounter_lab_items as (
         lr.encounter_id,
         lr.collected_datetime,
         ltt.name as item
-    from {{ ref('lab_requests') }} lr
+    from {{ partition_ref('lab_requests', network) }} lr
     join encounters_in_scope eis
         on eis.encounter_id = lr.encounter_id
-    join {{ ref('lab_tests') }} lt
+    join {{ partition_ref('lab_tests', network) }} lt
         on lt.lab_request_id = lr.id
-    join {{ ref('int__lab_test_panel_attribution') }} lta
+    join {{ partition_ref('int__lab_test_panel_attribution', network) }} lta
         on lta.lab_test_id = lt.id
         and lta.lab_test_panel_request_id is null
     left join {{ ref('lab_test_types') }} ltt
@@ -500,7 +500,7 @@ notes_raw as (
         n.record_id,
         n.updated_note_id,
         n.created_datetime
-    from {{ ref('notes') }} n
+    from {{ partition_ref('notes', network) }} n
     join encounters_in_scope eis
         on eis.encounter_id = n.record_id
     where n.record_type = 'Encounter'
@@ -512,7 +512,7 @@ notes_raw as (
 
        Inner join, where the coalesce carried a fallback arm: a note whose record_id
        resolved to no imaging_request was compared against encounter_id directly. The arm is
-       reachable -- ref('imaging_requests') drops requests belonging to the test patient or
+       reachable -- partition_ref('imaging_requests', network) drops requests belonging to the test patient or
        to a deleted encounter, and their notes took it -- but for it to have returned a row,
        an imaging request id would have to equal an encounter id. AC-011 settles that against
        real ids rather than reasoning about it. #}
@@ -525,8 +525,8 @@ notes_raw as (
         n.record_id,
         n.updated_note_id,
         n.created_datetime
-    from {{ ref('notes') }} n
-    join {{ ref('imaging_requests') }} ir
+    from {{ partition_ref('notes', network) }} n
+    join {{ partition_ref('imaging_requests', network) }} ir
         on ir.id = n.record_id
     join encounters_in_scope eis
         on eis.encounter_id = ir.encounter_id
@@ -608,10 +608,10 @@ imaging_request_areas as (
             when n.note_type = 'other' then n.content
         end, ','
         order by n.datetime, n.created_datetime, n.id) as notes
-    from {{ ref('imaging_requests') }} ir
+    from {{ partition_ref('imaging_requests', network) }} ir
     join encounters_in_scope eis
         on eis.encounter_id = ir.encounter_id
-    left join {{ ref('imaging_request_areas') }} ira
+    left join {{ partition_ref('imaging_request_areas', network) }} ira
         on ira.imaging_request_id = ir.id
     left join {{ ref('reference_data') }} area
         on area.id = ira.area_id
@@ -711,11 +711,11 @@ select
 from encounters_in_scope eis
 join {{ ref('patients') }} p
     on p.id = eis.patient_id
-join {{ ref('locations') }} l
+join {{ partition_ref('locations', network) }} l
     on l.id = eis.location_id
-join {{ ref('departments') }} dp
+join {{ partition_ref('departments', network) }} dp
     on dp.id = eis.department_id
-left join {{ ref('location_groups') }} lg
+left join {{ partition_ref('location_groups', network) }} lg
     on lg.id = l.location_group_id
 left join {{ ref('users') }} c
     on c.id = eis.clinician_id
@@ -726,7 +726,7 @@ left join encounter_triages t
     on t.encounter_id = eis.encounter_id
 left join encounter_type_groups etg
     on etg.encounter_id = eis.encounter_id
-left join {{ ref('discharges') }} d
+left join {{ partition_ref('discharges', network) }} d
     on d.encounter_id = eis.encounter_id
 left join {{ ref('patient_additional_data') }} pad
     on pad.patient_id = eis.patient_id

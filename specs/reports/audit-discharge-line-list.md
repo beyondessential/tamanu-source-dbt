@@ -52,7 +52,7 @@ a deleted or merged patient are out of scope.
 
 | Argument | Values | Purpose |
 |---|---|---|
-| `is_sensitive` | `false` (standard) / `true` (sensitive) | Selects the facility partition. |
+| `network` | `none` (standard) / a sensitive network's code | Selects the facility partition. |
 
 ### Upstream models
 
@@ -125,7 +125,7 @@ a deleted or merged patient are out of scope.
 - **BL-008:** `later_edit_count` is the number of change log entries after the first. It is
   null where the discharge has no change log coverage, which distinguishes "never edited"
   from "not known".
-- **BL-009:** Facility scope is partitioned by the `is_sensitive` macro argument.
+- **BL-009:** Facility scope is partitioned by the `network` macro argument.
 - **BL-010:** Diagnoses are aggregated to semicolon-separated strings per encounter so the
   one-row-per-encounter grain holds, split primary from secondary and name from code — the same
   four columns as the admissions line list. Each group is ordered by the date the diagnosis
@@ -152,7 +152,7 @@ a deleted or merged patient are out of scope.
   candidate compares deployment time while BL-007's filter compares the viewer's selected
   timezone, up to 26 hours apart, and BL-007's exact filter trims the result to the range
   afterwards, so correctness never depends on the candidate step being exact.
-  `ds__discharge_audit` and `ds__sensitive_discharge_audit` call the same dataset macro
+  `ds__discharge_audit` and `ds__sn_<network>_discharge_audit` call the same dataset macro
   unfiltered, so other consumers keep reading every discharge's full history.
 - **BL-014:** `discharges_change_history()` holds the change-log extraction's
   `row_number()`, partitioned by `discharge_id` and ordered by the UTC sort keys, reading from
@@ -222,5 +222,6 @@ _None._
 | 2026-08-21 | Maui team | Brought the spec back in line with the code where it had drifted: partial change log coverage (BL-002 and Risks), the `end_date` clamp inherited from the encounters base (BL-011), earliest-wins dedup in BL-001, the null-location blind spot shared by the dataset and AC-001's test, and the `warn` severity the acceptance tests run at. Documentation only, no code change. |
 | 2026-08-31 | Maui team | Removed `created_datetime` from the `discharges` base model and with it BL-002's fallback: `discharge_recorded_datetime` now comes from the change log alone and is null where the change log has no entry. AC-003 re-aimed at the invariant that still holds, its `not_null` tests dropped, `test_ds__discharge_audit_changelog_fallback` renamed to `test_ds__discharge_audit_no_changelog_coverage`, and the report notes updated. Consumers needing the clinician-entered discharge date join the encounters base for it, as `ds__discharge_audit` already does. |
 | 2026-10-16 | Maui team | [MAUI-7018](https://linear.app/bes/issue/MAUI-7018): BL-002's earliest entry is chosen by UTC log time (the base's `change_sequence`), so a recording followed by an edit inside a DST fall-back's repeated hour reports the recording (AC-009). Unchanged outside that hour. |
-| 2026-10-19 | Maui team | [MAUI-7017](https://linear.app/bes/issue/MAUI-7017): added BL-013/BL-014 and AC-010. The report now scopes the change-log read to candidate discharges before `discharge_audit_dataset` aggregates it, via the new `discharges_change_events` thin base and `discharges_change_log_events()` extraction macro. Output unchanged; `ds__discharge_audit` and `ds__sensitive_discharge_audit` are unaffected. |
+| 2026-10-19 | Maui team | [MAUI-7017](https://linear.app/bes/issue/MAUI-7017): added BL-013/BL-014 and AC-010. The report now scopes the change-log read to candidate discharges before `discharge_audit_dataset` aggregates it, via the new `discharges_change_events` thin base and `discharges_change_log_events()` extraction macro. Output unchanged; `ds__discharge_audit` and `ds__sn_<network>_discharge_audit` are unaffected. |
 | 2026-11-10 | Maui team | [MAUI-7088](https://linear.app/bes/issue/MAUI-7088/tamanu-reports-replace-repeated-filters-with-a-multi-select): added BL-015. |
+| 2026-11-24 | Maui team | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

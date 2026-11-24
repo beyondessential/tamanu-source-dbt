@@ -31,6 +31,10 @@ processes = -1
 [sqlfluff:templater:dbt]
 project_dir = ./
 
+# Passed to dbt as vars. Lists the fixture sensitive network so its models are linted here too.
+[sqlfluff:templater:dbt:context]
+sensitive_networks = example
+
 [sqlfluff:templater:jinja]
 apply_dbt_builtins = True
 

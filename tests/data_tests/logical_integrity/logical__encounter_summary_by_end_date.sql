@@ -1,4 +1,14 @@
-with base as (
+with raw_facilities as (
+    -- the raw table, not the facilities base, so the partition is checked
+    -- independently of the base's own filter
+    select
+        id,
+        sensitive_network_id
+    from {{ source('tamanu', 'facilities') }}
+    where deleted_at is null
+),
+
+base as (
     select count(distinct e.id) as total_encounters
     from {{ ref('encounters') }} e
     -- Mirrors the report's history join. No join to users: the report left-joins the
@@ -15,7 +25,7 @@ with base as (
         on eh_l.id = eh.location_id
     join {{ ref('locations') }} l
         on l.id = e.location_id
-    join {{ ref('facilities') }} f
+    join raw_facilities f
         on f.id = l.facility_id
     join {{ ref('departments') }} dp
         on dp.id = e.department_id

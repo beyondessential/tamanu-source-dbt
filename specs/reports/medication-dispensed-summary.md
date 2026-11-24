@@ -4,8 +4,8 @@
 
 | Field | Value |
 |---|---|
-| **Name** | `medication-dispensed-summary` + `sensitive-medication-dispensed-summary` |
-| **Type** | Tamanu report, standard + sensitive pair in `models/reports/`, reading `ds__medication_dispenses` / `ds__sensitive_medication_dispenses` (see `specs/dbt-model/ds__medication_dispenses.md`) |
+| **Name** | `medication-dispensed-summary` + `sensitive-<network>-medication-dispensed-summary` |
+| **Type** | Tamanu report, standard + sensitive pair in `models/reports/`, reading `ds__medication_dispenses` / `ds__sn_<network>_medication_dispenses` (see `specs/dbt-model/ds__medication_dispenses.md`) |
 | **Layer** | `report` |
 | **Materialisation** | `view` |
 | **Status** | `implemented` |
@@ -57,3 +57,4 @@ One row per medication, summed over every dispense in the date range and filters
 | Date | Author | Change |
 |---|---|---|
 | 2026-11-10 | Maui team | Retrospective spec, written with MAUI-7088, which made the drug filter a multi-select. |
+| 2026-11-24 | Maui team | The sensitive side is generated per sensitive network, and the macro argument `is_sensitive` is `network` (`specs/dbt-model/sensitive-facility-partition.md`). |

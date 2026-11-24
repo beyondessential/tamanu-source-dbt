@@ -1,1 +1,1 @@
-{{ imaging_requests_dataset(is_sensitive=false) }}
+{{ imaging_requests_dataset(network=none) }}

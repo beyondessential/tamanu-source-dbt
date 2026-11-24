@@ -1,11 +1,10 @@
-{% macro outpatient_appointments_audit_dataset(is_sensitive=false) %}
+{% macro outpatient_appointments_audit_dataset(network=none) %}
 
 {{
     config(
         materialized='incremental' if target.name.startswith('analytics') else 'view',
         incremental_strategy='delete+insert',
-        unique_key='appointment_id',
-        enabled=(var('has_sensitive_facility', false) if is_sensitive else true)
+        unique_key='appointment_id'
     )
 }}
 
@@ -29,7 +28,7 @@
 {%- set candidate_filter -%}
 c.appointment_id in (
     select distinct c2.appointment_id
-    from {{ ref('outpatient_appointments_change_logs') }} c2
+    from {{ partition_ref('outpatient_appointments_change_logs', network) }} c2
     where c2.updated_at_sync_tick >= (select coalesce(max(updated_at_sync_tick), 0) from {{ this }})
 )
 {%- endset %}
@@ -82,7 +81,7 @@ select
     facility
 from (
     {{ outpatient_appointments_audit_core(
-        is_sensitive=is_sensitive,
+        network=network,
         record_id_filter=candidate_filter if is_incremental() else none
     ) }}
 ) core

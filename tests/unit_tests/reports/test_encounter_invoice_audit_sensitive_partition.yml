@@ -1,16 +1,17 @@
 unit_tests:
   - name: test_encounter_invoice_audit_sensitive_partition
-    model: sensitive-audit-encounter-invoice
+    model: sensitive-example-audit-encounter-invoice
     description: >
       BL-001 of encounters_in_scope, asserted from the sensitive side. The same two
-      facilities are in scope as the standard-variant tests -- one sensitive, one not --
-      and each carries an encounter that would otherwise qualify. The sensitive variant
-      must return the encounter at the sensitive facility and only that one.
+      locations are in scope as the standard-variant tests, each with an encounter that
+      would otherwise qualify, but only the sensitive facility is in the
+      `sn_example_facilities` stub. The sensitive variant must return the encounter at the
+      sensitive facility and only that one.
 
       This is the inverse of what test_encounter_invoice_audit_aggregation asserts, and
-      the two together pin both halves of the partition. Without this test, changing
-      `(f.sensitive_network_id is not null) = {{ is_sensitive }}` to a constant `= false` would still pass
-      every other audit-encounter-invoice test, because they all run the standard variant.
+      the two together pin both halves of the partition. Without this test, pointing the
+      sensitive variant at `facilities` would still pass every other audit-encounter-invoice
+      test, because they all run the standard variant.
       test_encounter_summary_start_sensitive_variant asserts the same partition at the
       encounter summary's call site.
     overrides:
@@ -23,7 +24,7 @@ unit_tests:
         yearmonth_format: 'YYYY-MM'
         language: default
     given:
-      - input: ref('encounters')
+      - input: ref('sn_example_encounters')
         format: sql
         rows: |
           -- at the SENSITIVE facility: the only row this variant should return
@@ -32,19 +33,17 @@ unit_tests:
           -- at the NON-sensitive facility: must not appear in the sensitive variant
           select 'enc_std', '2024-01-19 09:00:00'::timestamp, '2024-01-19 17:00:00'::timestamp, 'pat_002', 'loc_001', 'dept_001', null::text, null::text, 'clinic', null::text, null::text, null::timestamp
 
-      - input: ref('locations')
+      - input: ref('sn_example_locations')
         format: sql
         rows: |
           select 'loc_001' as id, 'fac_001' as facility_id
           union all
           select 'loc_002', 'fac_002'
 
-      - input: ref('facilities')
+      - input: ref('sn_example_facilities')
         format: sql
         rows: |
-          select 'fac_001' as id, 'General Hospital' as name, null::text as sensitive_network_id
-          union all
-          select 'fac_002', 'Sensitive Clinic', 'sn_001'
+          select 'fac_002' as id, 'Sensitive Clinic' as name, 'sn_001' as sensitive_network_id
 
       - input: ref('patients')
         format: sql
@@ -53,7 +52,7 @@ unit_tests:
           union all
           select 'pat_002', 'P002', 'Jane', 'Smith', '1985-06-15'::date, 'female'
 
-      - input: ref('departments')
+      - input: ref('sn_example_departments')
         format: sql
         rows: |
           select 'dept_001' as id, 'Medicine' as name
@@ -68,7 +67,7 @@ unit_tests:
         rows: |
           select null::text as id, null::text as name where false
 
-      - input: ref('ds__encounter_invoices')
+      - input: ref('ds__sn_example_encounter_invoices')
         format: sql
         rows: |
           select

@@ -60,14 +60,14 @@ unit_tests:
         select 'Paracetamol' as "Medication", 'PCM' as "Code", 20 as "Quantity"
 
   - name: test_enc_rx_discharge_summary_sensitive_medication_filter
-    model: sensitive-encounter-prescription-discharge-summary
+    model: sensitive-example-encounter-prescription-discharge-summary
     description: AC-006 / BL-010 of specs/reports/encounter-prescription-discharge-summary.md, sensitive variant.
     overrides:
       vars:
         timezone: UTC
         medicationId: med_002
     given:
-      - input: ref('ds__sensitive_encounter_prescriptions')
+      - input: ref('ds__sn_example_encounter_prescriptions')
         format: sql
         rows: |
           select 'rx_001' as prescription_id, 'fac_001' as facility_id, 'med_001' as medication_id, 'Amoxicillin' as medication, 'AMX' as medication_code, 10 as quantity, true as is_selected_for_discharge, '2024-01-05 09:00:00'::timestamp as datetime
@@ -118,14 +118,14 @@ unit_tests:
         select 'Paracetamol', 'PCM', 20
 
   - name: test_enc_rx_discharge_summary_sensitive_two
-    model: sensitive-encounter-prescription-discharge-summary
+    model: sensitive-example-encounter-prescription-discharge-summary
     description: The sensitive variant returns the rows for both selected values.
     overrides:
       vars:
         timezone: UTC
         medicationId: [med_001, med_002]
     given:
-      - input: ref('ds__sensitive_encounter_prescriptions')
+      - input: ref('ds__sn_example_encounter_prescriptions')
         format: sql
         rows: |
           select 'rx_001' as prescription_id, 'fac_001' as facility_id, 'med_001' as medication_id, 'Amoxicillin' as medication, 'AMX' as medication_code, 10 as quantity, true as is_selected_for_discharge, '2024-01-05 09:00:00'::timestamp as datetime

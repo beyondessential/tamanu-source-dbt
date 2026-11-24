@@ -1,1 +1,1 @@
-{{ prescription_administrations_dataset(is_sensitive=false) }}
+{{ prescription_administrations_dataset(network=none) }}

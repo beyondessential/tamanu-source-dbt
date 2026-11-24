@@ -1,9 +1,9 @@
-{% macro hospital_admissions_by_location_summary_report(is_sensitive=false) %}
+{% macro hospital_admissions_by_location_summary_report(network=none) %}
 
 {#- BL-012 (specs/reports/hospital-admissions-summaries.md): the partition is
     carried by the intermediate, so this macro's only sensitivity-related job is
     picking which one to read. -#}
-{% set episodes = 'int__sensitive_admission_history_location' if is_sensitive else 'int__admission_history_location' %}
+{% set episodes = partition_name('int__admission_history_location', network) %}
 
 with reporting_months as (
     select month::date
@@ -53,7 +53,7 @@ location_summary as (
     join {{ ref(episodes) }} alh
         on {{ to_user_selected_timezone('alh.start_datetime') }}::date <= (rm.month + '1 month'::interval - '1 day'::interval)
         and ({{ to_user_selected_timezone('alh.end_datetime') }}::date is null or {{ to_user_selected_timezone('alh.end_datetime') }}::date >= rm.month)
-    join {{ ref('locations') }} l on l.id = alh.location_id
+    join {{ partition_ref('locations', network) }} l on l.id = alh.location_id
     where rm.month <= current_date
     group by
         rm.month,

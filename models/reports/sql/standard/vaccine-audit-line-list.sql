@@ -1,3 +1,4 @@
+{%- set network = none -%}
 select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
@@ -16,7 +17,7 @@ select
     recorded_by as "{{ translate_label('vaccinationRecordedBy') }}",
     modified_by as "{{ translate_label('vaccinationModifiedBy') }}",
     to_char({{ to_user_selected_timezone('updated_at') }}, '{{ var("datetime_format") }}') as "{{ translate_label('vaccinationModifiedDate') }}"
-from {{ ref("ds__vaccinations") }}
+from {{ partition_ref('ds__vaccinations', network) }}
 where
     vaccine_status in ('Recorded in error', 'Historical')
     and

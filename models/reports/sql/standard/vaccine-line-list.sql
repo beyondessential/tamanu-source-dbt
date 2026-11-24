@@ -1,3 +1,4 @@
+{%- set network = none -%}
 select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
@@ -24,7 +25,7 @@ select
     given_elsewhere_by as "{{ translate_label('vaccinationGivenElsewhereCountry') }}",
     not_given_clinician as "{{ translate_label('vaccinationNotGivenClinician') }}",
     not_given_reason as "{{ translate_label('vaccinationNotGivenReason') }}"
-from {{ ref("ds__vaccinations") }}
+from {{ partition_ref('ds__vaccinations', network) }}
 where
     vaccine_status in ('Given', 'Not Given')
     and

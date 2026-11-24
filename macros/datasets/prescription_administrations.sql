@@ -1,5 +1,5 @@
 -- See specs/dbt-model/ds__prescription_administrations.md for BL-003..BL-008, BL-011.
-{% macro prescription_administrations_dataset(is_sensitive=false) %}
+{% macro prescription_administrations_dataset(network=none) %}
 
 -- BL-006: each encounter history entry's department and location hold from its
 -- own time until the next entry's. Built in one pass rather than a per-row
@@ -15,7 +15,7 @@ with encounter_history_windows as (
             partition by eh.encounter_id
             order by eh.datetime, eh.id
         ) as valid_to
-    from {{ ref('encounter_history') }} eh
+    from {{ partition_ref('encounter_history', network) }} eh
 )
 
 select
@@ -59,16 +59,15 @@ select
     dose.given_by_user_id as administered_by_id,
     administrator.display_name as administered_by,
     mar.changing_status_reason as administration_notes
-from {{ ref('encounter_prescriptions') }} ep
-join {{ ref('encounters') }} e on e.id = ep.encounter_id
+from {{ partition_ref('encounter_prescriptions', network) }} ep
+join {{ partition_ref('encounters', network) }} e on e.id = ep.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
-join {{ ref('prescriptions') }} pr on pr.id = ep.prescription_id
+join {{ partition_ref('prescriptions', network) }} pr on pr.id = ep.prescription_id
 join {{ ref('reference_data') }} m on m.id = pr.medication_id
-join {{ ref('locations') }} l on l.id = e.location_id
+join {{ partition_ref('locations', network) }} l on l.id = e.location_id
 -- BL-007: standard vs sensitive split on the location's facility
-join {{ ref('facilities') }} f
+join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
-    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
 -- BL-008: prescriber_id is nullable, so this must stay a left join or prescriptions
 -- recorded without a prescriber would drop out of the dataset entirely
 left join {{ ref('users') }} prescriber on prescriber.id = pr.prescriber_id
@@ -76,12 +75,12 @@ left join {{ ref('users') }} prescriber on prescriber.id = pr.prescriber_id
 -- row, with every administration column null
 -- BL-004: records marked as an error were entered in error and never
 -- happened, so they are not joined
-left join {{ ref('medication_administration_records') }} mar
+left join {{ partition_ref('medication_administration_records', network) }} mar
     on mar.prescription_id = pr.id
     and mar.is_error is not true
 -- BL-005: one row per dose given; a MAR record with no dose (not given, or
 -- not yet recorded) keeps one row with the dose columns null
-left join {{ ref('medication_administration_record_doses') }} dose on dose.mar_id = mar.id
+left join {{ partition_ref('medication_administration_record_doses', network) }} dose on dose.mar_id = mar.id
 left join {{ ref('users') }} administrator on administrator.id = dose.given_by_user_id
 -- BL-006: the encounter history window in effect when the dose was given, or
 -- when it was due, or when prescribed. Falls back to the encounter's current
@@ -93,7 +92,7 @@ left join encounter_history_windows eh_at
         eh_at.valid_to is null
         or eh_at.valid_to > coalesce(dose.given_datetime, mar.due_datetime, pr.datetime)
     )
-left join {{ ref('departments') }} d on d.id = coalesce(eh_at.department_id, e.department_id)
-left join {{ ref('locations') }} l_at on l_at.id = coalesce(eh_at.location_id, e.location_id)
+left join {{ partition_ref('departments', network) }} d on d.id = coalesce(eh_at.department_id, e.department_id)
+left join {{ partition_ref('locations', network) }} l_at on l_at.id = coalesce(eh_at.location_id, e.location_id)
 
 {% endmacro %}

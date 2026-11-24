@@ -1,1 +1,1 @@
-{{ emergency_triage_dataset(is_sensitive=false) }}
+{{ emergency_triage_dataset(network=none) }}

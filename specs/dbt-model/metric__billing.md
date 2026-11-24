@@ -220,3 +220,4 @@ None.
 | 2026-10-05 | Maui team | `care_setting` and `is_admitted_via_emergency` retired: a consumer reads the setting from `visit_concept_id` and `visit_concept_name` (BL-019) |
 | 2026-10-09 | Maui team | `invoice_seen_by_billing` added: 1 when billing staff have acted on the invoice (BL-020, BL-021, MAUI-6984) |
 | 2026-10-13 | Maui team | `invoice_total` is the total before item adjustments, matching the app's "Invoice total", and `invoice_item_adjustment` added (BL-004) |
+| 2026-11-22 | Maui team | `ds__encounter_invoices` covers invoices at standard facilities only, so this metric does too. |

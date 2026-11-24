@@ -1,13 +1,13 @@
 unit_tests:
   - name: test_audit_outpatient_appointments_prev_area_symmetric
-    model: sensitive-audit-outpatient-appointments
+    model: sensitive-example-audit-outpatient-appointments
     description: >
       AC-037 / BL-033: the mirror of AC-036, pinning that the partition is symmetric rather
       than the sensitive variant being a privileged superset. An appointment moves out of a
       standard facility into a sensitive one, so the row is admitted to the sensitive report
       on its current facility, but "Previous area" comes back blank rather than naming the
       standard facility's area -- the sensitive variant carries only sensitive-facility data,
-      as every other is_sensitive partition in this project does.
+      as every other network partition in this project does.
       Note the cross-facility move this depends on is not a normal workflow: the
       appointment form's Area field is hard-scoped to the logged-in facility, so this
       state arrives via the API or a user at another facility. The test specifies
@@ -20,7 +20,7 @@ unit_tests:
         fromDate: '2026-09-01'
         toDate: '2026-09-02'
     given:
-      - input: ref('outpatient_appointments_change_logs')
+      - input: ref('sn_example_outpatient_appointments_change_logs')
         format: sql
         rows: |
           -- creation, in the standard facility (BL-023 excludes it, but it is the lag() baseline)
@@ -47,7 +47,7 @@ unit_tests:
             200::bigint,
             '{"start_time":"2026-10-01 09:00:00","end_time":"2026-10-01 09:30:00","patient_id":"pat_001","clinician_id":"cli_001","location_group_id":"lg_sensitive","appointment_type_id":"apt_001","is_high_priority":false,"status":"Confirmed","schedule_id":null}'::jsonb
 
-      - input: ref('outpatient_appointments')
+      - input: ref('sn_example_outpatient_appointments')
         format: sql
         rows: |
           select 'appt_moved'::text as id, null::date as cancelled_at_date
@@ -71,19 +71,17 @@ unit_tests:
           union all
           select 'usr_002'::text, 'Bob Admin'::text
 
-      - input: ref('location_groups')
+      - input: ref('sn_example_location_groups')
         format: sql
         rows: |
           select 'lg_standard'::text as id, 'Outpatients'::text as name, 'fac_standard'::text as facility_id
           union all
           select 'lg_sensitive'::text, 'Restricted Ward'::text, 'fac_sensitive'::text
 
-      - input: ref('facilities')
+      - input: ref('sn_example_facilities')
         format: sql
         rows: |
-          select 'fac_standard'::text as id, 'Central Hospital'::text as name, null::text as sensitive_network_id
-          union all
-          select 'fac_sensitive'::text, 'Restricted Clinic'::text, 'sn_001'
+          select 'fac_sensitive'::text as id, 'Restricted Clinic'::text as name, 'sn_001' as sensitive_network_id
 
       - input: ref('reference_data')
         format: sql

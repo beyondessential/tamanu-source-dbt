@@ -66,3 +66,5 @@ left join {{ ref("patients") }} p_mother on p_mother.id = pad.mother_id
 left join {{ ref("patients") }} p_father on p_father.id = pad.father_id
 left join {{ ref("facilities") }} f on f.id = pbd.birth_facility_id
 left join {{ ref("users") }} u on u.id = pad.registered_by_id
+-- standard facilities only: drop a row whose facility is set but is not in `facilities`
+where pbd.birth_facility_id is null or f.id is not null

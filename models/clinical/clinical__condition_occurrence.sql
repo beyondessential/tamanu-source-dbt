@@ -1,3 +1,4 @@
+{%- set network = none -%}
 -- clinical__condition_occurrence -- OMOP-lite CONDITION_OCCURRENCE domain. One row per
 -- recorded diagnosis, unioning two sources: encounter diagnoses and program-registry
 -- conditions. The FK graph anchors on the encounter for the first and on the enrolment for the
@@ -8,11 +9,11 @@
 -- See specs/dbt-model/clinical__condition_occurrence.md for BL-001..BL-011.
 
 with encounter_diagnoses as (
-    select * from {{ ref('encounter_diagnoses') }}
+    select * from {{ partition_ref('encounter_diagnoses', network) }}
 ),
 
 encounters as (
-    select * from {{ ref('encounters') }}
+    select * from {{ partition_ref('encounters', network) }}
 ),
 
 reference_data as (
@@ -20,7 +21,7 @@ reference_data as (
 ),
 
 registration_conditions as (
-    select * from {{ ref('patient_program_registration_conditions') }}
+    select * from {{ partition_ref('patient_program_registration_conditions', network) }}
 ),
 
 registry_conditions as (
@@ -37,7 +38,7 @@ condition_categories as (
 -- emits conditions against enrolments recorded in error, and against patients merged away,
 -- which have no episode and no clinical__person row to answer for them
 enrolments as (
-    select * from {{ ref('int__program_enrolments') }}
+    select * from {{ partition_ref('int__program_enrolments', network) }}
     where registration_status != 'recordedInError'
 ),
 

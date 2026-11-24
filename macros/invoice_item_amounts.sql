@@ -3,23 +3,27 @@
 
     Emits a full `with ... select` producing one row per invoice item: price-list
     resolution, resolved unit price, item discount/adjustment, and per-item insurance
-    coverage. Kept as a macro (not a ref'd model) so both consumers embed the *bases*
+    coverage. Kept as a macro (not a ref'd model) so its consumers embed the *bases*
     directly:
       - int__encounter_invoice_item_amounts  = {{ invoice_item_amounts() }}   (item grain)
-      - int__encounter_invoice_amounts        wraps it as `with items as (...)` and
+      - encounter_invoice_amounts()           wraps it as `with items as (...)` and
                                                aggregates to invoice grain
+
+    network picks the facility partition: none reads `facilities` (standard only), a
+    sensitive network's code reads that network's facilities. An invoice at a facility
+    outside the partition has no item rows.
 
     Embedding via a macro (rather than one int ref'ing the other) keeps invoice_items /
     price lists / discounts / insurance plans as direct refs of int__encounter_invoice_amounts,
     so its unit tests mock those bases exactly as before. One definition, no drift.
     See specs/dbt-model/ds__encounter_invoice_items.md.
 #}
-{% macro invoice_item_amounts() %}
+{% macro invoice_item_amounts(network=none) %}
 with invoice_context as materialized (
     -- Per-invoice context for price-list resolution, mirroring the inputs the
-    -- app passes to getIdForPatientEncounter. Facility-agnostic: the consumer
-    -- applies any facility or sensitivity scoping. Billing type falls back to
-    -- the patient's additional data when the encounter has none.
+    -- app passes to getIdForPatientEncounter, for invoices in the network
+    -- facility partition. Billing type falls back to the patient's additional
+    -- data when the encounter has none.
     -- `materialized` is load-bearing: it is referenced once, so without the hint
     -- Postgres inlines it and drives the `cross join invoice_price_lists` from
     -- the encounters table (exploding to ~745k rows). Materialising bounds the
@@ -30,12 +34,12 @@ with invoice_context as materialized (
         coalesce(e.patient_billing_type_id, pad.patient_billing_type_id) as patient_billing_type_id,
         -- BL-002: patient age in completed years at the invoice date, computed once
         date_part('year', age(i.datetime, p.date_of_birth)) as age_at_invoice
-    from {{ ref('invoices') }} i
-    join {{ ref('encounters') }} e
+    from {{ partition_ref('invoices', network) }} i
+    join {{ partition_ref('encounters', network) }} e
         on e.id = i.encounter_id
-    join {{ ref('locations') }} l
+    join {{ partition_ref('locations', network) }} l
         on l.id = e.location_id
-    join {{ ref('facilities') }} f
+    join {{ partition_ref('facilities', network) }} f
         on f.id = l.facility_id
     join {{ ref('patients') }} p
         on p.id = e.patient_id
@@ -140,7 +144,7 @@ item_unit_price as (
             ipli.price,
             0
         ) as price
-    from {{ ref('invoice_items') }} ii
+    from {{ partition_ref('invoice_items', network) }} ii
     left join {{ ref('invoice_products') }} ip
         on ip.id = ii.product_id
     left join invoice_price_list ipl_match
@@ -194,7 +198,7 @@ item_resolved_price as (
             invoice_item_id,
             amount,
             type
-        from {{ ref('invoice_item_discounts') }}
+        from {{ partition_ref('invoice_item_discounts', network) }}
         order by invoice_item_id asc, id asc
     ) iid on iid.invoice_item_id = iup.invoice_item_id
 ),
@@ -220,14 +224,14 @@ item_coverage as (
             0
         )) as total_pct
     from item_resolved_price irp
-    join {{ ref('invoices_invoice_insurance_plans') }} iiip
+    join {{ partition_ref('invoices_invoice_insurance_plans', network) }} iiip
         on iiip.invoice_id = irp.invoice_id
     join {{ ref('invoice_insurance_plans') }} iip
         on iip.id = iiip.invoice_insurance_plan_id
     left join {{ ref('invoice_insurance_plan_items') }} iipi
         on iipi.invoice_insurance_plan_id = iiip.invoice_insurance_plan_id
         and iipi.invoice_product_id = irp.product_id
-    left join {{ ref('invoice_item_finalised_insurances') }} fin
+    left join {{ partition_ref('invoice_item_finalised_insurances', network) }} fin
         on fin.invoice_item_id = irp.invoice_item_id
         and fin.invoice_insurance_plan_id = iiip.invoice_insurance_plan_id
     where irp.insurable = true

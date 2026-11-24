@@ -1,18 +1,13 @@
-{% macro admission_history_location(is_sensitive=false) %}
+{% macro admission_history_location(network=none) %}
 
 {#-
     Admission episodes per location, partitioned by facility sensitivity.
 
     See specs/reports/hospital-admissions-summaries.md for the BL clauses.
 
-    BL-012: the facility scope is partitioned by is_sensitive, exhaustively and
-    disjointly, so each facility's episodes reach exactly one of the two variants. The
-    join to facilities exists only to resolve the facility name; the predicate is what
-    makes it a partition.
-
-    The predicate is exhaustive by construction: `sensitive_network_id is not null` is
-    never null, so a bare `= true` / `= false` pair puts every facility in exactly one
-    variant.
+    BL-012: the facility scope is partitioned by network, disjointly, so each facility's
+    episodes reach exactly one partition. network picks the facility base: `facilities`
+    holds the standard facilities and each listed sensitive network has a base of its own.
 -#}
 
 with admission_location_log as (
@@ -25,7 +20,7 @@ with admission_location_log as (
             when eh.change_type is null or 'encounter_type' = any(eh.change_type) then 'admission'
             else 'transfer-in'
         end as type
-    from {{ ref('encounter_history') }} eh
+    from {{ partition_ref('encounter_history', network) }} eh
     where (eh.change_type isnull or eh.change_type && array['location', 'encounter_type'])
         and eh.encounter_type = 'admission'
 ),
@@ -102,17 +97,16 @@ select
         false
     ) as death
 from location_phases ll
-join {{ ref('encounters') }} e on e.id = ll.encounter_id
+join {{ partition_ref('encounters', network) }} e on e.id = ll.encounter_id
 join {{ ref('patients') }} p on p.id = e.patient_id
-join {{ ref('locations') }} l on l.id = ll.location_id
+join {{ partition_ref('locations', network) }} l on l.id = ll.location_id
 -- BL-013 (specs/reports/hospital-admissions-summaries.md): left join. A location
 -- with no location_group is real and its episodes count; an inner join here dropped
 -- them from -by-area and -by-location entirely, deaths included.
-left join {{ ref('location_groups') }} lg on lg.id = l.location_group_id
+left join {{ partition_ref('location_groups', network) }} lg on lg.id = l.location_group_id
 -- BL-012 (specs/reports/hospital-admissions-summaries.md): facility partition
-join {{ ref('facilities') }} f
+join {{ partition_ref('facilities', network) }} f
     on f.id = l.facility_id
-    and (f.sensitive_network_id is not null) = {{ is_sensitive }}
 window w as (
     partition by ll.encounter_id
     order by ll.start_datetime

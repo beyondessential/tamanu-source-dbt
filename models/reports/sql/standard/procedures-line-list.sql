@@ -1,3 +1,4 @@
+{%- set network = none -%}
 select
     display_id as "{{ translate_label('patientDisplayId') }}",
     first_name as "{{ translate_label('patientFirstName') }}",
@@ -25,7 +26,7 @@ select
     is_completed as "{{ translate_label('procedureIsCompleted') }}",
     time_in as "{{ translate_label('procedureTimeIn') }}",
     time_out as "{{ translate_label('procedureTimeOut') }}"
-from {{ ref('ds__procedures') }}
+from {{ partition_ref('ds__procedures', network) }}
 where
     procedure_date
     >= {{ parameter('fromDate', default_value='2024-01-01', data_type='date') }}

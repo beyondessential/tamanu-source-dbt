@@ -38,7 +38,17 @@ unit_tests:
       - input: source('tamanu', 'encounters')
         format: sql
         rows: |
-          select 'e1' as id, 'pat1' as patient_id, null::timestamp as deleted_at
+          select 'e1' as id, 'pat1' as patient_id, null::timestamp as deleted_at, 'loc1' as location_id
+
+      - input: source('tamanu', 'locations')
+        format: sql
+        rows: |
+          select 'loc1'::text as id, 'fac1'::text as facility_id
+
+      - input: source('tamanu', 'facilities')
+        format: sql
+        rows: |
+          select 'fac1'::text as id, null::text as sensitive_network_id
 
       - input: source('tamanu', 'patient_ongoing_prescriptions')
         format: sql

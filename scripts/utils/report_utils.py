@@ -53,7 +53,7 @@ def generate_project_reports(language):
     """
     Generates reports for the given target by compiling model nodes tagged with "reports".
     Nodes tagged "restricted" (i.e. sensitive-facility dataset views) are excluded when
-    has_sensitive_facility is false. has_sensitive_facility is read from dbt_project.yml via get_dbt_project_vars(),
+    the deployment lists no sensitive network. sensitive_networks is read from dbt_project.yml via get_dbt_project_vars(),
     not from the dbt runtime context.
 
     Args:
@@ -66,7 +66,7 @@ def generate_project_reports(language):
     manifest = read_file(manifest_path, "json")
 
     project_vars = get_dbt_project_vars()
-    has_sensitive_facility = project_vars.get("has_sensitive_facility", False)
+    has_sensitive_networks = bool(project_vars.get("sensitive_networks"))
 
     nodes = [
         key
@@ -74,7 +74,7 @@ def generate_project_reports(language):
         if key.startswith("model")
         and "reports" in manifest["nodes"][key].get("tags", [])
         and (
-            has_sensitive_facility
+            has_sensitive_networks
             or "restricted" not in manifest["nodes"][key].get("tags", [])
         )
     ]
@@ -206,7 +206,7 @@ def _describe_excluded_dependency(manifest, dep):
 
     tags = manifest["nodes"].get(dep, {}).get("tags", [])
     if "restricted" in tags:
-        return 'tagged "restricted", which is excluded while has_sensitive_facility is false'
+        return 'tagged "restricted", which is excluded while sensitive_networks is empty'
     for tag in ("reports", "internal"):
         if tag in tags:
             return f'tagged "{tag}", which is excluded from the reporting schema'
@@ -290,17 +290,17 @@ def effective_dependencies(manifest, node):
     return resolved
 
 
-def reporting_schema_nodes(manifest, has_sensitive_facility):
+def reporting_schema_nodes(manifest, has_sensitive_networks):
     """The models the reporting schema creates a view for.
 
     Every model except the reports themselves, "internal" models and ephemeral
     models. An ephemeral model is inlined into its consumers and creates nothing
     in a dbt run, so a view of it would be one no query reads. A "restricted" model
-    is included only when has_sensitive_facility is true.
+    is included only when the deployment lists a sensitive network.
 
     Args:
         manifest (dict): The parsed dbt manifest.
-        has_sensitive_facility (bool): Whether the deployment has a sensitive facility.
+        has_sensitive_networks (bool): Whether the deployment lists a sensitive network.
 
     Returns:
         list: Unique IDs of the models to create, in manifest order.
@@ -312,7 +312,7 @@ def reporting_schema_nodes(manifest, has_sensitive_facility):
         and "reports" not in node.get("tags", [])
         and "internal" not in node.get("tags", [])
         and not _is_ephemeral(manifest, key)
-        and (has_sensitive_facility or "restricted" not in node.get("tags", []))
+        and (has_sensitive_networks or "restricted" not in node.get("tags", []))
     ]
 
 
@@ -371,7 +371,7 @@ def generate_reporting_schema_script():
     views they read. Nodes tagged "internal" (e.g. the
     metric_definitions registry) are dbt-package-internal and never materialised into the
     deployable reporting schema. Nodes tagged "restricted" (i.e. sensitive-facility dataset
-    views) are excluded when has_sensitive_facility is false. has_sensitive_facility is read
+    views) are excluded when the deployment lists no sensitive network. sensitive_networks is read
     from dbt_project.yml via get_dbt_project_vars(), not from the dbt runtime context.
 
     Returns:
@@ -381,9 +381,9 @@ def generate_reporting_schema_script():
     manifest = read_file(manifest_path, "json")
 
     project_vars = get_dbt_project_vars()
-    has_sensitive_facility = project_vars.get("has_sensitive_facility", False)
+    has_sensitive_networks = bool(project_vars.get("sensitive_networks"))
 
-    nodes = reporting_schema_nodes(manifest, has_sensitive_facility)
+    nodes = reporting_schema_nodes(manifest, has_sensitive_networks)
 
     if not nodes:
         raise RuntimeError("No models found: the manifest carries nothing to build a schema from")
