@@ -61,6 +61,8 @@ models:
           - who_dak_hiv_dsd_retention_eligible
           - who_dak_hiv_dsd_retained
           - who_dak_hiv_art_on_art_key_population
+          - who_dak_hiv_art_ltfu
+          - who_dak_hiv_art_reinitiated
     - relationships:
         name: ac_006_metric__sn_example_who_dak_hiv_indicators_metric_id_registered
         arguments:
