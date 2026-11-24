@@ -13,7 +13,7 @@
 | **Repo** | `tamanu-source-dbt` |
 | **Linear issue** | [MAUI-7199](https://linear.app/bes/issue/MAUI-7199), [MAUI-7225](https://linear.app/bes/issue/MAUI-7225) |
 | **Created** | 2026-08-24 |
-| **Last updated** | 2026-11-23 |
+| **Last updated** | 2026-11-24 |
 
 ## Purpose
 
@@ -211,15 +211,25 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
   ART.2 is formed by the consumer: ART.1 at the previous period's end plus ART.4 within the period,
   less ART.1 at the period's end, over ART.1 at the previous period's end plus ART.4 within the
   period. `who_dak_hiv_art_ltfu` is its lost-to-follow-up disaggregation.
-- **BL-055:** `int__who_dak_hiv_form_answers` reads HIV.H.DE41 (HIV treatment outcome) as
-  `hiv_treatment_outcome`, dated on its submission's date.
+- **BL-055:** A client's treatment outcomes are HIV.H.DE41 (HIV treatment outcome), read by
+  `int__who_dak_hiv_form_answers` as `hiv_treatment_outcome` and dated on its submission's date,
+  and their registry outcomes (BL-061).
 - **BL-056:** A client whose latest treatment outcome on or before a month end is `Transferred out`
-  is not on ART at that month end, unless an ART period starts after that outcome's date.
+  or `Death (documented)` is not on ART at that month end, unless an ART period starts after that
+  outcome's date.
 - **BL-057:** `who_dak_hiv_art_ltfu` does not count a client whose ART stop is dated after their
   period began, or after their ART start for a client with no supply recorded, and on or before the
   day they became lost to follow-up, nor one whose latest treatment outcome dated in that span is
   `Transferred out`. A recorded `Lost to follow-up` outcome is not read, since loss to follow-up
   comes from ART supply (BL-048 to BL-050).
+- **BL-061:** A registration in the `art_episode_registry_id` registry that enters a clinical
+  status listed in `who_dak_hiv_death_status_ids` records `Death (documented)`, and one listed in
+  `who_dak_hiv_transferred_out_status_ids` records `Transferred out`, dated when the status was
+  logged, unless the registration is recorded in error.
+- **BL-062:** `who_dak_hiv_art_ltfu` does not count a client with a `Death (documented)` outcome
+  dated on or after the start of the period, or the ART start, they became lost to follow-up from,
+  however long after that day it was recorded, unless an ART period started between that day and
+  the death.
 
 ## Acceptance criteria
 
@@ -254,8 +264,10 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
 | AC-039 | A client with an ART start date and no supply record is on ART until their lapse date and not after; one whose ART start is after their site's first supply lapses from their own start; one whose site has no supply record and no `art_supply_start_dates` entry never lapses | BL-049–BL-051 | unit tests `test_int__who_dak_hiv_client_month_state_unrecorded_supply`, `test_int__who_dak_hiv_art_lapse` |
 | AC-040 | `who_dak_hiv_art_ltfu` counts a client once, in the month after their period's last day on ART or their lapse date; `who_dak_hiv_art_reinitiated` counts them in the month period 2 starts and never for period 1; neither adds an ART.4 row | BL-052–BL-054 | unit test `test_metric__who_dak_hiv_indicators_ltfu_reinitiation` |
 | AC-041 | A client recorded `Transferred out` is not on ART from that month end and is not counted lost to follow-up when their supply lapses; a later ART period puts them back on ART; a recorded `Lost to follow-up` outcome changes nothing | BL-055–BL-057 | unit test `test_int__who_dak_hiv_client_month_state_transferred_out` |
+| AC-045 | Entering a death status records one `Death (documented)` and entering a transferred out status records `Transferred out`, each time the status is entered, dated when logged; another registry's status and a registration recorded in error record nothing | BL-061 | unit test `test_int__who_dak_hiv_registry_outcomes` |
+| AC-046 | A registry transfer out ends on ART from its month; a death recorded in the registry after the client became lost to follow-up stops them being counted lost to follow-up, but not when they restarted ART before the death | BL-055, BL-056, BL-062 | unit test `test_int__who_dak_hiv_client_month_state_registry_outcomes` |
 
-The nine unit tests carry the definitional weight. No deployment has captured these forms yet,
+The unit tests carry the definitional weight. No deployment has captured these forms yet,
 so the data tests assert shape on an empty relation — a fixture is the only way to prove a
 definition holds before there is data, and each of AC-012 to AC-014 pins a boundary a reader
 would otherwise have to take on trust.
@@ -266,6 +278,8 @@ would otherwise have to take on trust.
 `encounters`, `locations`, `program_data_elements`, `map__who_dak_hiv_questions`,
 `clinical__person`), `int__who_dak_hiv_client_month_state`,
 `int__who_dak_hiv_key_populations`, the `who_dak_hiv_plhiv` macro, `int__who_dak_hiv_art_lapse`,
+`int__who_dak_hiv_registry_outcomes` (over `patient_program_registrations_change_logs` and
+`patient_program_registrations`),
 `derived__episode_art` and `int__art_supply` (`specs/dbt-model/derived__episode_art.md`),
 `metric_definitions`.
 
@@ -292,6 +306,7 @@ the Global Fund or PEPFAR reads the same counts via Annex C's crosswalk.
 
 | Date | Author | Change |
 |---|---|---|
+| 2026-11-24 | Maui team | A death or transfer out recorded through the registry's clinical status is a treatment outcome; a recorded death ends on ART and is never counted lost to follow-up, however late it is recorded (BL-055, BL-056, BL-061, BL-062, MAUI-7225). |
 | 2026-11-23 | Maui team | On-ART state, loss to follow-up and re-initiation come from ART supply through `derived__episode_art`; a recorded transfer out ends it; adds `who_dak_hiv_art_ltfu` and `who_dak_hiv_art_reinitiated`, and ART.2 formed by the consumer (MAUI-7225). |
 | 2026-11-19 | Maui team | Answers reach their DAK elements through the generated question map `map__who_dak_hiv_questions` (MAUI-7199). |
 | 2026-08-24 | Maui team | Initial spec. Sixteen counts over nine Annex C indicators from the generated DAK forms, as counts with the rate left to the consumer. `int__who_dak_hiv_client_month_state` carries each client's last known state to a month end, which is what `ART.1` and `DSD.4` need; key population is a bridge feeding a separate metric of client-population pairs, because a column would make a count of people wrong. |
