@@ -1,3 +1,7 @@
+{{ incremental_from_table(
+    key='id',
+    table='procedures'
+) }}
 select
     p.id,
     p.date::date as date,
@@ -16,9 +20,13 @@ select
     p.anaesthetist_id,
     p.assistant_anaesthetist_id,
     p.time_in::time as time_in,
-    p.time_out::time as time_out
+    p.time_out::time as time_out,
+    p.updated_at_sync_tick
 from {{ source('tamanu', 'procedures') }} p
 join {{ source('tamanu', 'encounters') }} e on e.id = p.encounter_id
 where p.deleted_at is null
     and e.deleted_at is null
     and e.patient_id != '{{ var("test_patient") }}'
+    {%- if is_incremental() %}
+    and p.updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}

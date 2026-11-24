@@ -25,3 +25,6 @@ models:
       - name: program_registry_id
         data_type: character varying(255)
         description: "{{ doc('program_registry_conditions__program_registry_id') }}"
+      - name: updated_at_sync_tick
+        data_type: bigint
+        description: "{{ doc('generic__updated_at_sync_tick') }}"

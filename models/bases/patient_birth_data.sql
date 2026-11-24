@@ -1,3 +1,7 @@
+{{ incremental_from_table(
+    key='patient_id',
+    table='patient_birth_data'
+) }}
 select
     patient_id,
     time_of_birth::time as birth_time,
@@ -13,7 +17,11 @@ select
     apgar_score_ten_minutes,
     registered_birth_place,
     birth_facility_id,
-    (created_at at time zone '{{ var("timezone") }}')::date as registration_date
+    (created_at at time zone '{{ var("timezone") }}')::date as registration_date,
+    updated_at_sync_tick
 from {{ source('tamanu', 'patient_birth_data') }}
 where deleted_at is null
     and id != '{{ var("test_patient") }}'
+    {%- if is_incremental() %}
+    and updated_at_sync_tick >= {{ last_sync_tick() }}
+    {%- endif %}
