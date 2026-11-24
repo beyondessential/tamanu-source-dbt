@@ -1,6 +1,7 @@
 {{ incremental_from_table(
     key='id',
-    table='survey_responses'
+    table='survey_responses',
+    indexes=[['encounter_id']]
 ) }}
 select
     id,
