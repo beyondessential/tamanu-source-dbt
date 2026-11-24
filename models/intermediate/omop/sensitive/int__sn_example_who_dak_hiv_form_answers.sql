@@ -16,7 +16,8 @@
 --
 -- Ephemeral, so this is inlined into its consumer and materialises nothing.
 --
--- Spec: specs/dbt-model/metric__who_dak_hiv_indicators.md, BL-002..BL-004.
+-- Spec: specs/dbt-model/metric__who_dak_hiv_indicators.md, BL-002..BL-004. BL-047: the days of ART
+-- dispensed (HIV.D.DE462) are the form's ART supply. BL-055: the treatment outcome (HIV.H.DE41).
 
 {% set elements = {
     'hiv_status': 'HIV.B.DE115',
@@ -43,6 +44,8 @@
     'substitution_third_line_date': 'HIV.D.DE493',
     'key_population_hts': 'HIV.B.DE50',
     'key_population_pmtct': 'HIV.E.DE114',
+    'art_days_dispensed': 'HIV.D.DE462',
+    'hiv_treatment_outcome': 'HIV.H.DE41',
 } %}
 
 with responses as (
@@ -148,6 +151,7 @@ typed as (
         v.viral_load_reason_raw as viral_load_reason,
         v.art_stopped_reason_raw as art_stopped_reason,
         v.regimen_substitution_reason_raw as regimen_substitution_reason,
+        v.hiv_treatment_outcome_raw as hiv_treatment_outcome,
         -- MultiSelect answers, so each is a JSON array of the values the client selected. The DAK
         -- asks for key population on the HTS visit and again on the PMTCT pathway, and a client seen
         -- only on one of them must not be missing from the disaggregation, so both are carried.
@@ -165,7 +169,7 @@ typed as (
             end as {{ column }},
         {% endfor %}
 
-        {% for column in ['baseline_cd4_count', 'viral_load_result'] %}
+        {% for column in ['baseline_cd4_count', 'viral_load_result', 'art_days_dispensed'] %}
             case
                 when v.{{ column }}_raw ~ '^-?\d+(\.\d+)?$' then v.{{ column }}_raw::numeric
             end as {{ column }},
