@@ -24,13 +24,13 @@ unit_tests:
       - input: ref('int__who_dak_hiv_client_month_state')
         format: sql
         rows: |
-          select '2026-06-01'::date as month_start, '2026-06-30'::date as month_end, 'pat_retained' as patient_id, 'fac_001' as facility_id, true as on_art, true as on_art_recorded, null::date as art_stopped_date, '2024-01-01'::date as art_start_date, true as dsd_enrolled, '2024-12-01'::date as dsd_start_date, 29 as months_on_art, 18 as months_on_dsd, 'female' as sex, 41 as age_years
+          select '2026-06-01'::date as month_start, '2026-06-30'::date as month_end, 'pat_retained' as patient_id, 'fac_001' as facility_id, true as on_art, true as on_art_recorded, null::date as art_stopped_date, '2024-01-01'::date as art_start_date, true as dsd_enrolled, '2024-12-01'::date as dsd_start_date, 29 as months_on_art, 18 as months_on_dsd, 'female' as sex, 41 as age_years, false as ltfu_in_month, false as reinitiated_in_month
           union all
-          select '2026-06-01'::date, '2026-06-30'::date, 'pat_lapsed', 'fac_001', true, true, null::date, '2024-01-01'::date, false, '2024-12-01'::date, 29, 18, 'male', 41
+          select '2026-06-01'::date, '2026-06-30'::date, 'pat_lapsed', 'fac_001', true, true, null::date, '2024-01-01'::date, false, '2024-12-01'::date, 29, 18, 'male', 41, false, false
           union all
-          select '2026-06-01'::date, '2026-06-30'::date, 'pat_recent', 'fac_002', true, true, null::date, '2024-01-01'::date, true, '2025-12-01'::date, 29, 6, 'male', 41
+          select '2026-06-01'::date, '2026-06-30'::date, 'pat_recent', 'fac_002', true, true, null::date, '2024-01-01'::date, true, '2025-12-01'::date, 29, 6, 'male', 41, false, false
           union all
-          select '2026-06-01'::date, '2026-06-30'::date, 'pat_off_art', 'fac_002', false, false, null::date, '2024-01-01'::date, true, '2024-12-01'::date, 29, 18, 'female', 41
+          select '2026-06-01'::date, '2026-06-30'::date, 'pat_off_art', 'fac_002', false, false, null::date, '2024-01-01'::date, true, '2024-12-01'::date, 29, 18, 'female', 41, false, false
 
       - input: ref('int__who_dak_hiv_key_populations')
         format: sql

@@ -25,7 +25,7 @@ unit_tests:
       - input: ref('int__who_dak_hiv_client_month_state')
         format: sql
         rows: |
-          select null::date as month_start, null::date as month_end, null::text as patient_id, null::text as facility_id, null::boolean as on_art, null::boolean as on_art_recorded, null::date as art_stopped_date, null::date as art_start_date, null::boolean as dsd_enrolled, null::date as dsd_start_date, null::int as months_on_art, null::int as months_on_dsd, null::text as sex, null::int as age_years where false
+          select null::date as month_start, null::date as month_end, null::text as patient_id, null::text as facility_id, null::boolean as on_art, null::boolean as on_art_recorded, null::date as art_stopped_date, null::date as art_start_date, null::boolean as dsd_enrolled, null::date as dsd_start_date, null::int as months_on_art, null::int as months_on_dsd, null::text as sex, null::int as age_years, null::boolean as ltfu_in_month, null::boolean as reinitiated_in_month where false
 
       - input: ref('int__who_dak_hiv_key_populations')
         format: sql
