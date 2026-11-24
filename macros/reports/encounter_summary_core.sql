@@ -455,7 +455,7 @@ encounter_lab_items as (
         on eis.encounter_id = lr.encounter_id
     join {{ partition_ref('lab_tests', network) }} lt
         on lt.lab_request_id = lr.id
-    join {{ ref('int__lab_test_panel_attribution') }} lta
+    join {{ partition_ref('int__lab_test_panel_attribution', network) }} lta
         on lta.lab_test_id = lt.id
         and lta.lab_test_panel_request_id is null
     left join {{ ref('lab_test_types') }} ltt

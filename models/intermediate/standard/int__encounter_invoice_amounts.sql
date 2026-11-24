@@ -1,5 +1,5 @@
 -- int__encounter_invoice_amounts -- per-invoice billing arithmetic for standard facilities,
 -- one row per invoice. Consumed by ds__encounter_invoices and clinical__cost. The body is
--- the encounter_invoice_amounts() macro, shared with int__sensitive_encounter_invoice_amounts.
+-- the encounter_invoice_amounts() macro, shared with each sensitive network's copy of it.
 -- Ephemeral: inlined by consumers.
 {{ encounter_invoice_amounts(network=none) }}

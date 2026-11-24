@@ -71,6 +71,11 @@ def output_dir(relative_dir):
     return relative_dir / "sensitive"
 
 
+def strip_comments(sql):
+    """`sql` without its Jinja and SQL line comments, so a comment cannot mark a model partitioned."""
+    return re.sub(r"--[^\n]*", "", re.sub(r"\{#.*?#\}", "", sql, flags=re.DOTALL))
+
+
 def partitioned_models(models_dir):
     """Every model that takes the partition, as paths relative to `models_dir`."""
     found = []
@@ -78,7 +83,7 @@ def partitioned_models(models_dir):
         relative = path.relative_to(models_dir)
         if is_generated_dir(relative.parent):
             continue
-        if PARTITION_ARGUMENT.search(path.read_text(encoding="utf-8")):
+        if PARTITION_ARGUMENT.search(strip_comments(path.read_text(encoding="utf-8"))):
             found.append(relative)
     return found
 
@@ -223,6 +228,10 @@ def main(argv=None):
     keys = [network_key(network) for network in networks]
     if len(set(keys)) != len(keys) or "" in keys:
         sys.exit(f"Sensitive network codes must give distinct, non-empty keys: {networks}")
+    # A code is written into SQL string literals, in the generated models and in the partition predicates.
+    quoted = [network for network in networks if "'" in network or "\\" in network]
+    if quoted:
+        sys.exit(f"Sensitive network codes must not contain a quote or backslash: {quoted}")
 
     written = generate(args.source / "models", args.output / "models", networks)
     print(f"Wrote {len(written)} files for {len(networks)} sensitive network(s): {', '.join(networks) or 'none'}")

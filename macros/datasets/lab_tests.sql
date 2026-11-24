@@ -64,7 +64,7 @@ join {{ partition_ref('lab_tests', network) }} lt on lt.lab_request_id = lr.id
 join {{ ref('lab_test_types') }} ltt on ltt.id = lt.lab_test_type_id
 -- The panel this test belongs to, not the request's: from Tamanu 2.66 one request can hold
 -- several panels and individual tests. Null for a test ordered individually.
-left join {{ ref('int__lab_test_panel_attribution') }} lta on lta.lab_test_id = lt.id
+left join {{ partition_ref('int__lab_test_panel_attribution', network) }} lta on lta.lab_test_id = lt.id
 left join {{ ref('lab_test_panels') }} ltp on ltp.id = lta.lab_test_panel_id
 
 {% endmacro %}

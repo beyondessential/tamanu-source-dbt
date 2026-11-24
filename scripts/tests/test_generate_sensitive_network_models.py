@@ -16,6 +16,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from generate_sensitive_network_models import (  # noqa: E402
     MARKER,
     generate,
+    main,
     network_key,
     partition_name,
     partitioned_models,
@@ -156,6 +157,17 @@ def test_generated_models_are_not_partitioned_again(source):
         "datasets/standard/ds__admissions.sql",
         "reports/sql/standard/admissions-line-list.sql",
     ]
+
+
+def test_a_comment_does_not_mark_a_model_partitioned(source):
+    _write(source / "bases" / "users.sql", "-- network = none in a comment\n{# network=none #}\nselect 1\n")
+
+    assert "bases/users.sql" not in [path.as_posix() for path in partitioned_models(source)]
+
+
+def test_refuses_a_network_code_with_a_quote(source, tmp_path):
+    with pytest.raises(SystemExit, match="quote or backslash"):
+        main(["--networks", "o'hara", "--source", str(source.parent), "--output", str(tmp_path)])
 
 
 def test_committed_fixture_network_models_are_in_sync(tmp_path):

@@ -5,8 +5,8 @@
     arithmetic in invoice_item_amounts()), invoice-level discount, net patient payment,
     net insurer payment, and finalisation.
 
-    Called by int__encounter_invoice_amounts (standard facilities) and
-    int__sensitive_encounter_invoice_amounts (sensitive facilities). The standard model feeds
+    Called by int__encounter_invoice_amounts (standard facilities) and each sensitive network's
+    copy of it. The standard model feeds
     ds__encounter_invoices and clinical__cost, so there is one source of truth without a
     backwards clinical->ds dependency (D2). The per-item arithmetic is embedded through
     invoice_item_amounts() so invoice_items, price lists and discounts stay direct refs for

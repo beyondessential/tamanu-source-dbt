@@ -10,6 +10,7 @@
     Severity is set where the test is called.
 #}
 {% test facility_crosswalk_coverage(model, column_name, unmapped_facility_ids=[], ignore_ids=[]) %}
+{%- set include_sensitive = listed_sensitive_networks() | length > 0 %}
 with facilities as (
     {{ every_partition('facilities', ['id::text as facility_id']) }}
 ),

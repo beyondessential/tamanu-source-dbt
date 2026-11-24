@@ -11,7 +11,7 @@
 --
 -- BL-013: record_id_filter (on the change-log extraction's `discharge_id`) narrows the
 -- change-log read to candidate discharges, for the audit report's candidate-scoping step. Left
--- none by ds__discharge_audit / ds__sensitive_discharge_audit, which need every discharge's
+-- none by ds__discharge_audit and each sensitive network's copy of it, which need every discharge's
 -- full history.
 
 -- BL-001: the discharges base is already one row per encounter with deleted discharges,

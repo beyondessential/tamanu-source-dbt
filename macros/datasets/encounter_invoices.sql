@@ -1,7 +1,7 @@
 {% macro encounter_invoices_dataset(network=none) %}
 {#-
     One row per invoice with the resolved billing figures, for one facility partition.
-    Materialised by ds__encounter_invoices (standard) and ds__sensitive_encounter_invoices.
+    Materialised by ds__encounter_invoices (standard) and each sensitive network's copy of it.
 
     The per-invoice arithmetic lives in encounter_invoice_amounts(), through the
     int__encounter_invoice_amounts pair, so clinical__cost shares the same source of truth

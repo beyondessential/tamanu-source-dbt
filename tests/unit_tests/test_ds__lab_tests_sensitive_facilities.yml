@@ -169,7 +169,7 @@ unit_tests:
           select null::text as id, null::text as display_name
           where false
 
-      - input: ref('int__lab_test_panel_attribution')
+      - input: ref('int__sn_example_lab_test_panel_attribution')
         format: sql
         rows: |
           select null::text as lab_test_id, null::text as lab_request_id, null::text as lab_test_panel_request_id, null::text as lab_test_panel_id, null::text as panel_attribution
