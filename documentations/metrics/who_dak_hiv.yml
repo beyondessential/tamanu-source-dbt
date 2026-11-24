@@ -447,8 +447,9 @@ metrics:
   numerator_description: >-
     COUNT of clients who became lost to follow-up in the reporting period: the day after the last day on ART
     of a period on ART that has ended, or the day after the lapse date of a client with no supply recorded.
-    A client recorded as transferred out, or whose ART was stopped, is not counted. Loss to follow-up is
-    worked out from ART supplied, so a recorded Lost to follow-up outcome is not read
+    A client recorded as transferred out, or whose ART was stopped, is not counted, nor a client recorded as
+    dead, however late the death was recorded. Loss to follow-up is worked out from ART supplied, so a
+    recorded Lost to follow-up outcome is not read
   denominator_description: null
   data_source: tamanu
   definition_source: WHO_SMART_HIV
