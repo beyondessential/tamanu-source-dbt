@@ -1,0 +1,136 @@
+version: 2
+
+models:
+  - name: derived__episode_art
+    description: >-
+      One row per continuous period a client is on antiretroviral therapy (ART), assembled from
+      the ART they were supplied: medications dispensed in Tamanu, and the days of ART a WHO HIV
+      form records as dispensed. A period ends when the client's supply has run out for longer
+      than the lost to follow-up allowance, and a supply collected after that starts a new,
+      numbered period, which is a re-initiation. The WHO HIV indicators read who is on ART, who
+      is lost to follow-up and who has re-initiated from these periods.
+    config:
+      tags:
+        - derived
+        - hiv
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
+    data_tests:
+      # AC-001: a client's periods are numbered once each
+      - dbt_utils.unique_combination_of_columns:
+          name: ac_001_derived__episode_art_subject_episode_number_unique
+          arguments:
+            combination_of_columns:
+              - subject_id
+              - episode_number
+      # AC-007: a period's end date and closure reason are present together, and the end is
+      # never before the start
+      - dbt_utils.expression_is_true:
+          name: ac_007_derived__episode_art_end_matches_closure
+          arguments:
+            expression: >-
+              (episode_end_date is null) = (closure_reason is null)
+              and (episode_end_date is null or episode_end_date >= episode_start_date)
+      # AC-008: a period numbered 2 or more is a re-initiation
+      - dbt_utils.expression_is_true:
+          name: ac_008_derived__episode_art_reinitiation_matches_number
+          arguments:
+            expression: "is_reinitiation = (episode_number >= 2)"
+    columns:
+      - name: metric_id
+        data_type: text
+        description: The registry entry this row belongs to, always episode_art.
+        data_tests:
+          - accepted_values:
+              name: ac_002_derived__episode_art_metric_id_value
+              arguments:
+                values: ['episode_art']
+          - relationships:
+              name: ac_002_derived__episode_art_metric_id_registered
+              arguments:
+                to: ref('metric_definitions')
+                field: metric_id
+      - name: variant_id
+        data_type: text
+        description: Always empty. The periods are a definition of their own, not a variant of another.
+        data_tests:
+          - dbt_utils.expression_is_true:
+              name: ac_002_derived__episode_art_variant_id_null
+              arguments:
+                expression: "is null"
+      - name: episode_id
+        data_type: character varying
+        description: The client and the day the period started.
+        data_tests:
+          - unique:
+              name: ac_001_derived__episode_art_episode_id_unique
+          - not_null:
+              name: ac_001_derived__episode_art_episode_id_not_null
+      - name: subject_id
+        data_type: character varying
+        description: The client on ART.
+        data_tests:
+          - not_null:
+              name: ac_001_derived__episode_art_subject_id_not_null
+      - name: episode_concept_id
+        data_type: integer
+        description: The standard concept for the kind of episode. Empty until the vocabulary layer exists.
+      - name: episode_parent_id
+        data_type: character varying
+        description: >-
+          The client's enrolment in the HIV program registry, the registry named by the
+          art_episode_registry_id setting. Empty where they are not enrolled in it.
+        data_tests:
+          - relationships:
+              name: ac_009_derived__episode_art_episode_parent_id_enrolment
+              arguments:
+                to: ref('clinical__episode')
+                field: episode_id
+      - name: episode_number
+        data_type: integer
+        description: The period's position among the client's periods, from 1.
+        data_tests:
+          - not_null:
+              name: ac_001_derived__episode_art_episode_number_not_null
+      - name: episode_start_date
+        data_type: date
+        description: The first day the client was supplied ART in the period.
+        data_tests:
+          - not_null:
+              name: ac_001_derived__episode_art_episode_start_date_not_null
+      - name: supply_end_date
+        data_type: date
+        description: The day the period's supply runs out.
+      - name: last_day_on_art
+        data_type: date
+        description: >-
+          The last day the client counts as on ART in the period, the lost to follow-up allowance
+          after their supply runs out. Present whether or not that day has passed.
+      - name: episode_end_date
+        data_type: date
+        description: The last day on ART once that day has passed. Empty while the period is open.
+      - name: closure_reason
+        data_type: text
+        description: Lost to follow-up once the period has ended. Empty while the period is open.
+        data_tests:
+          - accepted_values:
+              name: ac_007_derived__episode_art_closure_reason_value
+              arguments:
+                values: ['Lost to follow-up']
+      - name: is_reinitiation
+        data_type: boolean
+        description: >-
+          Whether the period began after a lapse in the client's supply, so the client is back
+          on ART rather than starting it.
+      - name: first_supply_facility_id
+        data_type: character varying
+        description: The facility of the period's first supply.
+      - name: last_supply_facility_id
+        data_type: character varying
+        description: The facility of the period's latest supply.
+      - name: supply_count
+        data_type: integer
+        description: The days the client was supplied ART in the period.
