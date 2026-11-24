@@ -84,6 +84,9 @@ clean-targets:
 
 models:
   tamanu_source_dbt:
+    # Tables get planner statistics as soon as they are built, so the next model does not read
+    # them unanalysed. See macros/analyze_after_build.sql.
+    +post-hook: "{{ analyze_after_build() }}"
     bases:
       +docs:
         show: true
