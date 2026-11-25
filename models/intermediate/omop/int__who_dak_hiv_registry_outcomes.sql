@@ -2,8 +2,9 @@
 -- program registry enters a death or transferred out clinical status, as the HIV treatment
 -- outcome that status records.
 --
--- The registry's clinical status is where a death or a transfer out is recorded. The DAK
--- follow-up form's treatment outcome (HIV.H.DE41) holds historical records, and both feed the
+-- The registry's clinical status is where a death or a transfer out is recorded, whether on the
+-- registry page or by the DAK follow-up form's treatment outcome (HIV.H.DE41), which sets the
+-- status. A form answer holding one of the DAK's outcomes is an outcome too, and both feed the
 -- outcomes int__who_dak_hiv_client_month_state reads.
 --
 -- Ephemeral, so this is inlined into its consumer and materialises nothing.
