@@ -38,7 +38,7 @@ jobs:
       - name: Determine version to upgrade to
         id: version
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAMANU_DEPLOY_KEY: ${{ secrets.TAMANU_DEPLOY_KEY }}
         run: |
           if [ -n "${{ github.event.inputs.version }}" ]; then
             VERSION="${{ github.event.inputs.version }}"
@@ -53,8 +53,13 @@ jobs:
             echo "Using version from repository_dispatch: $VERSION"
           else
             echo "Auto-detecting latest Tamanu release branch..."
-            LATEST_RELEASE=$(gh api repos/beyondessential/tamanu/branches \
-              --jq '[.[] | select(.name | startswith("release/")) | .name]' | sort -V | tail -1)
+            KEY="$RUNNER_TEMP/tamanu-deploy-key"
+            printf '%s\n' "$TAMANU_DEPLOY_KEY" > "$KEY"
+            chmod 600 "$KEY"
+            LATEST_RELEASE=$(GIT_SSH_COMMAND="ssh -i $KEY -o IdentitiesOnly=yes" \
+              git ls-remote --heads git@github.com:beyondessential/tamanu.git 'refs/heads/release/*' \
+              | sed 's|.*refs/heads/||' | sort -V | tail -1)
+            rm -f "$KEY"
 
             if [ -z "$LATEST_RELEASE" ]; then
               echo "Error: Could not find any release branches in tamanu repo"
