@@ -25,8 +25,8 @@ models:
         data_type: text
         description: "{{ doc('patients__last_name') }} at the time of edit."
       - name: date_of_birth
-        data_type: date
-        description: "{{ doc('patients__date_of_birth') }} at the time of edit."
+        data_type: text
+        description: "{{ doc('patients__date_of_birth') }} at the time of edit, as recorded. May not be a calendar date."
       - name: sex
         data_type: text
         description: "{{ doc('patients__sex') }} at the time of edit."
