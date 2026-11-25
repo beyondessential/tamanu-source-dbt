@@ -56,10 +56,7 @@ invoice_context as (
         -- BL-020: finalised, or any other billing activity on the invoice
         (
             i.status = 'finalised'
-            or exists (
-                select 1 from billing_activity ba
-                where ba.invoice_id = i.invoice_id::varchar
-            )
+            or ba.invoice_id is not null
         ) as is_seen_by_billing,
         -- BL-012: the facility of the encounter's location
         l.facility_id,
@@ -75,6 +72,9 @@ invoice_context as (
         on vo.visit_occurrence_id = i.encounter_id
     join locations l
         on l.id = vo.care_site_id
+    -- BL-020: joined once. billing_activity has one row per invoice
+    left join billing_activity ba
+        on ba.invoice_id = i.invoice_id::varchar
 ),
 
 invoice_rows as (
