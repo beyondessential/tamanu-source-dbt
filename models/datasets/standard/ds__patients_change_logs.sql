@@ -20,7 +20,8 @@ with patient_edits as (
         p.display_id,
         p.first_name,
         p.last_name,
-        p.date_of_birth,
+        -- text, to match the recorded date of birth in patients_change_logs
+        to_char(p.date_of_birth::timestamp, 'YYYY-MM-DD') as date_of_birth,
         p.sex,
         p.village_id,
         lcpad.updated_by_user_id,
