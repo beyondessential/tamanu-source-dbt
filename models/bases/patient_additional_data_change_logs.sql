@@ -48,7 +48,6 @@ select
     fc.record_data ->> 'blood_type' as blood_type,
     fc.record_data ->> 'patient_billing_type_id' as patient_billing_type_id,
     fc.record_data ->> 'health_center_id' as health_center_id,
-    fc.record_data ->> 'insurer_id' as insurer_id,
     fc.record_data ->> 'insurer_policy_number' as insurer_policy_number,
     fc.record_data ->> 'mother_id' as mother_id,
     fc.record_data ->> 'father_id' as father_id,

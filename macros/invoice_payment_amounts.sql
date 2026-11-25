@@ -15,7 +15,7 @@
     {%- if payer == 'patient' -%}
         {%- set link = 'invoice_patient_payments' -%}
     {%- elif payer == 'insurer' -%}
-        {%- set link = 'invoice_insurer_payments' -%}
+        {%- set link = 'invoice_insurance_plan_payments' -%}
     {%- else -%}
         {{ exceptions.raise_compiler_error("invoice_payment_amounts: payer must be 'patient' or 'insurer', got '" ~ payer ~ "'") }}
     {%- endif %}

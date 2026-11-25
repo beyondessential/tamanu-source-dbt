@@ -50,7 +50,7 @@ belongs to.
 (`invoice_item_discounts`, `invoice_discounts`), insurance plans
 (`invoices_invoice_insurance_plans` and coverage snapshots), and payments
 (`invoice_payments`, split into `invoice_patient_payments` and
-`invoice_insurer_payments`). OMOP models money in the `COST` table, linked to a
+`invoice_insurance_plan_payments`). OMOP models money in the `COST` table, linked to a
 clinical event via `cost_event_id` + `cost_domain_id`. This model is the contract
 between the two.
 
@@ -133,7 +133,7 @@ canonical billing surface must not lose information the source carries.
 | `total_charge` | numeric | Invoice value: `int__encounter_invoice_amounts.invoice_total` (sum of discounted item totals) |
 | `total_paid` | numeric | Money actually received: `paid_by_patient` + `paid_by_payer` |
 | `paid_by_patient` | numeric | Net patient payment (payments less refunds): `int__encounter_invoice_amounts.patient_payment` |
-| `paid_by_payer` | numeric | Insurer payments **actually received**: `int__encounter_invoice_amounts.insurer_payment` (sum of `invoice_payments.amount` linked to `invoice_insurer_payments`, refunds netted). Distinct from `amount_allowed` |
+| `paid_by_payer` | numeric | Insurer payments **actually received**: `int__encounter_invoice_amounts.insurer_payment` (sum of `invoice_payments.amount` linked to `invoice_insurance_plan_payments`, refunds netted). Distinct from `amount_allowed` |
 | `amount_allowed` | numeric | Insurance **coverage** (expected, not necessarily paid): `int__encounter_invoice_amounts.insurance_coverage` |
 | `discount_amount` **[ext]** | numeric | The **invoice-level** discount (`int__encounter_invoice_amounts.invoice_discount`). OMOP `COST` has no discount field — retained for billing consumers. Item-level discounts are already netted into `total_charge`, not double-counted here (BL-008) |
 | `payer_plan_period_id` | varchar | FK to a future `clinical__payer_plan_period`. Typed `varchar` (cast NULL) pending that model — see OQ-002 |
@@ -174,14 +174,14 @@ keeping `clinical__cost` totals-only (see **Decisions taken** above).
   — the net patient payment (refunds already netted upstream).
 - **BL-006:** `paid_by_payer` is `int__encounter_invoice_amounts.insurer_payment`
   — the sum of `invoice_payments.amount` for payments carrying an
-  `invoice_insurer_payments` row, with reversed payments netted by **excluding the
+  `invoice_insurance_plan_payments` row, with reversed payments netted by **excluding the
   reversed original** (an insurer reversal, unlike a patient refund, carries no
-  `invoice_insurer_payments` row of its own, so it cannot be found by a
+  `invoice_insurance_plan_payments` row of its own, so it cannot be found by a
   negative-reversal lookup). Aggregated in the shared ephemeral (not here) so
   patient and insurer receipts have one definition, mirroring the app's
   `getInvoiceSummary`. **No status filter:** `invoice_payments.amount` is the amount
   *actually* paid and the insurer `status` is derived from it in the app
-  (`getInvoiceInsurerPaymentStatus`: 0 → rejected, full → paid, part → partial), so
+  (`getInvoiceInsurancePlanPaymentStatus`: 0 → rejected, full → paid, part → partial), so
   rejected rows contribute 0 and partial rows contribute their real received value.
 - **BL-007:** `total_paid` is `paid_by_patient + paid_by_payer` — all money
   received against the invoice, patient and insurer. This is the value the
@@ -238,7 +238,7 @@ would carry the registry row.
 
 (`clinical__cost`'s only direct `ref()` is `int__encounter_invoice_amounts`. The
 `invoices` `display_id` reaches it *through* the shared ephemeral — `clinical__cost`
-does not `ref('invoices')` directly. `invoice_payments` / `invoice_insurer_payments`
+does not `ref('invoices')` directly. `invoice_payments` / `invoice_insurance_plan_payments`
 are likewise consumed by `int__encounter_invoice_amounts`, through the shared
 `invoice_payment_amounts()` macro, not by `clinical__cost`.)
 
@@ -247,8 +247,8 @@ are likewise consumed by `int__encounter_invoice_amounts`, through the shared
 ```
 invoice_payment_   ──┐
   amounts() (macro)   │
-invoice_insurer_    ──┼──►  int__encounter_   ──┬──►  clinical__cost  ──►  metric__cost_* / reports
-  payments             │      invoice_amounts   │    (display_id →     └►  Tupaia cost & coverage
+invoice_insurance_  ──┼──►  int__encounter_   ──┬──►  clinical__cost  ──►  metric__cost_* / reports
+  plan_payments        │      invoice_amounts   │    (display_id →     └►  Tupaia cost & coverage
 invoices, items,    ──┘      (carries display_id)│     cost_source_value)
   price lists, ...                               └──►  ds__encounter_invoices
 clinical__visit_    ─────►  clinical__cost   (cost_event_id FK)
@@ -280,3 +280,4 @@ implementation to reconcile.
 | 2026-10-02 | Maui team | Payments reach `int__encounter_invoice_amounts` through the shared `invoice_payment_amounts()` macro (`specs/dbt-model/invoice_payment_amounts.md`), with no change to `paid_by_patient` or `paid_by_payer` |
 | 2026-10-13 | Maui team | [MAUI-6911](https://linear.app/bes/issue/MAUI-6911): `int__encounter_invoice_amounts.invoice_total` is the total before item adjustments, so BL-003 adds `item_adjustment` back. `total_charge` is unchanged in value. |
 | 2026-11-24 | Maui team | `clinical__cost` is partitioned: it covers invoices at standard facilities, and each sensitive network has a copy covering its own (`specs/dbt-model/sensitive-facility-partition.md` BL-017). |
+| 2026-11-26 | Maui team | Tamanu 2.69 renames the insurer link table to `invoice_insurance_plan_payments`; `paid_by_payer` is unchanged |

@@ -39,7 +39,7 @@ link table as direct refs and its unit tests mock them directly.
 |---|---|
 | **App calculation** | `getInvoiceSummary` in `@tamanu/utils/invoice` (paid to date: payments neither refunding nor refunded) |
 | **Branches mirrored** | payer by link table (BL-001), refund by `original_payment_id` (BL-004), reversed by a refund pointing at it (BL-005) |
-| **Stored app fields** | `invoices.patient_payment_status`, `invoices.insurer_payment_status` — reconciliation only, not read |
+| **Stored app fields** | `invoices.patient_payment_status`, `invoices.insurance_plan_payment_status` — reconciliation only, not read |
 | **Reconciliation** | AC-002, AC-003 |
 | **Other surfaces** | Encounter invoice audit report, `clinical__cost`, Tupaia billing, deployment cash reports |
 
@@ -53,7 +53,7 @@ link table as direct refs and its unit tests mock them directly.
 |---|---|
 | `{{ ref('invoice_payments') }}` | The payments, their dates, amounts and refund links |
 | `{{ ref('invoice_patient_payments') }}` | Marks a patient payment (`payer='patient'`) |
-| `{{ ref('invoice_insurer_payments') }}` | Marks an insurer payment (`payer='insurer'`) |
+| `{{ ref('invoice_insurance_plan_payments') }}` | Marks an insurer payment (`payer='insurer'`) |
 
 ## Output schema
 
@@ -70,7 +70,7 @@ link table as direct refs and its unit tests mock them directly.
 ## Business logic
 
 - **BL-001 (payer):** a row is a payment of `payer` when that payer's link table
-  (`invoice_patient_payments` or `invoice_insurer_payments`) carries it, and any other `payer`
+  (`invoice_patient_payments` or `invoice_insurance_plan_payments`) carries it, and any other `payer`
   is a compile error.
 - **BL-002 (date):** `payment_date` is the payment's own `date`.
 - **BL-003 (amount):** `amount` is the stored amount, unchanged.
@@ -98,10 +98,10 @@ link table as direct refs and its unit tests mock them directly.
 ## Lineage
 
 ```
-invoice_payments ─────────┐
-invoice_patient_payments ─┼──► invoice_payment_amounts(payer) ──┬──► int__encounter_invoice_amounts ──► ds__encounter_invoices, clinical__cost
-invoice_insurer_payments ─┘                                     ├──► metric__billing ──► Tupaia billing
-                                                                └──► deployment cash reports
+invoice_payments ────────────────┐
+invoice_patient_payments ────────┼──► invoice_payment_amounts(payer) ──┬──► int__encounter_invoice_amounts ──► ds__encounter_invoices, clinical__cost
+invoice_insurance_plan_payments ─┘                                       ├──► metric__billing ──► Tupaia billing
+                                                                         └──► deployment cash reports
 ```
 
 ## Open questions
@@ -113,3 +113,4 @@ None.
 | Date | Author | Change |
 |---|---|---|
 | 2026-10-02 | Maui team | Initial spec |
+| 2026-11-21 | Maui team | Tamanu 2.69 renames the insurer link table to `invoice_insurance_plan_payments`; no change to behaviour |

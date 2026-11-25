@@ -198,12 +198,6 @@ models:
         config:
           tags:
             - quasi_identifier
-      - name: insurer_id
-        data_type: text
-        description: "{{ doc('patient_additional_data__insurer_id') }} from history."
-        config:
-          tags:
-            - quasi_identifier
       - name: insurer_policy_number
         data_type: text
         description: "{{ doc('patient_additional_data__insurer_policy_number') }} from history."
