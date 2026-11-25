@@ -26,7 +26,9 @@ select
     fc.record_data ->> 'cultural_name' as cultural_name,
     fc.record_data ->> 'email' as email,
     initcap(fc.record_data ->> 'sex') as sex,
-    (fc.record_data ->> 'date_of_birth')::date as date_of_birth,
+    -- as recorded: patients.date_of_birth is text, so history can hold a value that is not a
+    -- calendar date, and casting it would fail the whole model
+    fc.record_data ->> 'date_of_birth' as date_of_birth,
     (fc.record_data ->> 'date_of_death')::timestamp as date_of_death,
     fc.record_data ->> 'village_id' as village_id,
     (fc.record_data ->> 'created_at')::date as registration_date,
