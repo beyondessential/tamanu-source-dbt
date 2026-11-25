@@ -1,0 +1,57 @@
+unit_tests:
+  - name: test_int__who_dak_hiv_registry_outcomes
+    model: int__who_dak_hiv_registry_outcomes
+    description: >
+      BL-061. A registration in the ART registry that enters a death status records Death (documented),
+      and one that enters a transferred out status records Transferred out, dated when the status was
+      logged. A later change that keeps the same status records nothing more, and a registration that
+      leaves the status and enters it again records it again. A status in another registry, and any
+      status on a registration recorded in error, records nothing.
+
+      reg_a moves from On ART to Died on 2026-03-05 and is updated again on 2026-03-20 still Died: one
+      death. reg_b is transferred out on 2026-02-01, back on ART in March, and transferred out again on
+      2026-04-10: two transfers. reg_c dies in another registry, reg_d dies on a registration recorded
+      in error, and reg_e is only ever On ART.
+    given:
+      - input: ref('patient_program_registrations_change_logs')
+        format: sql
+        rows: |
+          select 'c1' as changelog_id, 'reg_a' as id, 'pat_a' as patient_id, 'programRegistry-who-dak-hiv' as program_registry_id, 'prClinicalStatus-who-dak-hiv-on-art' as clinical_status_id, '2026-01-10 09:00:00'::timestamp as logged_at, '2026-01-09 20:00:00'::timestamp as logged_at_utc, '2026-01-09 20:00:00'::timestamp as record_updated_at_utc
+          union all
+          select 'c2', 'reg_a', 'pat_a', 'programRegistry-who-dak-hiv', 'prClinicalStatus-who-dak-hiv-died', '2026-03-05 10:00:00'::timestamp, '2026-03-04 21:00:00'::timestamp, '2026-03-04 21:00:00'::timestamp
+          union all
+          select 'c3', 'reg_a', 'pat_a', 'programRegistry-who-dak-hiv', 'prClinicalStatus-who-dak-hiv-died', '2026-03-20 10:00:00'::timestamp, '2026-03-19 21:00:00'::timestamp, '2026-03-19 21:00:00'::timestamp
+          union all
+          select 'c4', 'reg_b', 'pat_b', 'programRegistry-who-dak-hiv', 'prClinicalStatus-who-dak-hiv-transferred-out', '2026-02-01 09:00:00'::timestamp, '2026-01-31 20:00:00'::timestamp, '2026-01-31 20:00:00'::timestamp
+          union all
+          select 'c5', 'reg_b', 'pat_b', 'programRegistry-who-dak-hiv', 'prClinicalStatus-who-dak-hiv-on-art', '2026-03-01 09:00:00'::timestamp, '2026-02-28 20:00:00'::timestamp, '2026-02-28 20:00:00'::timestamp
+          union all
+          select 'c6', 'reg_b', 'pat_b', 'programRegistry-who-dak-hiv', 'prClinicalStatus-who-dak-hiv-transferred-out', '2026-04-10 09:00:00'::timestamp, '2026-04-09 20:00:00'::timestamp, '2026-04-09 20:00:00'::timestamp
+          union all
+          select 'c7', 'reg_c', 'pat_c', 'programRegistry-other', 'prClinicalStatus-who-dak-hiv-died', '2026-03-05 10:00:00'::timestamp, '2026-03-04 21:00:00'::timestamp, '2026-03-04 21:00:00'::timestamp
+          union all
+          select 'c8', 'reg_d', 'pat_d', 'programRegistry-who-dak-hiv', 'prClinicalStatus-who-dak-hiv-died', '2026-03-05 10:00:00'::timestamp, '2026-03-04 21:00:00'::timestamp, '2026-03-04 21:00:00'::timestamp
+          union all
+          select 'c9', 'reg_e', 'pat_e', 'programRegistry-who-dak-hiv', 'prClinicalStatus-who-dak-hiv-on-art', '2026-03-05 10:00:00'::timestamp, '2026-03-04 21:00:00'::timestamp, '2026-03-04 21:00:00'::timestamp
+
+      - input: ref('patient_program_registrations')
+        format: sql
+        rows: |
+          select 'reg_a' as id, 'active' as registration_status
+          union all
+          select 'reg_b', 'active'
+          union all
+          select 'reg_c', 'active'
+          union all
+          select 'reg_d', 'recordedInError'
+          union all
+          select 'reg_e', 'active'
+
+    expect:
+      format: sql
+      rows: |
+        select 'registry:c2' as response_id, 'pat_a' as patient_id, '2026-03-05 10:00:00'::timestamp as submitted_datetime, 'Death (documented)' as hiv_treatment_outcome
+        union all
+        select 'registry:c4', 'pat_b', '2026-02-01 09:00:00'::timestamp, 'Transferred out'
+        union all
+        select 'registry:c6', 'pat_b', '2026-04-10 09:00:00'::timestamp, 'Transferred out'
