@@ -82,6 +82,12 @@ vars:
   art_unrecorded_supply_days: 90
   # The program registry whose enrolment is each ART period's parent in clinical__episode.
   art_episode_registry_id: programRegistry-who-dak-hiv
+  # The clinical statuses of that registry that record a client's death, and a transfer out. A
+  # registration entering one records that treatment outcome for metric__who_dak_hiv_indicators.
+  who_dak_hiv_death_status_ids:
+    - prClinicalStatus-who-dak-hiv-died
+  who_dak_hiv_transferred_out_status_ids:
+    - prClinicalStatus-who-dak-hiv-transferred-out
   # The date a facility started recording ART supply in Tamanu, keyed by facility id. It takes
   # the place of the date of the facility's first supply record, which a stray early record can
   # misstate.
