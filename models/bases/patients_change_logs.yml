@@ -70,8 +70,8 @@ models:
           tags:
             - quasi_identifier
       - name: date_of_birth
-        data_type: date
-        description: "{{ doc('patients__date_of_birth') }} from history."
+        data_type: text
+        description: "{{ doc('patients__date_of_birth') }} from history, as recorded. May not be a calendar date."
         config:
           tags:
             - quasi_identifier
