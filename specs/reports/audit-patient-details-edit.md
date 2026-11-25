@@ -56,7 +56,7 @@ One row per patient per minute of edit activity, across both `patients` and
 | `patientDisplayId` | text | Patient display ID |
 | `patientFirstName` | text | Patient given name, at the time of edit |
 | `patientLastName` | text | Patient family name, at the time of edit |
-| `patientDateOfBirth` | text | Date of birth at the time of edit, formatted |
+| `patientDateOfBirth` | text | Date of birth at the time of edit, formatted, or `Invalid date (<recorded value>)` when it is not a calendar date |
 | `patientSex` | text | Patient sex at the time of edit |
 | `patientVillage` | text | Patient village at the time of edit |
 | `logChangeBy` | text | Editing user's display name |
@@ -91,6 +91,10 @@ One row per patient per minute of edit activity, across both `patients` and
   parameterised by `candidate_patient_ids` — a subquery of candidate patient ids, applied
   identically against both source tables' patient-id columns. `ds__patients_change_logs` calls
   it unfiltered; the report calls it with BL-013's candidate filter.
+- **BL-015:** `patients.date_of_birth` is text, so change history can hold a value that is not a
+  calendar date, such as `2017-11-31`. `patients_change_logs` and `ds__patients_change_logs` keep
+  the date of birth as recorded text rather than casting it. The report shows a calendar date in
+  the report's date format and anything else as `Invalid date (<recorded value>)`.
 
 ## Acceptance criteria
 
@@ -100,6 +104,7 @@ One row per patient per minute of edit activity, across both `patients` and
 | AC-002 | A `patient_additional_data` edit reports the patient's current name, date of birth, sex and village | BL-002 | `test_audit_patient_details_edit_basic` |
 | AC-003 | The date range includes edits made at any time of day on `toDate` | BL-004 | `test_audit_patient_details_edit_basic` |
 | AC-004 | A patient changed outside the candidate window (including its ±2/+3 day margin) is excluded from the report; one changed inside it is included and the row's values are unaffected by the candidate step | BL-013 | `test_audit_patient_details_edit_basic` asserts the exclusion; `EXPLAIN` against a replica confirms the `(table_name, record_id)` index is used for candidates only |
+| AC-005 | An edit whose recorded date of birth is not a calendar date is reported with `Invalid date (<recorded value>)`, and the other rows are unaffected | BL-015 | `test_audit_patient_details_edit_basic` |
 
 Data tests run at `warn` severity project-wide (`data_tests: +severity: warn` in
 `dbt_project.yml`); this report's only unit test is `test_audit_patient_details_edit_basic`.
@@ -124,3 +129,4 @@ _None._
 | Date | Author | Change |
 |---|---|---|
 | 2026-10-19 | Maui team | [MAUI-7017](https://linear.app/bes/issue/MAUI-7017): retrospective spec documenting the existing report, plus BL-013/BL-014 and AC-004 for the new candidate-scoping step (`patients_change_logs_core()`, `audit_patient_details_edit_report()`). Output unchanged. Added `test_audit_patient_details_edit_basic`, the report's first unit test, covering AC-001 through AC-004's exclusion/inclusion behaviour. |
+| 2026-11-25 | Maui team | [MAUI-7232](https://linear.app/bes/issue/MAUI-7232): date of birth from change history is kept as recorded text, and the report flags a value that is not a calendar date (BL-015, AC-005). |

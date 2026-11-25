@@ -7,7 +7,8 @@ unit_tests:
       current name/DOB/sex from ref('patients'), not any value of its own. BL-004: the date
       range is exact -- a patient edited the day after toDate is excluded even though it falls
       inside BL-013's wider candidate window, and a patient edited long before the candidate
-      window never reaches the final filter at all.
+      window never reaches the final filter at all. BL-015: a recorded date of birth that is
+      not a calendar date is reported as 'Invalid date (<recorded value>)'.
     overrides:
       vars:
         timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
@@ -22,13 +23,15 @@ unit_tests:
       - input: ref('patients_change_logs')
         format: sql
         rows: |
-          select 'pat_001'::text as id, 'P001'::text as display_id, 'Alice'::text as first_name, 'Smith'::text as last_name, '1990-01-01'::date as date_of_birth, 'Female'::text as sex, null::text as village_id, 'usr_001'::text as updated_by_user_id, '2026-01-10 09:15:05'::timestamp as logged_at
+          select 'pat_001'::text as id, 'P001'::text as display_id, 'Alice'::text as first_name, 'Smith'::text as last_name, '1990-01-01'::text as date_of_birth, 'Female'::text as sex, null::text as village_id, 'usr_001'::text as updated_by_user_id, '2026-01-10 09:15:05'::timestamp as logged_at
           union all
-          select 'pat_001', 'P001', 'Alice', 'Smith', '1990-01-01'::date, 'Female', null, 'usr_001', '2026-01-10 09:15:40'::timestamp
+          select 'pat_001', 'P001', 'Alice', 'Smith', '1990-01-01', 'Female', null, 'usr_001', '2026-01-10 09:15:40'::timestamp
           union all
-          select 'pat_002', 'P002', 'Bob', 'Jones', '1985-05-05'::date, 'Male', null, 'usr_001', '2026-01-11 10:00:00'::timestamp
+          select 'pat_002', 'P002', 'Bob', 'Jones', '1985-05-05', 'Male', null, 'usr_001', '2026-01-11 10:00:00'::timestamp
           union all
-          select 'pat_004', 'P004', 'Dana', 'White', '1975-03-03'::date, 'Female', null, 'usr_001', '2025-12-01 00:00:00'::timestamp
+          select 'pat_004', 'P004', 'Dana', 'White', '1975-03-03', 'Female', null, 'usr_001', '2025-12-01 00:00:00'::timestamp
+          union all
+          select 'pat_005', 'P005', 'Eve', 'Green', '2017-11-31', 'Female', null, 'usr_001', '2026-01-10 16:00:00'::timestamp
 
       - input: ref('patient_additional_data_change_logs')
         format: sql
@@ -57,3 +60,5 @@ unit_tests:
         select 'P001'::text as "Patient ID", 'Alice'::text as "First name", 'Smith'::text as "Last name", '1990-01-01'::text as "Date of birth", 'Female'::text as "Sex", null::text as "Village", 'Nurse A'::text as "Edited by user", 'nursea@example.com'::text as "User email", 'nurse'::text as "User role", '2026-01-10 09:15'::text as "Date and time edited"
         union all
         select 'P003', 'Carol', 'Brown', '1992-07-07', 'female', null, 'Nurse A', 'nursea@example.com', 'nurse', '2026-01-10 14:00'
+        union all
+        select 'P005', 'Eve', 'Green', 'Invalid date (2017-11-31)', 'Female', null, 'Nurse A', 'nursea@example.com', 'nurse', '2026-01-10 16:00'
