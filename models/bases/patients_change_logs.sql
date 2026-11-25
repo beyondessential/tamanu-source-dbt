@@ -2,6 +2,8 @@
     key='id',
     table='patients'
 ) }}
+{#- date_of_birth is kept as recorded: patients.date_of_birth is text, so history can hold a
+    value that is not a calendar date, and casting it would fail the whole model. -#}
 {%- set columns = [
     {'expr': "fc.record_data ->> 'display_id'", 'name': 'display_id', 'is_direct_identifier': true},
     {'expr': "fc.record_data ->> 'first_name'", 'name': 'first_name', 'is_direct_identifier': true},
@@ -10,7 +12,7 @@
     {'expr': "fc.record_data ->> 'cultural_name'", 'name': 'cultural_name', 'is_direct_identifier': true},
     {'expr': "fc.record_data ->> 'email'", 'name': 'email', 'is_direct_identifier': true},
     {'expr': "initcap(fc.record_data ->> 'sex')", 'name': 'sex', 'is_direct_identifier': false},
-    {'expr': "(fc.record_data ->> 'date_of_birth')::date", 'name': 'date_of_birth', 'is_direct_identifier': false},
+    {'expr': "fc.record_data ->> 'date_of_birth'", 'name': 'date_of_birth', 'is_direct_identifier': false},
     {'expr': "(fc.record_data ->> 'date_of_death')::timestamp", 'name': 'date_of_death', 'is_direct_identifier': false},
     {'expr': "fc.record_data ->> 'village_id'", 'name': 'village_id', 'is_direct_identifier': false},
     {'expr': "(fc.record_data ->> 'created_at')::date", 'name': 'registration_date', 'is_direct_identifier': false}
