@@ -210,9 +210,9 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
   ART.2 is formed by the consumer: ART.1 at the previous period's end plus ART.4 within the period,
   less ART.1 at the period's end, over ART.1 at the previous period's end plus ART.4 within the
   period. `who_dak_hiv_art_ltfu` is its lost-to-follow-up disaggregation.
-- **BL-055:** A client's treatment outcomes are HIV.H.DE41 (HIV treatment outcome), read by
-  `int__who_dak_hiv_form_answers` as `hiv_treatment_outcome` and dated on its submission's date,
-  and their registry outcomes (BL-061).
+- **BL-055:** A client's treatment outcomes are their HIV.H.DE41 (HIV treatment outcome) answers
+  holding one of the DAK's four outcomes, read by `int__who_dak_hiv_form_answers` as
+  `hiv_treatment_outcome` and dated on its submission's date, and their registry outcomes (BL-061).
 - **BL-056:** A client whose latest treatment outcome on or before a month end is `Transferred out`
   or `Death (documented)` is not on ART at that month end, unless an ART period starts after that
   outcome's date.
@@ -265,6 +265,7 @@ first day of the reporting month and `period_end` the last; `value_numeric` is a
 | AC-041 | A client recorded `Transferred out` is not on ART from that month end and is not counted lost to follow-up when their supply lapses; a later ART period puts them back on ART; a recorded `Lost to follow-up` outcome changes nothing | BL-055–BL-057 | unit test `test_int__who_dak_hiv_client_month_state_transferred_out` |
 | AC-045 | Entering a death status records one `Death (documented)` and entering a transferred out status records `Transferred out`, each time the status is entered, dated when logged; another registry's status and a registration recorded in error record nothing | BL-061 | unit test `test_int__who_dak_hiv_registry_outcomes` |
 | AC-046 | A registry transfer out ends on ART from its month; a death recorded in the registry after the client became lost to follow-up stops them being counted lost to follow-up, but not when they restarted ART before the death | BL-055, BL-056, BL-062 | unit test `test_int__who_dak_hiv_client_month_state_registry_outcomes` |
+| AC-048 | A treatment outcome answer holding a registry clinical status id, as a form that sets the status records, is not an outcome, so a later one does not undo a registry transfer out | BL-055 | unit test `test_int__who_dak_hiv_client_month_state_registry_outcomes` |
 
 The unit tests carry the definitional weight. No deployment has captured these forms yet,
 so the data tests assert shape on an empty relation — a fixture is the only way to prove a
@@ -303,7 +304,7 @@ the Global Fund or PEPFAR reads the same counts via Annex C's crosswalk.
 
 | Date | Author | Change |
 |---|---|---|
-| 2026-11-25 | Maui team | The month state works out each client's lost to follow-up and re-initiation months once, rather than once per client month, with no change to its output (BL-052, BL-053, MAUI-7225). |
+| 2026-11-25 | Maui team | The month state works out each client's lost to follow-up and re-initiation months once, rather than once per client month, with no change to its output (BL-052, BL-053); a treatment outcome answer is an outcome only when it holds one of the DAK's outcomes, since the follow-up form's answer sets the registry status (BL-055, MAUI-7225). |
 | 2026-11-24 | Maui team | A death or transfer out recorded through the registry's clinical status is a treatment outcome; a recorded death ends on ART and is never counted lost to follow-up, however late it is recorded (BL-055, BL-056, BL-061, BL-062, MAUI-7225). |
 | 2026-11-23 | Maui team | On-ART state, loss to follow-up and re-initiation come from ART supply through `derived__episode_art`; a recorded transfer out ends it; adds `who_dak_hiv_art_ltfu` and `who_dak_hiv_art_reinitiated`, and ART.2 formed by the consumer (MAUI-7225). |
 | 2026-11-19 | Maui team | Answers reach their DAK elements through the generated question map `map__who_dak_hiv_questions` (MAUI-7199). |
