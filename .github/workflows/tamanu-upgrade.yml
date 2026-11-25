@@ -35,10 +35,20 @@ jobs:
         run: |
           uv pip install --system -r scripts/requirements.txt
 
-      - name: Determine version to upgrade to
-        id: version
+      # refresh_tamanu_source.py and check_schema_drift.py clone tamanu over https,
+      # so rewrite that to ssh with the deploy key for the rest of the job.
+      - name: Load the tamanu deploy key
         env:
           TAMANU_DEPLOY_KEY: ${{ secrets.TAMANU_DEPLOY_KEY }}
+        run: |
+          KEY="$RUNNER_TEMP/tamanu-deploy-key"
+          printf '%s\n' "$TAMANU_DEPLOY_KEY" > "$KEY"
+          chmod 600 "$KEY"
+          echo "GIT_SSH_COMMAND=ssh -i $KEY -o IdentitiesOnly=yes" >> "$GITHUB_ENV"
+          git config --global url."git@github.com:beyondessential/tamanu.git".insteadOf https://github.com/beyondessential/tamanu.git
+
+      - name: Determine version to upgrade to
+        id: version
         run: |
           if [ -n "${{ github.event.inputs.version }}" ]; then
             VERSION="${{ github.event.inputs.version }}"
@@ -53,13 +63,8 @@ jobs:
             echo "Using version from repository_dispatch: $VERSION"
           else
             echo "Auto-detecting latest Tamanu release branch..."
-            KEY="$RUNNER_TEMP/tamanu-deploy-key"
-            printf '%s\n' "$TAMANU_DEPLOY_KEY" > "$KEY"
-            chmod 600 "$KEY"
-            LATEST_RELEASE=$(GIT_SSH_COMMAND="ssh -i $KEY -o IdentitiesOnly=yes" \
-              git ls-remote --heads git@github.com:beyondessential/tamanu.git 'refs/heads/release/*' \
+            LATEST_RELEASE=$(git ls-remote --heads git@github.com:beyondessential/tamanu.git 'refs/heads/release/*' \
               | sed 's|.*refs/heads/||' | sort -V | tail -1)
-            rm -f "$KEY"
 
             if [ -z "$LATEST_RELEASE" ]; then
               echo "Error: Could not find any release branches in tamanu repo"
