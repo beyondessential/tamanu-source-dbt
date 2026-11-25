@@ -14,6 +14,10 @@ unit_tests:
       pat_back starts a second period on 2026-04-05 and dies on 2026-05-20: they are lost to follow-up
       in March, on ART and re-initiated in April, and off ART in May. pat_tr is supplied throughout but
       transferred out in the registry on 2026-03-10, so is on ART in January and February only.
+
+      AC-048: pat_tr's follow-up form on 2026-03-12 answers the treatment outcome with a registry
+      clinical status id, as a form that sets the status does. That answer is not an outcome, so the
+      registry's transfer out stays their latest and they stay off ART.
     overrides:
       vars:
         who_dak_hiv_spine_end: '2026-05-31'
@@ -28,6 +32,8 @@ unit_tests:
           select 'r3', 'pat_ltfu', 'fac_a', '2026-01-10 09:00:00'::timestamp, true, '2026-01-05'::date, null::date, null::date, null::boolean, null::text
           union all
           select 'r4', 'pat_tr', 'fac_a', '2026-01-10 09:00:00'::timestamp, true, '2026-01-05'::date, null::date, null::date, null::boolean, null::text
+          union all
+          select 'r5', 'pat_tr', 'fac_a', '2026-03-12 09:00:00'::timestamp, null::boolean, null::date, null::date, null::date, null::boolean, 'prClinicalStatus-who-dak-hiv-transferred-out'
 
       - input: ref('int__who_dak_hiv_registry_outcomes')
         format: sql

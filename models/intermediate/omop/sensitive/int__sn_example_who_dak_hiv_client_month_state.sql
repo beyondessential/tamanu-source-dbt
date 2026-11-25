@@ -64,8 +64,9 @@ lapses as (
     select * from {{ ref('int__who_dak_hiv_art_lapse') }}
 ),
 
--- BL-055: each recorded treatment outcome, from a form or from the client's registry status
--- (BL-061), dated on the day it was recorded
+-- BL-055: each recorded treatment outcome, from a form answer holding one of the DAK's outcomes or
+-- from the client's registry status (BL-061), dated on the day it was recorded. A form answer that
+-- sets the registry status holds a status id, and the registry records it
 outcomes as (
     select
         patient_id,
@@ -74,7 +75,9 @@ outcomes as (
         submitted_datetime::date as outcome_date,
         hiv_treatment_outcome
     from answers
-    where hiv_treatment_outcome is not null
+    where hiv_treatment_outcome in (
+            'Lost to follow-up', 'Transferred out', 'Death (documented)', 'Refused (stopped) treatment'
+        )
         and submitted_datetime is not null
 
     union all
