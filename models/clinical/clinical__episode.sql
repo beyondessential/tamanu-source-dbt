@@ -22,20 +22,20 @@ status_history as (
 ),
 
 -- BL-004: when the registration became inactive, for an episode closed by a status change
--- rather than a deactivation. Earliest such change, so a registration reactivated and closed
--- again reports the first close rather than the latest.
+-- rather than a deactivation. Earliest such change by the UTC instant (BL-012), so a
+-- registration reactivated and closed again reports the first close rather than the latest.
 --
 -- BL-006: logged changes only. The history also carries a synthetic current-state row, stamped
 -- at the enrolment datetime where nothing was logged; drawing an end from that would close
 -- every pre-2.33.0 inactive registration at its own start instead of leaving it open
 became_inactive as (
-    select
+    select distinct on (episode_id)
         episode_id,
-        min(logged_at) as inactive_at
+        logged_at as inactive_at
     from status_history
     where registration_status = 'inactive'
         and history_source = 'change log'
-    group by episode_id
+    order by episode_id, logged_at_utc
 ),
 
 -- BL-002: an enrolment recorded in error is a data-entry mistake, not a clinical fact. The

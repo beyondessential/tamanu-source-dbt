@@ -15,9 +15,9 @@ unit_tests:
       - input: ref('int__registration_status_history')
         format: sql
         rows: |
-          select 'pat_001;preg_001' as episode_id, '2024-05-01 08:00:00'::timestamp as logged_at, 'inactive' as registration_status, 'change log' as history_source
+          select 'pat_001;preg_001' as episode_id, '2024-05-01 08:00:00'::timestamp as logged_at, '2024-05-01 08:00:00'::timestamp as logged_at_utc, 'inactive' as registration_status, 'change log' as history_source
           union all
-          select 'pat_001;preg_001', '2024-09-01 08:00:00'::timestamp, 'active', 'change log'
+          select 'pat_001;preg_001', '2024-09-01 08:00:00'::timestamp, '2024-09-01 08:00:00'::timestamp, 'active', 'change log'
 
     expect:
       format: sql
