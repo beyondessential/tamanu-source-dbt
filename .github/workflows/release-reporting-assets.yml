@@ -137,6 +137,7 @@ jobs:
           # key is shared by the upgrade and provision containers, which read the same database.
           KEY_FILE="$RUNNER_TEMP/tamanu-crypto.key"
           head -c 32 /dev/urandom > "$KEY_FILE"
+          # World-readable so the image's non-root user can read a file the runner user owns.
           chmod 644 "$KEY_FILE"
 
           # The version check reads local_system_facts before the migrations create it.
