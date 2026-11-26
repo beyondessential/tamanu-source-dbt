@@ -18,9 +18,10 @@ Mono-repo for Tamanu and Tupaia reporting. Provides source base models for `data
 
 Models may use Postgres 12+ syntax. `int__emergency_visits` declares a CTE `not materialized`
 (the only use of it in `models/`), which a pre-12 server rejects at parse time — that fails
-`dbt parse` for the whole project, not just that model. `.github/workflows/checks.yml` runs
-`pytest` and the generated-macro drift guard only, so nothing in CI catches a version regression
-here.
+`dbt parse` for the whole project, not just that model. The `dbt unit tests` job in
+`.github/workflows/checks.yml` creates every model as a view on Postgres 12 against an empty copy
+of the Tamanu schema, so a model using syntax or a function newer than 12 fails the pull request
+(`specs/testing/model-postgres-compatibility.md`).
 
 ## Change log base models
 

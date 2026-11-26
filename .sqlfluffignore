@@ -2,10 +2,13 @@
 # dbt-conventions.md's "Do not review" list already excludes from human review.
 # target/ crashes sqlfluff outright on Windows (a compiled unit-test's path is
 # mis-resolved); compiled/ and dbt_packages/ only produce noisy warnings, but
-# there's nothing in either worth linting either way.
+# there's nothing in either worth linting either way. .venv/ and logs/ are local
+# tooling and dbt output that `sqlfluff lint .` would otherwise walk.
 target/
 compiled/
 dbt_packages/
+.venv/
+logs/
 
 # IS DISTINCT FROM in CASE WHEN causes SQLFluff PRS errors (known parser limitation).
 # The underlying SQL is valid PostgreSQL. The change-evaluation logic lives in both the
