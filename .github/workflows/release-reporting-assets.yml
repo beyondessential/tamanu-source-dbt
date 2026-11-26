@@ -133,9 +133,17 @@ jobs:
         env:
           IMAGE: ${{ steps.version.outputs.image }}
         run: |
+          # Tamanu 2.69 and later encrypt the device key with a 32-byte key file. A throwaway
+          # key is shared by the upgrade and provision containers, which read the same database.
+          KEY_FILE="$RUNNER_TEMP/tamanu-crypto.key"
+          head -c 32 /dev/urandom > "$KEY_FILE"
+          chmod 644 "$KEY_FILE"
+
           # The version check reads local_system_facts before the migrations create it.
           tamanu() {
             docker run -i --rm --network host --entrypoint bash \
+              -v "$KEY_FILE:/run/tamanu-crypto.key:ro" \
+              -e CRYPTO_KEY_FILE=/run/tamanu-crypto.key \
               -e NODE_CONFIG='{"db":{"skipVersionCompatibilityCheck":true}}' \
               -e CONFIG_SYNC_DB_HOST=127.0.0.1 \
               -e CONFIG_SYNC_DB_PORT=5432 \
