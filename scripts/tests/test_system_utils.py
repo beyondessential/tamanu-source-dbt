@@ -20,7 +20,7 @@ def test_execute_command_with_output_forces_utf8_decoding():
     # regardless of host locale.
     with patch("utils.system_utils.subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(returncode=0)
-        execute_command_with_output("dbt run-operation get_survey_docs")
+        execute_command_with_output("dbt run-operation get_all_survey_docs")
 
     _, kwargs = mock_run.call_args
     assert kwargs["text"] is True
@@ -40,7 +40,7 @@ def test_execute_command_with_output_forces_child_to_write_utf8():
     # as U+FFFD instead of itself even with our decode-side fix alone).
     with patch("utils.system_utils.subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(returncode=0)
-        execute_command_with_output("dbt run-operation get_survey_docs")
+        execute_command_with_output("dbt run-operation get_all_survey_docs")
 
     _, kwargs = mock_run.call_args
     assert kwargs["env"]["PYTHONUTF8"] == "1"
