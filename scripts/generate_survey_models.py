@@ -2,9 +2,9 @@ import sys
 
 from utils.survey_utils import (
     create_survey_model,
+    find_non_current_survey_models,
     generate_survey_doc,
-    get_survey_columns_from_deployment,
-    get_surveys_from_deployment,
+    get_surveys_with_columns_from_deployment,
     remove_survey_files,
 )
 from utils.system_utils import cprint
@@ -14,23 +14,15 @@ def main():
     try:
         cprint(f"Generating survey models", "info")
 
-        surveys = get_surveys_from_deployment()
+        # One dbt call for every survey. A failed call raises rather than
+        # reading as surveys with no questions (#896).
+        surveys = get_surveys_with_columns_from_deployment()
         total = len(surveys)
         skipped = 0
 
-        for index, (survey_id, survey_name) in enumerate(surveys, 1):
+        for index, (survey_id, survey_name, columns) in enumerate(surveys, 1):
             cprint(f"\n\nProgress: [{index}/{total}]", "warning")
             cprint(f"Creating: {survey_name}", "info")
-
-            columns = get_survey_columns_from_deployment(survey_id)
-            if columns is None:
-                # The dbt call itself failed -- this is not the same as a
-                # survey with no questions (#896), so fail loudly rather than
-                # silently skip a survey we couldn't actually check.
-                raise RuntimeError(
-                    f"Failed to fetch columns for survey '{survey_name}' ({survey_id}) "
-                    "-- see error logged above"
-                )
 
             if not columns:
                 # An empty survey (no questions) has nothing to model or
@@ -61,6 +53,17 @@ def main():
                 f"({skipped} skipped -- no questions)!"
             )
         cprint(summary, "success")
+
+        # Listed for review only: a report may still read one of these models.
+        non_current = find_non_current_survey_models(survey_id for survey_id, _, _ in surveys)
+        if non_current:
+            cprint(
+                f"\n{len(non_current)} survey model(s) belong to surveys that are no longer "
+                "current in Tamanu. Review whether they are still needed:",
+                "warning",
+            )
+            for path in non_current:
+                cprint(f"  {path}", "warning")
 
     except Exception as e:
         cprint(f"Error generating survey models: {e}", "error")
