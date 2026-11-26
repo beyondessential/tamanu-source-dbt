@@ -1,16 +1,20 @@
 {% macro get_survey_columns(survey_id) %}
-    SELECT 
-        pde.id, 
+    {#- Questions of one survey, or of every survey when survey_id is none -#}
+    SELECT
+        ssc.survey_id,
+        pde.id,
         replace(pde.code,'-','_') as code,
-        pde.name 
+        pde.name
     FROM {{ source('tamanu', 'survey_screen_components') }} ssc
     JOIN {{ source('tamanu', 'program_data_elements') }} pde
     ON ssc.data_element_id = pde.id
-    WHERE ssc.survey_id = '{{ survey_id }}'
-    AND ssc.deleted_at IS null
+    WHERE ssc.deleted_at IS null
     AND pde.type != 'Instruction'
     AND pde.deleted_at IS NULL
-    ORDER BY ssc.screen_index, ssc.component_index
+    {%- if survey_id is not none %}
+    AND ssc.survey_id = '{{ survey_id }}'
+    {%- endif %}
+    ORDER BY ssc.survey_id, ssc.screen_index, ssc.component_index
 {% endmacro %}
 
 {% macro get_survey(survey_id) %}
@@ -38,32 +42,28 @@
     GROUP BY sra.response_id, sr.encounter_id, sr.start_datetime, sr.end_datetime, sr.result_text, e.patient_id
 {% endmacro %}
 
-{% macro get_surveys_list() %}
-    {% set query %}
-        SELECT 
+{% macro get_all_survey_docs() %}
+    {#- Lists every current survey and every survey's questions in one call, for generate_survey_models.py -#}
+    {% set surveys_query %}
+        SELECT
             id,
             name
         FROM {{ source('tamanu', 'surveys') }}
         WHERE deleted_at IS NULL
         AND visibility_status = 'current'
+        ORDER BY id
     {% endset %}
-    
-    {% set results = run_query(query) %}
-    
-    {% if execute %}
-        {% for row in results %}
-            {{ log("SURVEY_DATA:" ~ row[0] ~ "|" ~ row[1], info=true) }}
-        {% endfor %}
-    {% endif %}
-{% endmacro %} 
 
-{% macro get_survey_docs(survey_id) %}
-    {%- set query = get_survey_columns(survey_id) -%}
-    {% set results = run_query(query) %}
-    
+    {% set surveys = run_query(surveys_query) %}
+    {% set columns = run_query(get_survey_columns(none)) %}
+
+    {#- Each row is logged as a JSON array, so a name holding a delimiter or a newline reads back whole -#}
     {% if execute %}
-        {% for row in results %}
-            {{ log("COLUMN_DATA:" ~ row[0] ~ "|" ~ row[1] ~ "|" ~ row[2], info=true) }}
+        {% for row in surveys %}
+            {{ log("SURVEY_DATA:" ~ tojson([row[0], row[1]]), info=true) }}
+        {% endfor %}
+        {% for row in columns %}
+            {{ log("COLUMN_DATA:" ~ tojson([row[0], row[1], row[2], row[3]]), info=true) }}
         {% endfor %}
     {% endif %}
 {% endmacro %}
