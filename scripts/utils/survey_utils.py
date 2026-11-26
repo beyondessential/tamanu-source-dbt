@@ -1,10 +1,16 @@
+import json
+import re
 from pathlib import Path
 
+from .dbt_utils import get_dbt_target_arg
 from .file_utils import ensure_directory_exists, write_file
 from .system_utils import cprint, execute_command_with_output
 
 BASE_DIR = Path.cwd()
 SURVEYS_DIR = BASE_DIR / "models" / "surveys"
+
+# Prefixes the get_all_survey_docs macro logs before each survey and question row.
+_LOGGED_ROW_MARKER = re.compile(r"(SURVEY_DATA|COLUMN_DATA):")
 
 # Base columns emitted by the get_survey macro. A survey data element whose
 # normalised code matches one of these is aliased to "<code>_answer" in the
@@ -20,68 +26,68 @@ RESERVED_COLUMNS = {
 }
 
 
-def get_surveys_from_deployment():
+def get_surveys_with_columns_from_deployment():
     """
-    Get all surveys from the database using dbt using the get_surveys_list macro.
+    Get every current survey and its questions from the database in a single
+    dbt call, using the get_all_survey_docs macro.
     Returns:
-        list: List of tuples containing (id, code, name) for each survey
+        list: (survey_id, survey_name, columns) tuples, where columns is a list
+            of (id, code, name) tuples in question order -- empty for a survey
+            with no questions. Empty where the deployment has no surveys.
+    Raises:
+        RuntimeError: Where the dbt call itself failed, so a database that could
+            not be read is not mistaken for surveys with no questions (#896).
     """
-    surveys = []
-    cmd = f"dbt run-operation get_surveys_list --profiles-dir config"
+    cmd = f"dbt run-operation get_all_survey_docs --profiles-dir config{get_dbt_target_arg()}"
     try:
         result = execute_command_with_output(cmd, cwd=BASE_DIR)
-        if not result or result.returncode != 0:
-            if result:
-                cprint(f"Error running dbt command {cmd}:\n {result.stderr}", "error")
-            return surveys
-
-        for line in (result.stdout + result.stderr).split("\n"):
-            if "SURVEY_DATA:" in line:
-                parts = line.split("SURVEY_DATA:")[1].split("|")
-                if len(parts) == 2:
-                    surveys.append(tuple(part.strip() for part in parts))
-
-        return surveys
-
     except Exception as e:
         cprint(f"Error getting surveys from dbt: {e}", "error")
-        return surveys
+        raise RuntimeError(f"Failed to list the deployment's surveys: {e}") from e
+
+    if not result or result.returncode != 0:
+        if result:
+            # dbt writes its errors to stdout, so print both streams.
+            output = "\n".join(
+                stream.strip() for stream in (result.stdout, result.stderr) if stream and stream.strip()
+            )
+            cprint(f"Error running dbt command {cmd}:\n{output or '(dbt printed nothing)'}", "error")
+        raise RuntimeError("Failed to list the deployment's surveys -- see error logged above")
+
+    surveys = []
+    columns_by_survey = {}
+    for line in (result.stdout + result.stderr).split("\n"):
+        # The first marker on the line is the row's own, so a name quoting the
+        # other marker does not change how the row is read.
+        marker = _LOGGED_ROW_MARKER.search(line)
+        if not marker:
+            continue
+        if marker.group(1) == "SURVEY_DATA":
+            surveys.append(tuple(_parse_logged_row(line, marker.end(), 2)))
+        else:
+            survey_id, *column = _parse_logged_row(line, marker.end(), 4)
+            columns_by_survey.setdefault(survey_id, []).append(tuple(column))
+
+    return [
+        (survey_id, survey_name, columns_by_survey.get(survey_id, []))
+        for survey_id, survey_name in surveys
+    ]
 
 
-def get_survey_columns_from_deployment(survey_id):
+def _parse_logged_row(line, start, field_count):
     """
-    Get survey column information from the database using dbt using the get_survey_docs macro.
-    Args:
-        survey_id (str): The survey identifier
-
-    Returns:
-        list | None: List of tuples containing (id, code, name) for each survey
-            question when the dbt call succeeds -- empty when the survey
-            genuinely has no questions. None when the dbt call itself failed;
-            callers must not treat that the same as "no questions" (see #896).
+    Read the JSON array the get_all_survey_docs macro logs from position start.
+    Raises:
+        RuntimeError: Where the line does not hold field_count fields, so a
+            survey or question is never silently dropped.
     """
-    cmd = f'dbt run-operation get_survey_docs --args "{{"survey_id": "{survey_id}"}}" --profiles-dir config'
-
     try:
-        result = execute_command_with_output(cmd, cwd=BASE_DIR)
-
-        if not result or result.returncode != 0:
-            if result:
-                cprint(f"Error running dbt command: {result.stderr}", "error")
-            return None
-
-        columns = []
-        for line in (result.stdout + result.stderr).split("\n"):
-            if "COLUMN_DATA:" in line:
-                parts = line.split("COLUMN_DATA:")[1].split("|")
-                if len(parts) == 3:
-                    columns.append(tuple(part.strip() for part in parts))
-
-        return columns
-
-    except Exception as e:
-        cprint(f"Error getting survey columns from dbt: {e}", "error")
-        return None
+        fields, _ = json.JSONDecoder().raw_decode(line[start:].lstrip())
+    except ValueError as e:
+        raise RuntimeError(f"Could not read dbt output line: {line!r}") from e
+    if not isinstance(fields, list) or len(fields) != field_count:
+        raise RuntimeError(f"Expected {field_count} fields in dbt output line: {line!r}")
+    return [str(field).strip() for field in fields]
 
 
 def generate_survey_doc(survey_id, survey_name, columns):
@@ -91,7 +97,7 @@ def generate_survey_doc(survey_id, survey_name, columns):
         survey_id (str): The survey identifier
         survey_name (str): The survey name
         columns (list): List of (id, code, name) tuples for the survey's questions,
-            from get_survey_columns_from_deployment. Callers must skip generation
+            from get_surveys_with_columns_from_deployment. Callers must skip generation
             entirely for a survey with no questions -- see generate_survey_models.main().
     Returns:
         str: Path to the created documentation file
@@ -99,13 +105,17 @@ def generate_survey_doc(survey_id, survey_name, columns):
     ensure_directory_exists(str(SURVEYS_DIR))
 
     survey_id = survey_id.replace("-", "_")
+    # JSON string syntax is valid YAML, so a quote or backslash in the name is escaped.
+    description = json.dumps(
+        f"Dataset containing responses for **{survey_name}** survey", ensure_ascii=False
+    )
 
     doc = ""
     yml = f"""version: 2
 
 models:
   - name: {survey_id}
-    description: "Dataset containing responses for **{survey_name}** survey"
+    description: {description}
     columns:
       - name: encounter_id
         description: '{{{{ doc("survey_responses__encounter_id") }}}}'
@@ -190,3 +200,22 @@ def remove_survey_files(survey_id):
             path.unlink()
             removed.append(str(path))
     return removed
+
+
+def find_non_current_survey_models(current_survey_ids):
+    """
+    List generated survey models whose survey is no longer current.
+
+    A survey that is retired or deleted in Tamanu drops out of the listing,
+    but its model stays in models/surveys/, where a report may still read it.
+
+    Args:
+        current_survey_ids (iterable[str]): Ids of every current survey
+
+    Returns:
+        list[str]: Sorted paths of .sql models matching no current survey
+    """
+    if not SURVEYS_DIR.is_dir():
+        return []
+    current = {survey_id.replace("-", "_") for survey_id in current_survey_ids}
+    return sorted(str(path) for path in SURVEYS_DIR.glob("*.sql") if path.stem not in current)
