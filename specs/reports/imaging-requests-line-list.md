@@ -26,7 +26,7 @@ Only the status filter is numbered here; the rest of the report is described as 
 
 | Name | Field | Label |
 |---|---|---|
-| `facilityId` | `ParameterAutocompleteField`, `facility` | Facility |
+| `facilityId` | `ParameterSuggesterSelectField`, `facility`, multi-select | Facility |
 | `requestedById` | `ParameterAutocompleteField`, `practitioner` | Requesting clinician |
 | `statusId` | `ParameterMultiselectField` | Status |
 | `imagingType` | `ImagingTypeField` | Imaging type |
