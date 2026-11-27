@@ -2,15 +2,14 @@ unit_tests:
   - name: test_derived__episode_art_assembly
     model: derived__episode_art
     description: >
-      BL-008 to BL-011, BL-013, BL-014, BL-016. A client's supply continues their period when it is
-      collected no later than 90 days after the supply they held ran out, and starts a new, numbered
-      period, a re-initiation, a day later. A short supply inside a long one does not shorten the
-      period. A period's parent is the client's enrolment in the registry the deployment names.
+      BL-009, BL-011, BL-014, BL-016. Supply days with their period numbers (int__art_supply_periods)
+      collapse into one row per period, whose supply end is the latest run-out date among them, so a
+      short supply inside a long one does not shorten it. A period numbered 2 is a re-initiation. A
+      period's parent is the client's enrolment in the registry the deployment names.
 
-      pat_cont is supplied 90 days on 2026-01-01, which runs out on 2026-04-01, and again on
-      2026-06-30, exactly 90 days later: one period. pat_split collects on 2026-07-01, 91 days after
-      it ran out: two periods, the second a re-initiation. pat_inside holds 180 days from 2026-01-01
-      and collects 30 more inside it, which leaves the period ending with the 180 days.
+      pat_cont's two supply days are one period, running out on 2026-07-30. pat_split's are two
+      periods, the second a re-initiation. pat_inside's 30 days inside its 180 leave the period
+      ending with the 180 days.
 
       pat_cont is enrolled in the DAK HIV registry and pat_split only in another, so only pat_cont
       has a parent. The local date is pinned well after every period so each is closed.
@@ -18,20 +17,20 @@ unit_tests:
       vars:
         test_current_date: '2027-12-31'
     given:
-      - input: ref('int__art_supply')
+      - input: ref('int__art_supply_periods')
         format: sql
         rows: |
-          select 'pat_cont' as subject_id, '2026-01-01'::date as supply_date, 90 as supply_days, 'fac_1' as facility_id, true as has_drug_exposure
+          select 'pat_cont' as subject_id, '2026-01-01'::date as supply_date, '2026-04-01'::date as run_out_date, 'fac_1' as facility_id, 1 as episode_number, '2026-01-01'::date as episode_start_date, false as is_reinitiation
           union all
-          select 'pat_cont', '2026-06-30'::date, 30, 'fac_2', true
+          select 'pat_cont', '2026-06-30'::date, '2026-07-30'::date, 'fac_2', 1, '2026-01-01'::date, false
           union all
-          select 'pat_split', '2026-01-01'::date, 90, 'fac_1', true
+          select 'pat_split', '2026-01-01'::date, '2026-04-01'::date, 'fac_1', 1, '2026-01-01'::date, false
           union all
-          select 'pat_split', '2026-07-01'::date, 30, 'fac_2', true
+          select 'pat_split', '2026-07-01'::date, '2026-07-31'::date, 'fac_2', 2, '2026-07-01'::date, true
           union all
-          select 'pat_inside', '2026-01-01'::date, 180, 'fac_1', true
+          select 'pat_inside', '2026-01-01'::date, '2026-06-30'::date, 'fac_1', 1, '2026-01-01'::date, false
           union all
-          select 'pat_inside', '2026-02-01'::date, 30, 'fac_1', true
+          select 'pat_inside', '2026-02-01'::date, '2026-03-03'::date, 'fac_1', 1, '2026-01-01'::date, false
 
       - input: ref('clinical__episode')
         format: sql

@@ -15,21 +15,22 @@ periods (`metric__who_dak_hiv_indicators` BL-047 to BL-057).
 
 | Field | Value |
 |---|---|
-| **Name** | `derived__episode_art`, with `int__art_supply` and `map__art_medications` |
+| **Name** | `derived__episode_art`, with `int__art_supply`, `int__art_supply_periods` and `map__art_medications` |
 | **Type** | dbt model (canonical definition) |
-| **Layer** | `derived` (OMOP-lite episode), over an `int__` ephemeral and a `map__` view |
-| **Materialisation** | env-aware: `table` on `analytics*`, `view` everywhere else. `int__art_supply` is ephemeral and `map__art_medications` a view |
+| **Layer** | `derived` (OMOP-lite episode), over `int__` ephemerals and a `map__` view |
+| **Materialisation** | env-aware: `table` on `analytics*`, `view` everywhere else. `int__art_supply` and `int__art_supply_periods` are ephemeral and `map__art_medications` a view |
 | **Status** | `implemented` |
 | **Owner** | Maui team |
 | **Linear issue** | [MAUI-7225](https://linear.app/bes/issue/MAUI-7225) |
 | **Repo** | `tamanu-source-dbt` |
 | **Registry** | `episode_art` (`kind: episode`) in `documentations/metrics/who_dak_hiv.yml` |
 | **Created** | 2026-11-23 |
-| **Last updated** | 2026-11-23 |
+| **Last updated** | 2026-11-27 |
 
 ## Grain
 
 - `int__art_supply`: **one row per client per supply day**, the ART supplied to them that day.
+- `int__art_supply_periods`: **one row per client per supply day**, with the period on ART it falls in.
 - `derived__episode_art`: **one row per continuous period on ART per client.**
 
 ## Inputs
@@ -55,6 +56,17 @@ drug exposures carry as `drug_source_value`) and `medication_name`.
 | `supply_days` | integer | Days of supply (BL-003 to BL-006) |
 | `facility_id` | varchar | Facility of the supply's encounter or submission |
 | `has_drug_exposure` | boolean | True when a drug exposure supplied ART that day, as opposed to only a form |
+
+### `int__art_supply_periods`
+
+The columns of `int__art_supply`, and:
+
+| Column | Type | Description |
+|---|---|---|
+| `run_out_date` | date | The day this supply runs out |
+| `episode_number` | integer | The number of the period the supply day falls in |
+| `episode_start_date` | date | The first supply day of that period |
+| `is_reinitiation` | boolean | True when `episode_number` is 2 or more |
 
 ### `derived__episode_art`
 
@@ -95,7 +107,7 @@ drug exposures carry as `drug_source_value`) and `medication_name`.
 - **BL-007:** Supply is read only for clients the WHO HIV indicators treat as living with HIV
   (`metric__who_dak_hiv_indicators` BL-008).
 
-### Periods on ART (`derived__episode_art`)
+### Periods on ART (`int__art_supply_periods`, `derived__episode_art`)
 
 - **BL-008:** A supply day's supply runs out on its date plus its days.
 - **BL-009:** A period's supply end is the latest run-out date among its supply days.
@@ -112,6 +124,9 @@ drug exposures carry as `drug_source_value`) and `medication_name`.
 - **BL-016:** A period's parent is the client's earliest enrolment in `clinical__episode` in the
   registry the `art_episode_registry_id` var names, which defaults to the DAK HIV registry
   (`programRegistry-who-dak-hiv`).
+- **BL-017:** Each supply day in `int__art_supply_periods` carries the number, first supply day and
+  re-initiation flag of the period it falls in, and `derived__episode_art` collapses those supply
+  days into its periods.
 
 ## Acceptance criteria
 
@@ -121,7 +136,7 @@ drug exposures carry as `drug_source_value`) and `medication_name`.
 | AC-002 | `metric_id` is always `episode_art` and in `metric_definitions`, and `variant_id` is always NULL | Registry | `accepted_values`, `relationships`, `dbt_utils.expression_is_true` |
 | AC-003 | A dispense of a mapped medication is supply and an unmapped one is not; a prescription is supply only when `art_supply_exposure_types` lists it; a form's days dispensed is supply on its submission's date | BL-001–BL-004 | unit test `test_int__art_supply_sources` |
 | AC-004 | Two records on one day are one supply day of the larger days; a quantity of 0 or of 400 is ignored; a client the indicators do not treat as living with HIV has no supply | BL-005–BL-007 | unit test `test_int__art_supply_sources` |
-| AC-005 | A 90-day supply followed by one 180 days later continues the period, and one 181 days later starts period 2, a re-initiation; a short supply inside a long one does not shorten the period | BL-008–BL-010, BL-013, BL-014 | unit test `test_derived__episode_art_assembly` |
+| AC-005 | A 90-day supply followed by one 180 days later continues the period, and one 181 days later starts period 2, a re-initiation; a short supply inside a long one does not shorten the period | BL-008–BL-010, BL-013, BL-014, BL-017 | unit tests `test_int__art_supply_periods_assembly` and `test_derived__episode_art_assembly` |
 | AC-006 | A period whose supply ended 90 days before the local date is open, and one that ended 91 days before is closed as `Lost to follow-up` with its end date the supply end plus 90 days | BL-011, BL-012 | unit test `test_derived__episode_art_closure` |
 | AC-007 | `episode_end_date` is NULL exactly when `closure_reason` is, and is never before `episode_start_date` | BL-011, BL-012 | `dbt_utils.expression_is_true` |
 | AC-008 | `is_reinitiation` is true exactly when `episode_number` is 2 or more | BL-014 | `dbt_utils.expression_is_true` |
@@ -131,9 +146,9 @@ drug exposures carry as `drug_source_value`) and `medication_name`.
 
 ```
 clinical__drug_exposure ──┐
-map__art_medications ─────┼──► int__art_supply ──► derived__episode_art ──► int__who_dak_hiv_client_month_state
-int__who_dak_hiv_form_answers ┘                          ▲                └─► metric__who_dak_hiv_indicators
-clinical__episode ───────────────────────────────────────┘
+map__art_medications ─────┼──► int__art_supply ──► int__art_supply_periods ──► derived__episode_art ──► int__who_dak_hiv_client_month_state
+int__who_dak_hiv_form_answers ┘                                                      ▲                └─► metric__who_dak_hiv_indicators
+clinical__episode ───────────────────────────────────────────────────────────────────┘
 ```
 
 ## Change log
@@ -141,3 +156,4 @@ clinical__episode ────────────────────�
 | Date | Author | Change |
 |---|---|---|
 | 2026-11-23 | Maui team | Initial spec: periods on ART assembled from ART supply, closed 90 days after the supply runs out (MAUI-7225) |
+| 2026-11-27 | Maui team | Each supply day with its period, in `int__art_supply_periods`, for consumers reading supply and periods as of a past date (MAUI-7257) |

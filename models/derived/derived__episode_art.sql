@@ -1,75 +1,38 @@
 -- derived__episode_art -- one row per continuous period a client is on ART, assembled from the ART
--- they were supplied (int__art_supply) and closed when the supply lapses.
+-- they were supplied (int__art_supply_periods) and closed when the supply lapses.
 --
 -- A client is on ART while they hold supply, and for the lost to follow-up allowance after it
 -- runs out. A supply collected within that allowance continues the period, and one collected
 -- after it starts a new, numbered period, which is how a re-initiation is recorded. The WHO HIV
 -- indicators read the on ART state, loss to follow-up and re-initiation from these periods.
 --
--- Spec: specs/dbt-model/derived__episode_art.md, BL-008..BL-016. The grain is one row per
--- client per period.
+-- Spec: specs/dbt-model/derived__episode_art.md, BL-009, BL-011, BL-012, BL-014, BL-016 and
+-- BL-017. The grain is one row per client per period.
 
 {% set ltfu_days = var('art_ltfu_days') %}
 
+-- BL-017: each supply day with the period it falls in
 with supply as (
-    select * from {{ ref('int__art_supply') }}
+    select * from {{ ref('int__art_supply_periods') }}
 ),
 
 episodes as (
     select * from {{ ref('clinical__episode') }}
 ),
 
--- BL-008: a supply runs out on its date plus its days. The latest run-out date of the client's
--- earlier supply days is the supply they already hold, so a short supply inside a long one
--- does not shorten it (BL-009)
-ordered as (
-    select
-        s.*,
-        s.supply_date + s.supply_days as run_out_date,
-        max(s.supply_date + s.supply_days) over (
-            partition by s.subject_id
-            order by s.supply_date asc
-            rows between unbounded preceding and 1 preceding
-        ) as prior_run_out_date
-    from supply s
-),
-
--- BL-010: a supply day starts a new period when it is the client's first, or when it falls more
--- than the allowance after the supply they held ran out. BL-015: the allowance is art_ltfu_days
-flagged as (
-    select
-        o.*,
-        case
-            when o.prior_run_out_date is null then 1
-            when o.supply_date > o.prior_run_out_date + {{ ltfu_days }} then 1
-            else 0
-        end as starts_period
-    from ordered o
-),
-
--- BL-013: a period's number is its position by start among the client's periods
-numbered as (
-    select
-        f.*,
-        sum(f.starts_period) over (
-            partition by f.subject_id
-            order by f.supply_date asc
-            rows between unbounded preceding and current row
-        ) as episode_number
-    from flagged f
-),
-
+-- BL-009: a period's supply end is the latest run-out date among its supply days
 periods as (
     select
         n.subject_id,
         n.episode_number,
-        min(n.supply_date) as episode_start_date,
+        n.episode_start_date,
+        n.is_reinitiation,
         max(n.run_out_date) as supply_end_date,
         count(*) as supply_count,
         (array_agg(n.facility_id order by n.supply_date asc))[1] as first_supply_facility_id,
         (array_agg(n.facility_id order by n.supply_date desc))[1] as last_supply_facility_id
-    from numbered n
-    group by n.subject_id, n.episode_number
+    from supply n
+    group by n.subject_id, n.episode_number, n.episode_start_date, n.is_reinitiation
 ),
 
 -- BL-016: the client's enrolment in the registry the deployment names, the earliest where they
@@ -107,7 +70,7 @@ select
     case when d.last_day_on_art < {{ get_current_date() }} then d.last_day_on_art end as episode_end_date,
     case when d.last_day_on_art < {{ get_current_date() }} then 'Lost to follow-up' end as closure_reason,
     -- BL-014: a period numbered 2 or more is a re-initiation
-    d.episode_number >= 2 as is_reinitiation,
+    d.is_reinitiation,
     d.first_supply_facility_id::varchar as first_supply_facility_id,
     d.last_supply_facility_id::varchar as last_supply_facility_id,
     d.supply_count::int as supply_count
