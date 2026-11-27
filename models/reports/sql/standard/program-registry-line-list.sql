@@ -37,4 +37,10 @@ where registration_status = 'active'
         when {{ parameter('divisionId') }} is null then true
         else division_id = {{ parameter('divisionId') }}
     end
+    and
+    -- BL-003 (see specs/reports/report-facility-options.md): optional facility filter. Nothing selected means every facility.
+    case
+        when {{ parameter('facilityId') }} is null then true
+        else registering_facility_id = {{ parameter('facilityId') }}
+    end
 order by registration_datetime desc

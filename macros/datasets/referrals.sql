@@ -21,7 +21,8 @@ select
     u.display_name as referring_doctor_name,
     sr.end_datetime as referral_datetime,
     rf.status,
-    d.name as department
+    d.name as department,
+    f.id as facility_id
 from {{ partition_ref('referrals', network) }} rf
 join {{ partition_ref('encounters', network) }} e on e.id = rf.initiating_encounter_id
 join {{ partition_ref('locations', network) }} l on l.id = e.location_id

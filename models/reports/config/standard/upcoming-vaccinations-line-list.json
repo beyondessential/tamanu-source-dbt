@@ -8,7 +8,6 @@
     "defaultDateRange": "18years",
     "dateRangeLabel": "Enter dates or leave blank for births in the past 18 years",
     "dataSources": [
-      "thisFacility",
       "allFacilities"
     ],
     "parameters": [

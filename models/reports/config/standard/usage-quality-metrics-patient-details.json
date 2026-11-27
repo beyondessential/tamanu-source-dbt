@@ -7,7 +7,6 @@
   "queryOptions": {
     "defaultDateRange": "allTime",
     "dataSources": [
-      "thisFacility",
       "allFacilities"
     ],
     "parameters": []

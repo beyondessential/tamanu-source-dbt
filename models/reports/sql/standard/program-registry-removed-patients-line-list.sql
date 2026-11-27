@@ -27,4 +27,10 @@ where registration_status = 'inactive'
         when {{ parameter('registryId') }} is null then true
         else program_registry_id = {{ parameter('registryId') }}
     end
+    and
+    -- BL-003 (see specs/reports/report-facility-options.md): optional facility filter. Nothing selected means every facility.
+    case
+        when {{ parameter('facilityId') }} is null then true
+        else registering_facility_id = {{ parameter('facilityId') }}
+    end
 order by deactivated_datetime desc
