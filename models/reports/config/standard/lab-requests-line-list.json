@@ -12,6 +12,12 @@
     ],
     "parameters": [
       {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
         "parameterField": "PractitionerField",
         "label": "Requesting clinician",
         "name": "requestedById"

@@ -40,6 +40,12 @@ where {{ to_user_selected_timezone('requested_datetime') }}
         when {{ parameter('testCategoryId') }} is null then true
         else lab_test_category_id = {{ parameter('testCategoryId') }}
     end
+    and
+    -- BL-002 (see specs/reports/report-facility-options.md): optional facility filter. Nothing selected means every facility.
+    case
+        when {{ parameter('facilityId') }} is null then true
+        else facility_id = {{ parameter('facilityId') }}
+    end
 order by
     requested_datetime,
     lab_test_panel,

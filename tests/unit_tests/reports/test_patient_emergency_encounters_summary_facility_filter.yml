@@ -1,0 +1,42 @@
+unit_tests:
+  - name: test_emergency_summary_facility_filter_selected
+    model: patient-emergency-encounters-summary
+    description: >
+      BL-002 of specs/reports/report-facility-options.md: a selected facility returns only that facility's rows.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        facilityId: fac_002
+    given:
+      - input: ref('ds__encounters_emergency')
+        format: sql
+        rows: |
+          select null::character varying(255) as triage_id, null::timestamp as arrival_datetime, '2025-01-15 10:00:00'::timestamp as triage_datetime, null::timestamp as closed_datetime, null::text as score, null::character varying(255) as patient_id, 'P001'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::date as date_of_birth, null::character varying(255) as sex, null::character varying(255) as village_id, null::character varying(255) as village, null::character varying(255) as encounter_id, null::character varying(255) as encounter_type, null::character varying(255) as arrival_mode, null::character varying(255) as chief_complaint, null::character varying(255) as secondary_complaint, null::character varying(255) as clinician_id, null::character varying(255) as clinician, 'fac_001'::character varying(255) as facility_id, null::character varying(255) as facility
+          union all
+          select null::character varying(255) as triage_id, null::timestamp as arrival_datetime, '2025-01-15 10:00:00'::timestamp as triage_datetime, null::timestamp as closed_datetime, null::text as score, null::character varying(255) as patient_id, 'P002'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::date as date_of_birth, null::character varying(255) as sex, null::character varying(255) as village_id, null::character varying(255) as village, null::character varying(255) as encounter_id, null::character varying(255) as encounter_type, null::character varying(255) as arrival_mode, null::character varying(255) as chief_complaint, null::character varying(255) as secondary_complaint, null::character varying(255) as clinician_id, null::character varying(255) as clinician, 'fac_002'::character varying(255) as facility_id, null::character varying(255) as facility
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P002
+
+  - name: test_emergency_summary_facility_filter_blank
+    model: patient-emergency-encounters-summary
+    description: >
+      BL-001 of specs/reports/report-facility-options.md: with no facility selected every facility's rows are returned.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+    given:
+      - input: ref('ds__encounters_emergency')
+        format: sql
+        rows: |
+          select null::character varying(255) as triage_id, null::timestamp as arrival_datetime, '2025-01-15 10:00:00'::timestamp as triage_datetime, null::timestamp as closed_datetime, null::text as score, null::character varying(255) as patient_id, 'P001'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::date as date_of_birth, null::character varying(255) as sex, null::character varying(255) as village_id, null::character varying(255) as village, null::character varying(255) as encounter_id, null::character varying(255) as encounter_type, null::character varying(255) as arrival_mode, null::character varying(255) as chief_complaint, null::character varying(255) as secondary_complaint, null::character varying(255) as clinician_id, null::character varying(255) as clinician, 'fac_001'::character varying(255) as facility_id, null::character varying(255) as facility
+          union all
+          select null::character varying(255) as triage_id, null::timestamp as arrival_datetime, '2025-01-15 10:00:00'::timestamp as triage_datetime, null::timestamp as closed_datetime, null::text as score, null::character varying(255) as patient_id, 'P002'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::date as date_of_birth, null::character varying(255) as sex, null::character varying(255) as village_id, null::character varying(255) as village, null::character varying(255) as encounter_id, null::character varying(255) as encounter_type, null::character varying(255) as arrival_mode, null::character varying(255) as chief_complaint, null::character varying(255) as secondary_complaint, null::character varying(255) as clinician_id, null::character varying(255) as clinician, 'fac_002'::character varying(255) as facility_id, null::character varying(255) as facility
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P002

@@ -7,7 +7,6 @@
   "queryOptions": {
     "defaultDateRange": "7days",
     "dataSources": [
-      "thisFacility",
       "allFacilities"
     ],
     "parameters": []

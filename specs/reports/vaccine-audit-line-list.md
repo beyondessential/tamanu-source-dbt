@@ -26,7 +26,7 @@ Only the status filter is numbered here; the rest of the report is described as 
 
 | Name | Field | Label |
 |---|---|---|
-| `facilityId` | `ParameterAutocompleteField`, `facility` | Facility |
+| `facilityId` | `ParameterSuggesterSelectField`, `facility`, multi-select | Facility |
 | `villageId` | `VillageField` | Village |
 | `category` | `VaccineCategoryField` | Category |
 | `vaccine` | `VaccineField` | Vaccine |

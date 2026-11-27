@@ -41,8 +41,7 @@ where {{ to_user_selected_timezone('requested_datetime') }}
     -- BL-002: the selection goes through multi_select_filter(), which stays valid when empty.
     {{ multi_select_filter('status_id::text', 'statusId') }}
     and
-    case
-        when {{ parameter('facilityId') }} is null then true
-        else facility_id = {{ parameter('facilityId') }}
-    end
+    -- BL-005 (see specs/reports/report-facility-options.md): multi-select. Nothing selected means every facility.
+    -- BL-006: the selection goes through multi_select_filter(), which stays valid when empty.
+    {{ multi_select_filter('facility_id::text', 'facilityId') }}
 order by requested_datetime

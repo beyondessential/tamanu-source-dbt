@@ -1,0 +1,42 @@
+unit_tests:
+  - name: test_incomplete_referrals_facility_filter_selected
+    model: incomplete-referrals
+    description: >
+      BL-002 of specs/reports/report-facility-options.md: a selected facility returns only that facility's rows.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        facilityId: fac_002
+    given:
+      - input: ref('ds__referrals')
+        format: sql
+        rows: |
+          select null::character varying(255) as patient_id, 'P001'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::character varying(255) as village_id, null::character varying(255) as diagnoses, null::character varying(255) as referral_type, null::character varying(255) as referring_doctor_id, null::character varying(255) as referring_doctor_name, '2024-01-15 10:00:00'::timestamp as referral_datetime, 'pending'::character varying(255) as status, null::character varying(255) as department, 'fac_001'::character varying(255) as facility_id
+          union all
+          select null::character varying(255) as patient_id, 'P002'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::character varying(255) as village_id, null::character varying(255) as diagnoses, null::character varying(255) as referral_type, null::character varying(255) as referring_doctor_id, null::character varying(255) as referring_doctor_name, '2024-01-15 10:00:00'::timestamp as referral_datetime, 'pending'::character varying(255) as status, null::character varying(255) as department, 'fac_002'::character varying(255) as facility_id
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P002
+
+  - name: test_incomplete_referrals_facility_filter_blank
+    model: incomplete-referrals
+    description: >
+      BL-001 of specs/reports/report-facility-options.md: with no facility selected every facility's rows are returned.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+    given:
+      - input: ref('ds__referrals')
+        format: sql
+        rows: |
+          select null::character varying(255) as patient_id, 'P001'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::character varying(255) as village_id, null::character varying(255) as diagnoses, null::character varying(255) as referral_type, null::character varying(255) as referring_doctor_id, null::character varying(255) as referring_doctor_name, '2024-01-15 10:00:00'::timestamp as referral_datetime, 'pending'::character varying(255) as status, null::character varying(255) as department, 'fac_001'::character varying(255) as facility_id
+          union all
+          select null::character varying(255) as patient_id, 'P002'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::character varying(255) as village_id, null::character varying(255) as diagnoses, null::character varying(255) as referral_type, null::character varying(255) as referring_doctor_id, null::character varying(255) as referring_doctor_name, '2024-01-15 10:00:00'::timestamp as referral_datetime, 'pending'::character varying(255) as status, null::character varying(255) as department, 'fac_002'::character varying(255) as facility_id
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P002

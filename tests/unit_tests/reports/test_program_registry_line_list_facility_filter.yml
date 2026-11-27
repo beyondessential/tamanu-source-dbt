@@ -1,0 +1,42 @@
+unit_tests:
+  - name: test_program_registry_line_list_facility_filter_selected
+    model: program-registry-line-list
+    description: >
+      BL-003 of specs/reports/report-facility-options.md: a selected facility returns only that facility's rows.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        facilityId: fac_002
+    given:
+      - input: ref('ds__patient_program_registrations')
+        format: sql
+        rows: |
+          select null::character varying(255) as patient_id, 'P001'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::date as date_of_birth, null::character varying(255) as sex, null::character varying(255) as village_id, null::character varying(255) as village, 'fac_001'::character varying(255) as registering_facility_id, null::character varying(255) as registering_facility, null::character varying(255) as registered_by_id, null::character varying(255) as registered_by, null::text as currently_at, null::text as currently_at_type, null::text as related_conditions, null::character varying(255) as clinical_status_id, null::character varying(255) as clinical_status, 'active'::text as registration_status, null::character varying(255) as program_registry_id, null::character varying(255) as subdivision_id, null::character varying(255) as subdivision, null::character varying(255) as division_id, null::character varying(255) as division, '2024-01-15 10:00:00'::timestamp as registration_datetime, null::character varying(255) as deactivated_by_id, null::character varying(255) as deactivated_by, null::timestamp as deactivated_datetime, null::character varying(255) as primary_contact_number, null::character varying(255) as secondary_contact_number, null::character varying(255) as emergency_contact_name, null::character varying(255) as emergency_contact_number, null::text as related_condition_categories
+          union all
+          select null::character varying(255) as patient_id, 'P002'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::date as date_of_birth, null::character varying(255) as sex, null::character varying(255) as village_id, null::character varying(255) as village, 'fac_002'::character varying(255) as registering_facility_id, null::character varying(255) as registering_facility, null::character varying(255) as registered_by_id, null::character varying(255) as registered_by, null::text as currently_at, null::text as currently_at_type, null::text as related_conditions, null::character varying(255) as clinical_status_id, null::character varying(255) as clinical_status, 'active'::text as registration_status, null::character varying(255) as program_registry_id, null::character varying(255) as subdivision_id, null::character varying(255) as subdivision, null::character varying(255) as division_id, null::character varying(255) as division, '2024-01-15 10:00:00'::timestamp as registration_datetime, null::character varying(255) as deactivated_by_id, null::character varying(255) as deactivated_by, null::timestamp as deactivated_datetime, null::character varying(255) as primary_contact_number, null::character varying(255) as secondary_contact_number, null::character varying(255) as emergency_contact_name, null::character varying(255) as emergency_contact_number, null::text as related_condition_categories
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P002
+
+  - name: test_program_registry_line_list_facility_filter_blank
+    model: program-registry-line-list
+    description: >
+      BL-001 of specs/reports/report-facility-options.md: with no facility selected every facility's rows are returned.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+    given:
+      - input: ref('ds__patient_program_registrations')
+        format: sql
+        rows: |
+          select null::character varying(255) as patient_id, 'P001'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::date as date_of_birth, null::character varying(255) as sex, null::character varying(255) as village_id, null::character varying(255) as village, 'fac_001'::character varying(255) as registering_facility_id, null::character varying(255) as registering_facility, null::character varying(255) as registered_by_id, null::character varying(255) as registered_by, null::text as currently_at, null::text as currently_at_type, null::text as related_conditions, null::character varying(255) as clinical_status_id, null::character varying(255) as clinical_status, 'active'::text as registration_status, null::character varying(255) as program_registry_id, null::character varying(255) as subdivision_id, null::character varying(255) as subdivision, null::character varying(255) as division_id, null::character varying(255) as division, '2024-01-15 10:00:00'::timestamp as registration_datetime, null::character varying(255) as deactivated_by_id, null::character varying(255) as deactivated_by, null::timestamp as deactivated_datetime, null::character varying(255) as primary_contact_number, null::character varying(255) as secondary_contact_number, null::character varying(255) as emergency_contact_name, null::character varying(255) as emergency_contact_number, null::text as related_condition_categories
+          union all
+          select null::character varying(255) as patient_id, 'P002'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::date as date_of_birth, null::character varying(255) as sex, null::character varying(255) as village_id, null::character varying(255) as village, 'fac_002'::character varying(255) as registering_facility_id, null::character varying(255) as registering_facility, null::character varying(255) as registered_by_id, null::character varying(255) as registered_by, null::text as currently_at, null::text as currently_at_type, null::text as related_conditions, null::character varying(255) as clinical_status_id, null::character varying(255) as clinical_status, 'active'::text as registration_status, null::character varying(255) as program_registry_id, null::character varying(255) as subdivision_id, null::character varying(255) as subdivision, null::character varying(255) as division_id, null::character varying(255) as division, '2024-01-15 10:00:00'::timestamp as registration_datetime, null::character varying(255) as deactivated_by_id, null::character varying(255) as deactivated_by, null::timestamp as deactivated_datetime, null::character varying(255) as primary_contact_number, null::character varying(255) as secondary_contact_number, null::character varying(255) as emergency_contact_name, null::character varying(255) as emergency_contact_number, null::text as related_condition_categories
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P002

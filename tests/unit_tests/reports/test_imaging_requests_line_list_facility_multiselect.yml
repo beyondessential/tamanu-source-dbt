@@ -1,0 +1,49 @@
+unit_tests:
+  - name: test_imaging_requests_line_list_facility_two_selected
+    model: imaging-requests-line-list
+    description: >
+      BL-005 of specs/reports/report-facility-options.md: two facilities selected return the rows of either and no others.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        facilityId: [fac_001, fac_003]
+    given:
+      - input: ref('ds__imaging_requests')
+        format: sql
+        rows: |
+          select null::character varying(255) as patient_id, 'P001'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::date as date_of_birth, null::integer as age, null::character varying(255) as sex, null::character varying(255) as village_id, null::character varying(255) as village, 'fac_001'::character varying(255) as facility_id, null::character varying(255) as facility, null::character varying(255) as department_id, null::character varying(255) as department, null::character varying(255) as location_group_id, null::character varying(255) as location_group, null::character varying(255) as request_id, '2024-01-15 10:00:00'::date as requested_datetime, null::character varying(255) as supervising_clinician_id, null::character varying(255) as supervising_clinician, null::character varying(255) as requesting_clinician_id, null::character varying(255) as requesting_clinician, null::character varying(255) as priority, null::character varying(31) as imaging_type_id, null::character varying(31) as imaging_type, null::character varying(255) as imaging_area, null::character varying(255) as status_id, null::character varying(255) as status, null::timestamp as completed_datetime, null::character varying(1024) as reason_for_cancellation
+          union all
+          select null::character varying(255) as patient_id, 'P002'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::date as date_of_birth, null::integer as age, null::character varying(255) as sex, null::character varying(255) as village_id, null::character varying(255) as village, 'fac_002'::character varying(255) as facility_id, null::character varying(255) as facility, null::character varying(255) as department_id, null::character varying(255) as department, null::character varying(255) as location_group_id, null::character varying(255) as location_group, null::character varying(255) as request_id, '2024-01-15 10:00:00'::date as requested_datetime, null::character varying(255) as supervising_clinician_id, null::character varying(255) as supervising_clinician, null::character varying(255) as requesting_clinician_id, null::character varying(255) as requesting_clinician, null::character varying(255) as priority, null::character varying(31) as imaging_type_id, null::character varying(31) as imaging_type, null::character varying(255) as imaging_area, null::character varying(255) as status_id, null::character varying(255) as status, null::timestamp as completed_datetime, null::character varying(1024) as reason_for_cancellation
+          union all
+          select null::character varying(255) as patient_id, 'P003'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::date as date_of_birth, null::integer as age, null::character varying(255) as sex, null::character varying(255) as village_id, null::character varying(255) as village, 'fac_003'::character varying(255) as facility_id, null::character varying(255) as facility, null::character varying(255) as department_id, null::character varying(255) as department, null::character varying(255) as location_group_id, null::character varying(255) as location_group, null::character varying(255) as request_id, '2024-01-15 10:00:00'::date as requested_datetime, null::character varying(255) as supervising_clinician_id, null::character varying(255) as supervising_clinician, null::character varying(255) as requesting_clinician_id, null::character varying(255) as requesting_clinician, null::character varying(255) as priority, null::character varying(31) as imaging_type_id, null::character varying(31) as imaging_type, null::character varying(255) as imaging_area, null::character varying(255) as status_id, null::character varying(255) as status, null::timestamp as completed_datetime, null::character varying(1024) as reason_for_cancellation
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P003
+
+  - name: test_imaging_requests_line_list_facility_empty_list
+    model: imaging-requests-line-list
+    description: >
+      BL-005 and BL-006 of specs/reports/report-facility-options.md: the form's empty selection returns every facility's rows.
+    overrides:
+      vars:
+        timezone: UTC  # to_user_selected_timezone is a no-op outside compile; see test_admissions_line_list_date_range_basic
+        facilityId: []
+    given:
+      - input: ref('ds__imaging_requests')
+        format: sql
+        rows: |
+          select null::character varying(255) as patient_id, 'P001'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::date as date_of_birth, null::integer as age, null::character varying(255) as sex, null::character varying(255) as village_id, null::character varying(255) as village, 'fac_001'::character varying(255) as facility_id, null::character varying(255) as facility, null::character varying(255) as department_id, null::character varying(255) as department, null::character varying(255) as location_group_id, null::character varying(255) as location_group, null::character varying(255) as request_id, '2024-01-15 10:00:00'::date as requested_datetime, null::character varying(255) as supervising_clinician_id, null::character varying(255) as supervising_clinician, null::character varying(255) as requesting_clinician_id, null::character varying(255) as requesting_clinician, null::character varying(255) as priority, null::character varying(31) as imaging_type_id, null::character varying(31) as imaging_type, null::character varying(255) as imaging_area, null::character varying(255) as status_id, null::character varying(255) as status, null::timestamp as completed_datetime, null::character varying(1024) as reason_for_cancellation
+          union all
+          select null::character varying(255) as patient_id, 'P002'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::date as date_of_birth, null::integer as age, null::character varying(255) as sex, null::character varying(255) as village_id, null::character varying(255) as village, 'fac_002'::character varying(255) as facility_id, null::character varying(255) as facility, null::character varying(255) as department_id, null::character varying(255) as department, null::character varying(255) as location_group_id, null::character varying(255) as location_group, null::character varying(255) as request_id, '2024-01-15 10:00:00'::date as requested_datetime, null::character varying(255) as supervising_clinician_id, null::character varying(255) as supervising_clinician, null::character varying(255) as requesting_clinician_id, null::character varying(255) as requesting_clinician, null::character varying(255) as priority, null::character varying(31) as imaging_type_id, null::character varying(31) as imaging_type, null::character varying(255) as imaging_area, null::character varying(255) as status_id, null::character varying(255) as status, null::timestamp as completed_datetime, null::character varying(1024) as reason_for_cancellation
+          union all
+          select null::character varying(255) as patient_id, 'P003'::character varying(255) as display_id, null::character varying(255) as first_name, null::character varying(255) as last_name, null::date as date_of_birth, null::integer as age, null::character varying(255) as sex, null::character varying(255) as village_id, null::character varying(255) as village, 'fac_003'::character varying(255) as facility_id, null::character varying(255) as facility, null::character varying(255) as department_id, null::character varying(255) as department, null::character varying(255) as location_group_id, null::character varying(255) as location_group, null::character varying(255) as request_id, '2024-01-15 10:00:00'::date as requested_datetime, null::character varying(255) as supervising_clinician_id, null::character varying(255) as supervising_clinician, null::character varying(255) as requesting_clinician_id, null::character varying(255) as requesting_clinician, null::character varying(255) as priority, null::character varying(31) as imaging_type_id, null::character varying(31) as imaging_type, null::character varying(255) as imaging_area, null::character varying(255) as status_id, null::character varying(255) as status, null::timestamp as completed_datetime, null::character varying(1024) as reason_for_cancellation
+    expect:
+      format: csv
+      rows: |
+        Patient ID
+        P001
+        P002
+        P003

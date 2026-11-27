@@ -32,10 +32,9 @@ where
         else village_id = {{ parameter('villageId') }}
     end
     and
-    case
-        when {{ parameter('facilityId') }} is null then true
-        else facility_id = {{ parameter('facilityId') }}
-    end
+    -- BL-005 (see specs/reports/report-facility-options.md): multi-select. Nothing selected means every facility.
+    -- BL-006: the selection goes through multi_select_filter(), which stays valid when empty.
+    {{ multi_select_filter('facility_id::text', 'facilityId') }}
     and
     case
         when {{ parameter('category') }} is null then true

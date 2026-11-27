@@ -12,10 +12,11 @@
     ],
     "parameters": [
       {
-        "parameterField": "ParameterAutocompleteField",
+        "parameterField": "ParameterSuggesterSelectField",
         "label": "Facility",
         "name": "facilityId",
-        "suggesterEndpoint": "facility"
+        "suggesterEndpoint": "facility",
+        "isMulti": true
       },
       {
         "parameterField": "VillageField",

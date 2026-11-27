@@ -19,6 +19,12 @@ where case
     {{ to_user_selected_timezone('triage_datetime') }} >= {{ parameter('fromDate', default_value='2025-01-01', data_type='date') }}
     and
     {{ to_user_selected_timezone('triage_datetime') }} <= {{ parameter('toDate', default_value='2025-01-31', data_type='date') }}
+    and
+    -- BL-002 (see specs/reports/report-facility-options.md): optional facility filter. Nothing selected means every facility.
+    case
+        when {{ parameter('facilityId') }} is null then true
+        else facility_id = {{ parameter('facilityId') }}
+    end
 group by
     display_id,
     first_name,

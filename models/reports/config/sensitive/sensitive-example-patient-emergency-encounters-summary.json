@@ -12,6 +12,12 @@
     ],
     "parameters": [
       {
+        "parameterField": "FacilityField",
+        "label": "Facility",
+        "name": "facilityId",
+        "filterBySelectedFacility": true
+      },
+      {
         "parameterField": "PatientField",
         "label": "Patient (or leave blank for all patients)",
         "name": "patientId"

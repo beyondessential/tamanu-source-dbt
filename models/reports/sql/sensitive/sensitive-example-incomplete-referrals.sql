@@ -27,4 +27,10 @@ where status in ('pending', 'cancelled')
         when {{ parameter('villageId') }} is null then true
         else village_id = {{ parameter('villageId') }}
     end
+    and
+    -- BL-002 (see specs/reports/report-facility-options.md): optional facility filter. Nothing selected means every facility.
+    case
+        when {{ parameter('facilityId') }} is null then true
+        else facility_id = {{ parameter('facilityId') }}
+    end
 order by referral_datetime, last_name, first_name
