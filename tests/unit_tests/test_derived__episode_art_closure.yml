@@ -13,12 +13,12 @@ unit_tests:
       vars:
         test_current_date: '2026-06-30'
     given:
-      - input: ref('int__art_supply')
+      - input: ref('int__art_supply_periods')
         format: sql
         rows: |
-          select 'pat_open' as subject_id, '2026-01-01'::date as supply_date, 90 as supply_days, 'fac_1' as facility_id, true as has_drug_exposure
+          select 'pat_open' as subject_id, '2026-01-01'::date as supply_date, '2026-04-01'::date as run_out_date, 'fac_1' as facility_id, 1 as episode_number, '2026-01-01'::date as episode_start_date, false as is_reinitiation
           union all
-          select 'pat_closed', '2025-12-31'::date, 90, 'fac_1', true
+          select 'pat_closed', '2025-12-31'::date, '2026-03-31'::date, 'fac_1', 1, '2025-12-31'::date, false
 
       - input: ref('clinical__episode')
         format: sql

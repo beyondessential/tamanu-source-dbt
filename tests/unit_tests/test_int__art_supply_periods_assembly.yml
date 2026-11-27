@@ -1,0 +1,38 @@
+unit_tests:
+  - name: test_int__art_supply_periods_assembly
+    model: int__art_supply_periods
+    description: >
+      BL-008, BL-010, BL-013, BL-014, BL-017. A client's supply continues their period when it is
+      collected no later than 90 days after the supply they held ran out, and starts a new, numbered
+      period, a re-initiation, a day later. A short supply inside a long one does not shorten the
+      period. Each supply day carries its period's number and first supply day.
+
+      pat_cont is supplied 90 days on 2026-01-01, which runs out on 2026-04-01, and again on
+      2026-06-30, exactly 90 days later: one period. pat_split collects on 2026-07-01, 91 days after
+      it ran out: two periods, the second a re-initiation. pat_inside holds 180 days from 2026-01-01
+      and collects 30 more inside it, which stays in the same period.
+    given:
+      - input: ref('int__art_supply')
+        format: sql
+        rows: |
+          select 'pat_cont' as subject_id, '2026-01-01'::date as supply_date, 90 as supply_days, 'fac_1' as facility_id, true as has_drug_exposure
+          union all
+          select 'pat_cont', '2026-06-30'::date, 30, 'fac_2', true
+          union all
+          select 'pat_split', '2026-01-01'::date, 90, 'fac_1', true
+          union all
+          select 'pat_split', '2026-07-01'::date, 30, 'fac_2', true
+          union all
+          select 'pat_inside', '2026-01-01'::date, 180, 'fac_1', true
+          union all
+          select 'pat_inside', '2026-02-01'::date, 30, 'fac_1', true
+
+    expect:
+      format: dict
+      rows:
+        - {subject_id: pat_cont, supply_date: '2026-01-01', run_out_date: '2026-04-01', episode_number: 1, episode_start_date: '2026-01-01', is_reinitiation: false}
+        - {subject_id: pat_cont, supply_date: '2026-06-30', run_out_date: '2026-07-30', episode_number: 1, episode_start_date: '2026-01-01', is_reinitiation: false}
+        - {subject_id: pat_split, supply_date: '2026-01-01', run_out_date: '2026-04-01', episode_number: 1, episode_start_date: '2026-01-01', is_reinitiation: false}
+        - {subject_id: pat_split, supply_date: '2026-07-01', run_out_date: '2026-07-31', episode_number: 2, episode_start_date: '2026-07-01', is_reinitiation: true}
+        - {subject_id: pat_inside, supply_date: '2026-01-01', run_out_date: '2026-06-30', episode_number: 1, episode_start_date: '2026-01-01', is_reinitiation: false}
+        - {subject_id: pat_inside, supply_date: '2026-02-01', run_out_date: '2026-03-03', episode_number: 1, episode_start_date: '2026-01-01', is_reinitiation: false}

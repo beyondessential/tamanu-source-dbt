@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: int__art_supply_periods
+    description: >
+      One row per client per day they were supplied ART, with the continuous period on ART the
+      supply day falls in. derived__episode_art collapses these into one row per period.
+    config:
+      tags:
+        - clinical
+      meta:
+        owner: bes-maui
+        domain: clinical
+        pii: true
+        classification: restricted
+    columns:
+      - name: subject_id
+        description: The client.
+      - name: supply_date
+        description: The day ART was supplied.
+      - name: supply_days
+        description: Days of supply.
+      - name: facility_id
+        description: Facility of the supply's encounter or submission.
+      - name: has_drug_exposure
+        description: True when a drug exposure supplied ART that day, as opposed to only a form.
+      - name: run_out_date
+        description: The day this supply runs out.
+      - name: episode_number
+        description: The number of the period on ART the supply day falls in, from 1.
+      - name: episode_start_date
+        description: The first supply day of that period.
+      - name: is_reinitiation
+        description: True when the period is the client's second or later, a re-initiation.
